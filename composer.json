@@ -1,0 +1,16 @@
+{
+    "name": "fixme-team/fixme",
+    "description": "Automobile technician finding application",
+    "autoload": {
+        "psr-4": {
+            "app\\": "./"
+        }
+    },
+    "authors": [
+        {
+            "name": "fixme",
+            "email": "fixmetek@gmail.com"
+        }
+    ],
+    "require": {}
+}
