@@ -20,4 +20,9 @@ class SiteController extends Controller
         $this->setLayout('signup-login');
         return $this->render('customer-sign-up');
     }
+    public function technicianSignUp()
+    {
+        $this->setLayout('signup-login');
+        return $this->render('/technician/technician-sign-up');
+    }
 }
