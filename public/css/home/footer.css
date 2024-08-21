@@ -1,0 +1,153 @@
+/* Container */
+.container-f {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 15px;
+    background-color: #010336; 
+    min-width: 100%;
+}
+
+/* Footer */
+footer {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+.container-f p {
+    color: #efefef;
+    font-size: 0.875rem;
+}
+
+.container-f h5 {
+    color: #ffffff;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+}
+.container-f h3 {
+    color: #ffffff;
+    font-size: 2rem;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-right: -15px;
+    margin-left: -15px;
+}
+
+.col-6 {
+    position: relative;
+    width: 100%;
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+.col-md-2 {
+    flex: 0 0 auto;
+    width: 16.66666667%;
+}
+
+.mb-3 {
+    margin-bottom: 1rem;
+}
+.ml-3 {
+    margin-left: 2.5rem;
+}
+
+
+/* Navigation */
+.nav-f {
+    display: flex;
+    flex-direction: column;
+    padding-left: 0;
+    margin-bottom: 0;
+    list-style: none;
+}
+
+.nav-item-f {
+    margin-bottom: 0.5rem;
+}
+
+.nav-link-f {
+    display: block;
+    padding: 0;
+    text-decoration: none;
+    color: #eff0f0;
+    transition: color 0.15s ease-in-out;
+}
+
+.text-body-secondary {
+    color: #eaebed;
+    font-size: 0.675rem;
+}
+
+.nav-link-f:hover {
+    color: #0056b3;
+}
+
+/* Flexbox utilities */
+.d-flex {
+    display: flex;
+}
+
+.flex-column {
+    flex-direction: column;
+}
+
+.flex-sm-row {
+    flex-direction: row;
+}
+
+.justify-content-between {
+    justify-content: space-between;
+}
+
+.py-4 {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+}
+
+.my-4 {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.mx-4 {
+    margin-left: 1.5rem;
+    margin-right: 1.5rem;
+}
+
+.border-top {
+    border-top: 1px solid #dee2e6;
+}
+
+.list-unstyled {
+    padding-left: 0;
+    list-style: none;
+}
+
+.ms-3 {
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+
+/* SVG Icons */
+.link-body-emphasis {
+    color: #ffffff;
+}
+
+.link-body-emphasis:hover {
+    color: #0056b3;
+}
+
+.bi {
+    fill: currentColor;
+}
+
+/* Responsive Utilities */
+@media (min-width: 576px) {
+    .flex-sm-row {
+        flex-direction: row;
+    }
+}
