@@ -8,15 +8,17 @@
     <link rel="stylesheet" href="/css/base/_global.css">
     <link rel="stylesheet" href="/css/home/navbar.css">
     <link rel="stylesheet" href="/css/home/footer.css">
+    <link rel="stylesheet" href="/css/home/home.css">
+    <script src="/js/home/main.js"></script>
     <title>Fixme Home</title>
 </head>
 
 <body>
     <nav class="container">
-        <header class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 border-bottom">
+        <header class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3">
             <div class="col-md-3 mb-2 mb-md-0">
                 <a href="/" class="d-inline-flex link-body-emphasis text-decoration-none">
-                    <svg class="bi" width="40" height="32" role="img" aria-label="Bootstrap">
+                    <svg class="bi" width="40" height="32" role="img" aria-label="fixme">
                         <use xlink:href="#bootstrap"></use>
                     </svg>
                 </a>
