@@ -19,27 +19,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   //declare a GlobalKey
   final _formKey = GlobalKey<FormState>();
 
-  void _submit() async {
-    final email = emailTextEditingController.text.trim();
-
-    try {
-      List<String> methods = await firebaseAuth.fetchSignInMethodsForEmail(email);
-      if (methods.isEmpty) {
-        Fluttertoast.showToast(
-          msg: "No account found for this email.",
-        );
-        return;
-      }
-
-      await firebaseAuth.sendPasswordResetEmail(email: email);
-      Fluttertoast.showToast(
-        msg: "We have sent you an email to recover password, please check your email",
-      );
-    } catch (error) {
-      Fluttertoast.showToast(
-        msg: "Error Occurred:\n${error.toString()}",
-      );
-    }
+  void _submit(){
+    firebaseAuth.sendPasswordResetEmail(
+        email: emailTextEditingController.text.trim()
+    ).then((value){
+      Fluttertoast.showToast(msg: "We have sent you an email to recover password, please check your email");
+    }).onError((error, stackTrace){
+      Fluttertoast.showToast(msg: "Error Occurred: \n ${error.toString()}");
+    });
   }
 
   @override
@@ -138,7 +125,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   }
                                 },
                                 child: Text(
-                                  'Reset Password',
+                                  'Send Link',
                                   style: TextStyle(
                                     fontSize: 20,
                                   ),
