@@ -1,7 +1,13 @@
 import 'package:email_validator/email_validator.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:fixme/mainScreen.dart';
+import 'package:fixme/screens/forgot_password_screen.dart';
+import 'package:fixme/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import '../global/global.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -22,6 +28,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   //declare a GlobalKey
   final _formKey = GlobalKey<FormState>();
+
+  void  _submit() async{
+    // validate all the form fields
+    if(_formKey.currentState!.validate()){
+      await firebaseAuth.createUserWithEmailAndPassword(
+          email: emailTextEditingController.text.trim(),
+          password: passwordTextEditingController.text.trim()
+      ).then((auth) async {
+        currentUser = auth.user;
+
+        if(currentUser!=null){
+          Map userMap = {
+            "id": currentUser!.uid,
+            "name": nameTextEditingController.text.trim(),
+            "email": emailTextEditingController.text.trim(),
+            "address": addressTextEditingController.text.trim(),
+            "phone": phoneTextEditingController.text.trim(),
+          };
+
+          DatabaseReference userRef = FirebaseDatabase.instance.ref().child("users");
+          userRef.child(currentUser!.uid).set(userMap);
+        }
+        await Fluttertoast.showToast(msg: "Successfully Registered");
+        Navigator.push(context, MaterialPageRoute(builder: (c)=>MainScreen()));
+      }).catchError((errorMessage){
+        Fluttertoast.showToast(msg: "Error occured: \n $errorMessage");
+      });
+    }else{
+      Fluttertoast.showToast(msg: "All fields are not valid");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +93,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Form(
+                        key: _formKey,
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -97,7 +135,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 nameTextEditingController.text = text;
                               }),
                             ),
-                            SizedBox(height: 10,),
+                            SizedBox(height: 20,),
                             TextFormField(
                               inputFormatters: [
                                 LengthLimitingTextInputFormatter(100)
@@ -137,7 +175,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 emailTextEditingController.text = text;
                               }),
                             ),
-                            SizedBox(height: 10,),
+                            SizedBox(height: 20,),
                             IntlPhoneField(
                               showCountryFlag: false,
                               dropdownIcon: Icon(
@@ -319,7 +357,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ),
                                 minimumSize: Size(double.infinity, 50),
                               ),
-                                onPressed: () {},
+                                onPressed: () {
+                                _submit();
+                                },
                                 child: Text(
                                   'Register',
                                   style: TextStyle(
@@ -329,7 +369,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             SizedBox(height: 20,),
                             GestureDetector(
-                              onTap: () {},
+                              onTap: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (c)=>ForgotPasswordScreen()));
+                              },
                               child: Text(
                                 'Forgot Password',
                                 style: TextStyle(
@@ -337,6 +379,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ),
                               ),
                             ),
+
+                            SizedBox(height: 20),
+
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text("Already have an account?",
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                SizedBox(width: 5,),
+
+                                GestureDetector(
+                                  onTap: (){
+                                    Navigator.push(context, MaterialPageRoute(builder: (c)=>LoginScreen()));
+                                  },
+                                  child: Text(
+                                    "Sign In",
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      color: darkTheme ? Colors.amber.shade400 : Colors.blue,
+                                    ),
+                                  ),
+                                )
+                              ],
+                            )
+
                           ],
                         ),
                       ),
