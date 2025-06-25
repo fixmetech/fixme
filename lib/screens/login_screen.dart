@@ -1,4 +1,5 @@
 import 'package:email_validator/email_validator.dart';
+import 'package:fixme/mainScreen.dart';
 import 'package:fixme/screens/forgot_password_screen.dart';
 import 'package:fixme/screens/register_screen.dart';
 import 'package:flutter/material.dart';
@@ -7,7 +8,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 
 import '../global/global.dart';
-import 'package:fixme/screens/home_page.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

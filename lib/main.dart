@@ -2,7 +2,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:fixme/screens/login_screen.dart';
 import 'package:fixme/splashScreen/splash_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:fixme/screens/home_page.dart';
 import 'package:fixme/screens/register_screen.dart';
 import 'package:fixme/themeProvider/theme_provider.dart';
 

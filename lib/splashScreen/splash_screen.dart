@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:fixme/Assistants/assistant_methods.dart';
 import 'package:fixme/global/global.dart';
+import 'package:fixme/mainScreen.dart';
 import 'package:fixme/screens/login_screen.dart';
-import 'package:fixme/screens/home_page.dart';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -21,7 +21,7 @@ class _SplashScreenState extends State<SplashScreen> {
     Timer(Duration(seconds: 3), () async{
       if(await firebaseAuth.currentUser != null){
         firebaseAuth.currentUser != null ? AssistantMethods.readCurrentOnlineUserInfo():null;
-        Navigator.push(context, MaterialPageRoute(builder: (c)=>LoginScreen()));
+        Navigator.push(context, MaterialPageRoute(builder: (c)=>MainScreen()));
       }else{
         Navigator.push(context, MaterialPageRoute(builder: (c)=>LoginScreen()));
       }
