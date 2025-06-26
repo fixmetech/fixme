@@ -1,6 +1,6 @@
+import 'package:fixme/screens/Profile/common_profile.dart';
 import 'package:flutter/material.dart';
 
-import 'common_profile.dart';
 
 /// Professional security settings screen with enhanced validation and UX
 class CustomerProfileSecurity extends StatefulWidget {
@@ -55,19 +55,8 @@ class _CustomerProfileSecurityState extends State<CustomerProfileSecurity> {
     return CommonProfile(
       title: 'Customer Profile',
       selectedIndex: 2, // Current bottom tab (security)
-      onTap: _handleBottomNavigation,
       body: _buildBody(context),
     );
-  }
-
-  void _handleBottomNavigation(int index) {
-    if (index == 0) {
-      Navigator.pushReplacementNamed(context, '/home');
-    } else if (index == 1) {
-      Navigator.pushReplacementNamed(context, '/profile');
-    } else if (index == 2) {
-      Navigator.pushReplacementNamed(context, '/security');
-    }
   }
 
   PreferredSizeWidget _buildAppBar() {

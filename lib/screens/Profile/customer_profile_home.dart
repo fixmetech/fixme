@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart' show AlertDialog, Alignment, AppBar, Border, BorderRadius, BottomNavigationBar, BottomNavigationBarItem, BottomNavigationBarType, BoxDecoration, BoxFit, BuildContext, Card, Center, Color, Colors, Column, Container, CrossAxisAlignment, DecorationImage, Divider, EdgeInsets, ElevatedButton, Expanded, FontWeight, GestureDetector, Icon, IconButton, IconThemeData, Icons, LinearGradient, MainAxisAlignment, MaterialPageRoute, Navigator, NetworkImage, Padding, PreferredSizeWidget, RoundedRectangleBorder, Row, Scaffold, ScaffoldMessenger, SingleChildScrollView, SizedBox, SnackBar, State, StatefulWidget, Text, TextButton, TextDecoration, TextStyle, Widget, showDialog;
+import 'package:fixme/screens/Profile/customer_profile_home_edit.dart';
+import 'package:flutter/material.dart' show AlertDialog, Alignment, AppBar, Border, BorderRadius,  BoxDecoration, BoxFit, BuildContext, Card, Center, Color, Colors, Column, Container, CrossAxisAlignment, DecorationImage, Divider, EdgeInsets, ElevatedButton, Expanded, FontWeight, GestureDetector, Icon, IconButton, IconThemeData, Icons, LinearGradient, MainAxisAlignment, MaterialPageRoute, Navigator, NetworkImage, Padding, PreferredSizeWidget, RoundedRectangleBorder, Row, Scaffold, ScaffoldMessenger, SingleChildScrollView, SizedBox, SnackBar, State, StatefulWidget, Text, TextButton, TextDecoration, TextStyle, Widget, showDialog;
 
-import 'customer_profile_home_edit.dart';
+
 
 
 class CustomerHomeProfile extends StatefulWidget {
@@ -30,7 +31,6 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: _buildAppBar(),
-      bottomNavigationBar: _buildBottomNavigationBar(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -70,37 +70,6 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildBottomNavigationBar() {
-    return BottomNavigationBar(
-      currentIndex: 1, // Profile tab selected
-      type: BottomNavigationBarType.fixed,
-      selectedItemColor: _primaryColor,
-      unselectedItemColor: Colors.grey[600],
-      backgroundColor: Colors.white,
-      elevation: 8,
-      selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
-      unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
-      onTap: _handleBottomNavigation,
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          activeIcon: Icon(Icons.home),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person_outline),
-          activeIcon: Icon(Icons.person),
-          label: 'Profile',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.settings_outlined),
-          activeIcon: Icon(Icons.settings),
-          label: 'Settings',
-        ),
-      ],
     );
   }
 
@@ -321,21 +290,6 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
         ),
       ],
     );
-  }
-
-  // Action methods
-  void _handleBottomNavigation(int index) {
-    switch (index) {
-      case 0:
-        Navigator.pushReplacementNamed(context, '/home');
-        break;
-      case 1:
-      // Already on Profile
-        break;
-      case 2:
-        Navigator.pushReplacementNamed(context, '/settings');
-        break;
-    }
   }
 
   void _showEditDialog() {
