@@ -1,6 +1,6 @@
+import 'package:fixme/screens/Profile/profile_page.dart';
 import 'package:fixme/screens/booking_screen.dart';
 import 'package:fixme/screens/home_screen.dart';
-import 'package:fixme/screens/profile_screen.dart';
 import 'package:fixme/screens/service_providers_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -27,7 +27,7 @@ class _MainNavigationState extends State<MainNavigation> {
     HomeScreen(),
     ServiceProvidersScreen(),
     BookingsScreen(),
-    ProfileScreen(),
+    CustomerProfilePage(),
   ];
 
   void _onItemTapped(int index) {

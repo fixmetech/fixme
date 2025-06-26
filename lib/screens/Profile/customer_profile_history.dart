@@ -153,7 +153,6 @@ class _CustomerProfileHistoryState extends State<CustomerProfileHistory>
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: _buildAppBar(),
-      bottomNavigationBar: _buildBottomNavigationBar(),
       body: Column(
         children: [
           _buildHeader(),
@@ -175,37 +174,9 @@ class _CustomerProfileHistoryState extends State<CustomerProfileHistory>
         ),
       ),
       backgroundColor: Colors.blue[800],
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: 0,
       centerTitle: true,
-    );
-  }
-
-  Widget _buildBottomNavigationBar() {
-    return BottomNavigationBar(
-      currentIndex: 1,
-      type: BottomNavigationBarType.fixed,
-      selectedItemColor: Colors.blue[800],
-      unselectedItemColor: Colors.grey[600],
-      onTap: (index) {
-        // Handle navigation
-      },
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          activeIcon: Icon(Icons.home),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person_outline),
-          activeIcon: Icon(Icons.person),
-          label: 'Profile',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.settings_outlined),
-          activeIcon: Icon(Icons.settings),
-          label: 'Settings',
-        ),
-      ],
     );
   }
 

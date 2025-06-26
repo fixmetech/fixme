@@ -1,8 +1,7 @@
 import 'dart:io';
+import 'package:fixme/screens/Profile/customer_profile_home.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-
-import 'customer_profile_home.dart';
 
 // Import your home page - replace with your actual home page import
 // import 'home_page.dart';
