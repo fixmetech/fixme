@@ -4,10 +4,8 @@ import 'package:fixme/splashScreen/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:fixme/screens/register_screen.dart';
 import 'package:fixme/themeProvider/theme_provider.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import 'screens/register_screen.dart';
-import 'themeProvider/theme_provider.dart';
 
 Future<void> main() async{
   WidgetsFlutterBinding.ensureInitialized();
