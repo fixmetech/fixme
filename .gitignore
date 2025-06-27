@@ -30,7 +30,6 @@ migrate_working_dir/
 .flutter-plugins
 .flutter-plugins-dependencies
 .pub-cache/
-pubspec.lock
 .pub/
 /build/
 
@@ -47,3 +46,4 @@ app.*.map.json
 /android/app/google-services.json
 
 .env
+./pubspec.lock
