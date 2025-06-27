@@ -23,6 +23,10 @@ dependencies:
   fluttertoast: ^8.2.12
   image_picker: ^1.0.4
   intl: ^0.18.1
+  geolocator: ^14.0.1
+  google_maps_flutter: ^2.12.3
+  flutter_dotenv: ^5.2.1
+  http: ^1.4.0
 
 dev_dependencies:
   flutter_test:
