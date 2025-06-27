@@ -12,6 +12,7 @@ import 'themeProvider/theme_provider.dart';
 Future<void> main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await dotenv.load(); // Load environment variables from .env file
   runApp(const MyApp());
 }
 

@@ -44,7 +44,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           children: [
             Column(
               children: [
-                Image.asset(darkTheme ? 'images/city_dark.jpg' : 'images/city.jpg'),
+                Image.asset(darkTheme ? 'assets/images/city_dark.jpg' : 'assets/images/city.jpg'),
 
                 SizedBox(height: 20,),
 
