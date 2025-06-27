@@ -1,10 +1,12 @@
+import 'package:fixme/screens/Profile/customer_profile_account.dart';
+import 'package:fixme/screens/Profile/customer_profile_history.dart';
+import 'package:fixme/screens/Profile/customer_profile_home.dart';
+import 'package:fixme/screens/Profile/customer_profile_security.dart';
+import 'package:fixme/screens/Profile/customer_profile_support.dart';
+import 'package:fixme/screens/Profile/customer_vehicle_profile.dart';
+import 'package:fixme/screens/login_screen.dart';
 import 'package:flutter/material.dart';
-import 'customer_profile_account.dart';
-import 'customer_profile_history.dart';
-import 'customer_profile_home.dart';
-import 'customer_profile_security.dart';
-import 'customer_profile_support.dart';
-import 'customer_vehicle_profile.dart';
+
 
 void main() {
   runApp(MaterialApp(
@@ -55,8 +57,10 @@ class CustomerProfilePage extends StatelessWidget {
   }
 
   void _handleLogout(BuildContext context) {
-    print('Logout clicked');
-    // Add your logout logic here
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+    );
   }
 
   @override
@@ -72,31 +76,9 @@ class CustomerProfilePage extends StatelessWidget {
           ),
         ),
         backgroundColor: Colors.blue[800],
+        iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
         centerTitle: true,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 1,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.blue[800],
-        unselectedItemColor: Colors.grey[600],
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined),
-            activeIcon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         child: Column(

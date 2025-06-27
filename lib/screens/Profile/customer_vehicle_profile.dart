@@ -1,5 +1,6 @@
+import 'package:fixme/screens/Profile/customer_profile_vehicle_edit.dart';
 import 'package:flutter/material.dart';
-import 'customer_profile_vehicle_edit.dart';
+
 
 class CustomerVehicleProfile extends StatefulWidget {
   const CustomerVehicleProfile({super.key});
@@ -28,7 +29,6 @@ class _CustomerVehicleProfileState extends State<CustomerVehicleProfile> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: _buildAppBar(),
-      bottomNavigationBar: _buildBottomNavigationBar(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -68,42 +68,6 @@ class _CustomerVehicleProfileState extends State<CustomerVehicleProfile> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildBottomNavigationBar() {
-    return BottomNavigationBar(
-      currentIndex: _currentIndex,
-      type: BottomNavigationBarType.fixed,
-      selectedItemColor: _primaryColor,
-      unselectedItemColor: Colors.grey[600],
-      backgroundColor: Colors.white,
-      elevation: 8,
-      selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
-      unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
-      onTap: (index) {
-        setState(() {
-          _currentIndex = index;
-        });
-        _handleNavigation(index);
-      },
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          activeIcon: Icon(Icons.home),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.directions_car_outlined),
-          activeIcon: Icon(Icons.directions_car),
-          label: 'Vehicle',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.settings_outlined),
-          activeIcon: Icon(Icons.settings),
-          label: 'Settings',
-        ),
-      ],
     );
   }
 
@@ -287,19 +251,6 @@ class _CustomerVehicleProfileState extends State<CustomerVehicleProfile> {
   }
 
   // Action methods
-  void _handleNavigation(int index) {
-    switch (index) {
-      case 0:
-        Navigator.pushReplacementNamed(context, '/home');
-        break;
-      case 1:
-      // Stay on the current page
-        break;
-      case 2:
-        Navigator.pushReplacementNamed(context, '/settings');
-        break;
-    }
-  }
 
   void _navigateToEditPage() {
     Navigator.push(
