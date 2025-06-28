@@ -1,6 +1,6 @@
+import 'package:fixme/screens/Profile/common_profile.dart';
 import 'package:flutter/material.dart';
 
-import 'common_profile.dart';
 
 /// Professional customer profile account management screen
 class CustomerProfileAccount extends StatefulWidget {
@@ -25,7 +25,6 @@ class _CustomerProfileAccountState extends State<CustomerProfileAccount> {
     return CommonProfile(
       title: 'Customer Profile',
       selectedIndex: 1, // Current bottom tab
-      onTap: _handleBottomNavigation,
       body: _buildBody(context),
     );
   }
@@ -301,22 +300,6 @@ class _CustomerProfileAccountState extends State<CustomerProfileAccount> {
   }
 
   // Event Handlers
-  void _handleBottomNavigation(int index) {
-    switch (index) {
-      case 0:
-      // TODO: Navigate to Home
-        _showSnackBar('Navigating to Home...');
-        break;
-      case 1:
-      // Already on Profile
-        break;
-      case 2:
-      // TODO: Navigate to Settings
-        _showSnackBar('Navigating to Settings...');
-        break;
-    }
-  }
-
   void _handleNotificationToggle(bool value) {
     setState(() {
       _notificationsEnabled = value;

@@ -6,7 +6,7 @@ publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.8.1
+  sdk: ">=3.8.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -21,6 +21,12 @@ dependencies:
   firebase_storage: ^12.4.7
   firebase_messaging: ^15.2.7
   fluttertoast: ^8.2.12
+  image_picker: ^1.0.7
+  intl: ^0.19.0
+  geolocator: ^14.0.1
+  google_maps_flutter: ^2.12.3
+  flutter_dotenv: ^5.2.1
+  http: ^1.4.0
 
 dev_dependencies:
   flutter_test:
@@ -33,3 +39,5 @@ flutter:
 
   assets:
     - images/
+    - assets/images/
+    - .env

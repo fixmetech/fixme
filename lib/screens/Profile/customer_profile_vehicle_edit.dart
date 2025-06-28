@@ -1,10 +1,10 @@
 import 'dart:io';
+import 'package:fixme/screens/Profile/customer_vehicle_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
-import 'customer_vehicle_profile.dart';
 
 // Import your vehicle page - replace with your actual vehicle page import
 // import 'vehicle_page.dart';

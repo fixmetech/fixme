@@ -1,6 +1,6 @@
+import 'package:fixme/screens/Profile/common_profile.dart';
 import 'package:flutter/material.dart';
 
-import 'common_profile.dart';
 
 class CustomerProfileSupport extends StatefulWidget {
   const CustomerProfileSupport({super.key});
@@ -10,8 +10,6 @@ class CustomerProfileSupport extends StatefulWidget {
 }
 
 class _CustomerProfileSupportState extends State<CustomerProfileSupport> {
-  static const String _supportPhone = '1234567890';
-  static const String _supportEmail = 'support@example.com';
   static const Color _primaryColor = Color(0xFF1565C0);
 
   static const List<SupportOption> _faqOptions = [
@@ -57,6 +55,11 @@ Account management options:
       title: 'Cancellation & Refunds',
       description: 'Understand refund and cancellation policies',
       icon: Icons.cancel,
+      details: '''
+Cancellation & Refund Rules:
+1. If cancel before technician accepts, then no cancellation payment
+2. If cancel after the technician accepts, then cancellation payment is required
+      ''',
     ),
   ];
 
@@ -66,22 +69,25 @@ Account management options:
       description: 'Hotline - 0778566774',
       icon: Icons.phone,
       actionType: SupportActionType.phone,
+      details: 'You can call the 0778566774 number if you have any issues.',
     ),
     SupportOption(
       title: 'Email Support',
       description: 'fixme@gmail.com',
       icon: Icons.email,
       actionType: SupportActionType.email,
+      details: 'Send your problems, ideas and support requests to fixme@gmail.com.',
     ),
     SupportOption(
       title: 'Submit Feedback',
       description: 'Send us your suggestions or complaints',
       icon: Icons.feedback,
       actionType: SupportActionType.feedback,
+      details: 'Click the Give Feedback and submit your feedback about our fixme.',
     ),
   ];
 
-  final _feedbackController = TextEditingController();
+  final TextEditingController _feedbackController = TextEditingController();
 
   @override
   void dispose() {
@@ -94,7 +100,6 @@ Account management options:
     return CommonProfile(
       title: 'Customer Profile',
       selectedIndex: 1,
-      onTap: _handleBottomNavigation,
       body: _buildBody(context),
     );
   }
@@ -175,9 +180,7 @@ Account management options:
   Widget _buildSupportCard(BuildContext context, SupportOption option) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -225,54 +228,27 @@ Account management options:
     );
   }
 
-  void _handleBottomNavigation(int index) {
-    if (index == 0) {
-      Navigator.pushReplacementNamed(context, '/home');
-    } else if (index == 1) {
-      Navigator.pushReplacementNamed(context, '/profile');
-    } else if (index == 2) {
-      Navigator.pushReplacementNamed(context, '/security');
-    }
-  }
-
   void _handleSupportOptionTap(BuildContext context, SupportOption option) {
-    switch (option.actionType) {
-      case SupportActionType.phone:
-        _launchPhone(context);
-        break;
-      case SupportActionType.email:
-        _launchEmail(context);
-        break;
-      case SupportActionType.feedback:
-        _handleFeedbackNavigation(context);
-        break;
-      default:
         _handleFAQTap(context, option);
-        break;
-    }
   }
 
   void _handleFAQTap(BuildContext context, SupportOption option) {
-    if (option.details != null) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          title: Text(option.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-          content: SingleChildScrollView(
-            child: Text(option.details!, style: const TextStyle(fontSize: 14)),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close', style: TextStyle(color: _primaryColor)),
-            ),
-          ],
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Text(option.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: SingleChildScrollView(
+          child: Text(option.details ?? '', style: const TextStyle(fontSize: 14)),
         ),
-      );
-    } else {
-      _showSnackBar(context, 'Opening ${option.title}...');
-    }
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close', style: TextStyle(color: _primaryColor)),
+          ),
+        ],
+      ),
+    );
   }
 
   void _handleFeedbackNavigation(BuildContext context) {
@@ -321,14 +297,6 @@ Account management options:
         ],
       ),
     );
-  }
-
-  void _launchPhone(BuildContext context) {
-    _showSnackBar(context, 'Phone call feature: $_supportPhone');
-  }
-
-  void _launchEmail(BuildContext context) {
-    _showSnackBar(context, 'Email feature: $_supportEmail');
   }
 
   void _showSnackBar(BuildContext context, String message) {
