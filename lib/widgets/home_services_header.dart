@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class HomeHeaders extends StatelessWidget {
-  const HomeHeaders({super.key});
+class HomeServicesHeader extends StatelessWidget {
+  const HomeServicesHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -12,10 +12,13 @@ class HomeHeaders extends StatelessWidget {
           clipper: HeaderClipper(),
           child: Container(
             width: double.infinity,
-            height: 130,
+            height: 200,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFFB4D9FF), Color(0xFF9CCAFF)],
+                colors: [
+                  Color.fromARGB(255, 101, 175, 249),
+                  Color.fromARGB(255, 44, 116, 198),
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -26,41 +29,41 @@ class HomeHeaders extends StatelessWidget {
         // Content (text + image)
         Positioned(
           top: 50,
-          left: 16,
-          right: 16,
+          left: 24,
+          right: 24,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Greeting Texts
+              // Home Image
+              Container(
+                height: 135,
+                width: 135,
+                decoration: BoxDecoration(
+                  image: const DecorationImage(
+                    image: AssetImage("assets/images/house.png"),
+                    fit: BoxFit.cover, 
+                  ),
+                ),
+              ),
+              SizedBox(width: 16),
+              // Home Service Text
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text(
-                    "Hello, Good Morning!",
+                    "Home Services",
                     style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
                     ),
                   ),
                   SizedBox(height: 4),
                   Text(
-                    "Saduni",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.black87,
-                    ),
+                    "All in One Place",
+                    style: TextStyle(fontSize: 14, color: Colors.white),
                   ),
                 ],
-              ),
-              const Spacer(),
-
-              // Profile Image
-              CircleAvatar(
-                radius: 24,
-                backgroundImage: NetworkImage(
-                  'https://wallpapers.com/images/hd/default-user-profile-icon-c8ljd88k8vow846e.png',
-                ),
               ),
             ],
           ),
