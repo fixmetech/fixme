@@ -13,17 +13,36 @@ class FindHelp extends StatefulWidget {
   State<FindHelp> createState() => _FindHelpState();
 }
 
-class _FindHelpState extends State<FindHelp> {
+class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
   late GoogleMapController mapController;
+  late AnimationController _animationController;
   LatLng? _currentPosition;
   bool _isSearching = false;
   LatLng? _selectedLocation;
   String _currentAddress = "-";
+  
+  // Search states
+  SearchState _searchState = SearchState.initial;
+  Map<String, dynamic>? _foundTechnician;
+  
+  // Draggable sheet controller
+  final DraggableScrollableController _dragController = DraggableScrollableController();
 
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
     _getCurrentLocation();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _dragController.dispose();
+    super.dispose();
   }
 
   Future<void> _getCurrentLocation() async {
@@ -48,24 +67,41 @@ class _FindHelpState extends State<FindHelp> {
     mapController = controller;
   }
 
-  void _startSearching() {
+  void _startSearching() async {
     setState(() {
       _isSearching = true;
+      _searchState = SearchState.searching;
     });
 
-    Future.delayed(const Duration(seconds: 1), () {
-      setState(() {
-        _isSearching = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Technicians found near your location.")),
-      );
+    // Simulate searching process
+    await Future.delayed(const Duration(seconds: 2));
+    
+    setState(() {
+      _searchState = SearchState.found;
+      _foundTechnician = {
+        'name': 'John Smith',
+        'rating': 4.8,
+        'experience': '5 years',
+        'specialization': 'AC Repair & Maintenance',
+        'distance': '0.8 km away',
+        'phone': '+1 234 567 8900',
+        'image': 'https://via.placeholder.com/80',
+        'estimatedArrival': '15-20 minutes',
+        'price': '\$45-65',
+        'completedJobs': 245,
+      };
+      _isSearching = false;
     });
+
+    // Auto-expand the bottom sheet when technician is found
+    _dragController.animateTo(0.6, 
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
   }
 
   Future<void> _getAddressFromLatLng(LatLng position) async {
-    final apiKey = dotenv.env['GOOGLE_API_KEY']; // Replace with your actual key
+    final apiKey = dotenv.env['GOOGLE_API_KEY'];
     final url =
         "https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.latitude},${position.longitude}&key=$apiKey";
 
@@ -81,12 +117,22 @@ class _FindHelpState extends State<FindHelp> {
             });
           }
         }
-      } else {
-        debugPrint("Failed to fetch address");
       }
     } catch (e) {
       debugPrint("Error: $e");
     }
+  }
+
+  void _resetSearch() {
+    setState(() {
+      _searchState = SearchState.initial;
+      _foundTechnician = null;
+      _isSearching = false;
+    });
+    _dragController.animateTo(0.25,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
   }
 
   @override
@@ -117,8 +163,9 @@ class _FindHelpState extends State<FindHelp> {
                   },
                 ),
 
+                // Location button
                 Positioned(
-                  bottom: 200, // adjust as needed
+                  bottom: 200,
                   right: 16,
                   child: FloatingActionButton(
                     mini: true,
@@ -137,12 +184,12 @@ class _FindHelpState extends State<FindHelp> {
                   ),
                 ),
 
-                /// 📍 Marker at center of screen
+                // Center marker
                 const Center(
-                  child: Icon(Icons.man_2, size: 45, color: Colors.blueGrey),
+                  child: Icon(Icons.person_pin_circle, size: 45, color: Colors.red),
                 ),
 
-                // 💡 Floating back button
+                // Back button
                 Positioned(
                   top: 48,
                   left: 16,
@@ -167,75 +214,341 @@ class _FindHelpState extends State<FindHelp> {
                   ),
                 ),
 
-                // Floating bottom sheet
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 16,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(24),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
+                // Draggable Bottom Sheet
+                DraggableScrollableSheet(
+                  controller: _dragController,
+                  initialChildSize: 0.25,
+                  minChildSize: 0.25,
+                  maxChildSize: 0.9,
+                  builder: (context, scrollController) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(24),
                         ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          "Confirm Your Location",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue[900],
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
                           ),
-                        ),
-                        Text(
-                          _currentAddress.isEmpty
-                              ? "Loading address..."
-                              : "Location: $_currentAddress",
-                          style: const TextStyle(fontSize: 14),
-                        ),
-
-                        const SizedBox(height: 16),
-                        _isSearching
-                            ? const CircularProgressIndicator()
-                            : ElevatedButton(
-                                onPressed: _startSearching,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue[400],
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 30,
-                                    vertical: 12,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: const Text(
-                                  "Find Technician",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
+                        ],
+                      ),
+                      child: SingleChildScrollView(
+                        controller: scrollController,
+                        child: Column(
+                          children: [
+                            // Drag handle
+                            Container(
+                              margin: const EdgeInsets.symmetric(vertical: 8),
+                              height: 4,
+                              width: 40,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(2),
                               ),
-                      ],
-                    ),
-                  ),
+                            ),
+                            
+                            _buildBottomSheetContent(),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
     );
   }
+
+  Widget _buildBottomSheetContent() {
+    switch (_searchState) {
+      case SearchState.initial:
+        return _buildInitialContent();
+      case SearchState.searching:
+        return _buildSearchingContent();
+      case SearchState.found:
+        return _buildFoundContent();
+    }
+  }
+
+  Widget _buildInitialContent() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            "Confirm Your Location",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue[900],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _currentAddress.isEmpty
+                ? "Loading address..."
+                : "📍 $_currentAddress",
+            style: const TextStyle(fontSize: 14, color: Colors.grey),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _startSearching,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue[600],
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                "Find Technician",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchingContent() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      child: Column(
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: 16),
+          Text(
+            "🔍 Searching for technicians nearby...",
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.blue[700],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "Please wait while we find the best technician for you",
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFoundContent() {
+    if (_foundTechnician == null) return const SizedBox();
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Success header
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.green[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.green[200]!),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green[600], size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  "✨ Technician Found!",
+                  style: TextStyle(
+                    color: Colors.green[700],
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Technician card
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Colors.blue[100],
+                      child: Text(
+                        _foundTechnician!['name'].split(' ').map((n) => n[0]).join(),
+                        style: TextStyle(
+                          color: Colors.blue[700],
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _foundTechnician!['name'],
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(Icons.star, color: Colors.amber[600], size: 16),
+                              const SizedBox(width: 4),
+                              Text(
+                                "${_foundTechnician!['rating']} • ${_foundTechnician!['completedJobs']} jobs",
+                                style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _foundTechnician!['specialization'],
+                            style: TextStyle(color: Colors.blue[600], fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Quick info row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildInfoChip(Icons.location_on, _foundTechnician!['distance']),
+                    _buildInfoChip(Icons.access_time, _foundTechnician!['estimatedArrival']),
+                    _buildInfoChip(Icons.attach_money, _foundTechnician!['price']),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Action buttons
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _resetSearch,
+                  icon: const Icon(Icons.search),
+                  label: const Text("Find Another"),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    // Handle booking
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Booking confirmed! Technician is on the way.")),
+                    );
+                  },
+                  icon: const Icon(Icons.handyman, color: Colors.white),
+                  label: const Text("Book Now", style: TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[600],
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Contact button
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                // Handle call
+              },
+              icon: const Icon(Icons.phone),
+              label: Text("Call ${_foundTechnician!['phone']}"),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoChip(IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.blue[50],
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: Colors.blue[600]),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.blue[700],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+enum SearchState {
+  initial,
+  searching,
+  found,
 }

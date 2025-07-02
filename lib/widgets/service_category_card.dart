@@ -18,7 +18,8 @@ class ServiceGrid extends StatelessWidget {
               Expanded(
                 child: ServiceBox(
                   title: 'car',
-                  imagePath: "assets/images/car1.png",
+                  icon: Icons.directions_car,
+                  imagePath: 'assets/images/car.png',
                   height: 120,
                   isMain: true,
                   onTap: () {
@@ -35,7 +36,8 @@ class ServiceGrid extends StatelessWidget {
               Expanded(
                 child: ServiceBox(
                   title: 'home',
-                  imagePath: "assets/images/house.png",
+                  icon: Icons.home,
+                  imagePath: 'assets/images/home.png',
                   height: 120,
                   isMain: true,
                   onTap: () {
@@ -57,10 +59,10 @@ class ServiceGrid extends StatelessWidget {
             children: [
               Expanded(
                 child: ServiceBox(
-                  title: 'towing',
+                  title: 'Towing',
                   height: 100,
-                  imagePath: "assets/images/towing.png",
-                  isMain: true,
+                  icon: Icons.car_repair,
+                  isMain: false,
                   onTap: () {
                     Navigator.push(
                       context,
@@ -74,10 +76,10 @@ class ServiceGrid extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: ServiceBox(
-                  title: 'electrical',
+                  title: 'service center',
                   height: 100,
-                  imagePath: "assets/images/electric.png",
-                  isMain: true,
+                  icon: Icons.electric_car,
+                  isMain: false,
                   onTap: () {
                     Navigator.push(
                       context,
@@ -91,10 +93,10 @@ class ServiceGrid extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: ServiceBox(
-                  title: 'plumbing',
-                  imagePath: "assets/images/water2.png",
+                  title: 'Marketplace',
+                  icon: Icons.shopping_cart,
                   height: 100,
-                  isMain: true,
+                  isMain: false,
                   onTap: () {
                     Navigator.push(
                       context,
@@ -108,51 +110,6 @@ class ServiceGrid extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-
-          // Row 3: More button full width
-          InkWell(
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('More services coming soon...')),
-              );
-            },
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              height: 50,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset("assets/images/more.png", height: 60, width: 120),
-                  const Text(
-                    "More",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(
-                    Icons.chevron_right,
-                    color: Colors.black54,
-                    size: 20,
-                  ),
-                ],
-              ),
-            ),
-          ),
         ],
       ),
     );
