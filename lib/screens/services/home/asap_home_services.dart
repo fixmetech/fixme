@@ -8,18 +8,40 @@ class AsapHomeServices extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        top: false,
-        child: Column(
-          children: const [
-            HomeServicesHeader(), // stays fixed at top
-            Expanded(
-              child: HomeServicesList(), // scrollable
+      backgroundColor: Colors.grey.shade50,
+      body: Stack(
+        children: [
+          // Scrollable list - positioned to fill entire screen with top padding
+          Positioned.fill(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 170), // Space for header
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.blue.shade50,
+                      Colors.white,
+                      Colors.blue.shade50,
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+                child: const HomeServicesList(),
+              ),
             ),
-          ],
-        ),
+          ),
+          // Fixed header - positioned at the top
+          const Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: HomeServicesHeader(),
+          ),
+        ],
       ),
     );
   }
 }
+
+
