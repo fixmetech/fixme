@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class TechnicianProfile extends StatelessWidget {
-  const TechnicianProfile({super.key});
+class ServiceCenterProfile extends StatelessWidget {
+  const ServiceCenterProfile({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +16,7 @@ class TechnicianProfile extends StatelessWidget {
             children: [
               // Top Profile Section
               Container(
-                height: screenHeight * 0.4,
+                height: screenHeight * 0.42,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -47,72 +47,40 @@ class TechnicianProfile extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    const SizedBox(height: 30), // Space for report button
-                    Row(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.5),
-                              width: 3,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
+                    // 1. Service Center Image (Banner style)
+                    Container(
+                      width: 175,
+                      height: 175,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: Colors.white, width: 4),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
-                          child: CircleAvatar(
-                            radius: 55,
-                            backgroundColor: Colors.lightBlueAccent,
-                            backgroundImage: Image.asset('assets/images/select-user-technician.png').image,
-                          ),
+                        ],
+                        image: const DecorationImage(
+                          image: AssetImage('assets/images/service-center.jpg'), // <-- replace with your image
+                          fit: BoxFit.cover,
                         ),
-                        const SizedBox(width: 20),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "Kasun Mendis",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.black26,
-                                      blurRadius: 2,
-                                      offset: Offset(0, 1),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 5),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                child: const Text(
-                                  "Professional Technician",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      ],
+                      ),
                     ),
-                    const SizedBox(height: 35),
+                    const SizedBox(height: 14),
+                    // 2. Service Center Name
+                    const Text(
+                      "Royal Auto Service Center",
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Spacer(),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -140,34 +108,10 @@ class TechnicianProfile extends StatelessWidget {
                             ),
                             onPressed: () {},
                             icon: const Icon(Icons.handyman, size: 18),
-                            label: const Text("Request", style: TextStyle(fontWeight: FontWeight.bold)),
+                            label: const Text("Book an Appointment", style: TextStyle(fontWeight: FontWeight.bold)),
                           ),
                         ),
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.white.withOpacity(0.2),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                              side: const BorderSide(color: Colors.white, width: 2),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25),
-                              ),
-                            ),
-                            onPressed: () {},
-                            icon: const Icon(Icons.message, size: 18),
-                            label: const Text("Message", style: TextStyle(fontWeight: FontWeight.bold)),
-                          ),
-                        ),
+
                       ],
                     )
                   ],
@@ -430,7 +374,7 @@ class TechnicianProfile extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 2),
           Text(
             label,
             style: const TextStyle(
