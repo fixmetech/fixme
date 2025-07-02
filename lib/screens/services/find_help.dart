@@ -5,6 +5,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:lottie/lottie.dart';
 
 class FindHelp extends StatefulWidget {
   const FindHelp({super.key});
@@ -20,13 +21,14 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
   bool _isSearching = false;
   LatLng? _selectedLocation;
   String _currentAddress = "-";
-  
+
   // Search states
   SearchState _searchState = SearchState.initial;
   Map<String, dynamic>? _foundTechnician;
-  
+
   // Draggable sheet controller
-  final DraggableScrollableController _dragController = DraggableScrollableController();
+  final DraggableScrollableController _dragController =
+      DraggableScrollableController();
 
   @override
   void initState() {
@@ -73,9 +75,14 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
       _searchState = SearchState.searching;
     });
 
+    _dragController.animateTo(
+      0.5,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
     // Simulate searching process
-    await Future.delayed(const Duration(seconds: 2));
-    
+    await Future.delayed(const Duration(seconds: 10));
+
     setState(() {
       _searchState = SearchState.found;
       _foundTechnician = {
@@ -94,7 +101,8 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
     });
 
     // Auto-expand the bottom sheet when technician is found
-    _dragController.animateTo(0.6, 
+    _dragController.animateTo(
+      0.6,
       duration: const Duration(milliseconds: 500),
       curve: Curves.easeInOut,
     );
@@ -129,7 +137,8 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
       _foundTechnician = null;
       _isSearching = false;
     });
-    _dragController.animateTo(0.25,
+    _dragController.animateTo(
+      0.25,
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
@@ -165,7 +174,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
 
                 // Location button
                 Positioned(
-                  bottom: 200,
+                  bottom: 220,
                   right: 16,
                   child: FloatingActionButton(
                     mini: true,
@@ -186,7 +195,11 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
 
                 // Center marker
                 const Center(
-                  child: Icon(Icons.person_pin_circle, size: 45, color: Colors.red),
+                  child: Icon(
+                    Icons.person_pin_circle,
+                    size: 45,
+                    color: Colors.red,
+                  ),
                 ),
 
                 // Back button
@@ -217,9 +230,9 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
                 // Draggable Bottom Sheet
                 DraggableScrollableSheet(
                   controller: _dragController,
-                  initialChildSize: 0.25,
-                  minChildSize: 0.25,
-                  maxChildSize: 0.9,
+                  initialChildSize: _getInitialSize(),
+                  minChildSize: _getMinSize(),
+                  maxChildSize: _getMaxSize(),
                   builder: (context, scrollController) {
                     return Container(
                       decoration: BoxDecoration(
@@ -248,7 +261,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
                                 borderRadius: BorderRadius.circular(2),
                               ),
                             ),
-                            
+
                             _buildBottomSheetContent(),
                           ],
                         ),
@@ -326,7 +339,16 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
       child: Column(
         children: [
-          const CircularProgressIndicator(),
+          // Lottie animation instead of CircularProgressIndicator
+          SizedBox(
+            width: 120,
+            height: 120,
+            child: Lottie.asset(
+              'assets/animations/findPerson.json', // Your Lottie file
+              repeat: true,
+              animate: true,
+            ),
+          ),
           const SizedBox(height: 16),
           Text(
             "🔍 Searching for technicians nearby...",
@@ -349,7 +371,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
 
   Widget _buildFoundContent() {
     if (_foundTechnician == null) return const SizedBox();
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -368,7 +390,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
                 Icon(Icons.check_circle, color: Colors.green[600], size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  "✨ Technician Found!",
+                  "Technician Found!",
                   style: TextStyle(
                     color: Colors.green[700],
                     fontWeight: FontWeight.bold,
@@ -377,9 +399,9 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Technician card
           Container(
             padding: const EdgeInsets.all(16),
@@ -396,7 +418,10 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
                       radius: 30,
                       backgroundColor: Colors.blue[100],
                       child: Text(
-                        _foundTechnician!['name'].split(' ').map((n) => n[0]).join(),
+                        _foundTechnician!['name']
+                            .split(' ')
+                            .map((n) => n[0])
+                            .join(),
                         style: TextStyle(
                           color: Colors.blue[700],
                           fontWeight: FontWeight.bold,
@@ -419,42 +444,57 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              Icon(Icons.star, color: Colors.amber[600], size: 16),
+                              Icon(
+                                Icons.star,
+                                color: Colors.amber[600],
+                                size: 16,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 "${_foundTechnician!['rating']} • ${_foundTechnician!['completedJobs']} jobs",
-                                style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 2),
                           Text(
                             _foundTechnician!['specialization'],
-                            style: TextStyle(color: Colors.blue[600], fontSize: 14),
+                            style: TextStyle(
+                              color: Colors.blue[600],
+                              fontSize: 14,
+                            ),
                           ),
                         ],
                       ),
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Quick info row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildInfoChip(Icons.location_on, _foundTechnician!['distance']),
-                    _buildInfoChip(Icons.access_time, _foundTechnician!['estimatedArrival']),
-                    _buildInfoChip(Icons.attach_money, _foundTechnician!['price']),
+                    _buildInfoChip(
+                      Icons.location_on,
+                      _foundTechnician!['distance'],
+                    ),
+                    _buildInfoChip(
+                      Icons.access_time,
+                      _foundTechnician!['estimatedArrival'],
+                    ),
                   ],
                 ),
               ],
             ),
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Action buttons
           Row(
             children: [
@@ -471,32 +511,11 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 2,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    // Handle booking
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Booking confirmed! Technician is on the way.")),
-                    );
-                  },
-                  icon: const Icon(Icons.handyman, color: Colors.white),
-                  label: const Text("Book Now", style: TextStyle(color: Colors.white)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[600],
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Contact button
           SizedBox(
             width: double.infinity,
@@ -514,7 +533,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 32),
         ],
       ),
@@ -545,10 +564,51 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
       ),
     );
   }
+
+  // Helper methods for size management
+  double _getInitialSize() {
+    switch (_searchState) {
+      case SearchState.initial:
+        return 0.25;
+      case SearchState.searching:
+        return 0.4; // Fits searching animation and text
+      case SearchState.found:
+        return 0.6;
+    }
+  }
+
+  double _getMinSize() {
+    switch (_searchState) {
+      case SearchState.initial:
+        return 0.25;
+      case SearchState.searching:
+        return 0.35; // Minimum to show searching content properly
+      case SearchState.found:
+        return 0.3;
+    }
+  }
+
+  double _getMaxSize() {
+    switch (_searchState) {
+      case SearchState.initial:
+        return 0.3;
+      case SearchState.searching:
+        return 0.5; // Allow some expansion but not full screen
+      case SearchState.found:
+        return 0.9;
+    }
+  }
+
+  List<double> _getSnapSizes() {
+    switch (_searchState) {
+      case SearchState.initial:
+        return [0.25, 0.3];
+      case SearchState.searching:
+        return [0.35, 0.4, 0.5];
+      case SearchState.found:
+        return [0.3, 0.6, 0.9];
+    }
+  }
 }
 
-enum SearchState {
-  initial,
-  searching,
-  found,
-}
+enum SearchState { initial, searching, found }
