@@ -56,9 +56,12 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
       permission = await Geolocator.requestPermission();
     }
 
-    final position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
+    final futures = await Future.wait([
+      Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high),
+      Future.delayed(const Duration(seconds: 1)), // Minimum 2 second delay
+    ]);
+
+    final position = futures[0] as Position;
 
     setState(() {
       _currentPosition = LatLng(position.latitude, position.longitude);
@@ -148,7 +151,22 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _currentPosition == null
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                child: SizedBox(
+                  width: 120,
+                  height: 120,
+                  child: Lottie.asset(
+                    'assets/animations/mapload.json',
+                    repeat: true,
+                    animate: true,
+                    fit: BoxFit.contain,
+                    frameRate: FrameRate.max, // For smooth animation
+                  ),
+                ),
+              ),
+            )
           : Stack(
               children: [
                 GoogleMap(
