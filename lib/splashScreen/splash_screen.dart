@@ -5,7 +5,6 @@ import 'package:fixme/global/global.dart';
 import 'package:fixme/mainScreen.dart';
 import 'package:fixme/screens/login_screen.dart';
 import 'package:flutter/material.dart';
-
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
