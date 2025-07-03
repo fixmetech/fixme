@@ -41,8 +41,8 @@ class TechnicianProfile extends StatelessWidget {
                 ),
                 padding: EdgeInsets.only(
                   top: screenHeight * 0.08,
-                  left: 30,
-                  right: 30,
+                  left: 10,
+                  right: 10,
                   bottom: 20,
                 ),
                 child: Column(
@@ -112,7 +112,7 @@ class TechnicianProfile extends StatelessWidget {
                         )
                       ],
                     ),
-                    const SizedBox(height: 35),
+                    const SizedBox(height: 15),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -132,14 +132,14 @@ class TechnicianProfile extends StatelessWidget {
                             style: ElevatedButton.styleFrom(
                               foregroundColor: Colors.white,
                               backgroundColor: Colors.green[600],
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(25),
                               ),
                               elevation: 0,
                             ),
                             onPressed: () {},
-                            icon: const Icon(Icons.handyman, size: 18),
+                            icon: const Icon(Icons.handyman, size: 16),
                             label: const Text("Request", style: TextStyle(fontWeight: FontWeight.bold)),
                           ),
                         ),
@@ -157,7 +157,7 @@ class TechnicianProfile extends StatelessWidget {
                           child: OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
                               side: const BorderSide(color: Colors.white, width: 2),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(25),
@@ -204,7 +204,7 @@ class TechnicianProfile extends StatelessWidget {
                             const Text(
                               "Average Rating",
                               style: TextStyle(
-                                fontSize: 20,
+                                fontSize: 15,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black87,
                               ),
@@ -278,7 +278,7 @@ class TechnicianProfile extends StatelessWidget {
                             const Text(
                               "Customer Reviews",
                               style: TextStyle(
-                                fontSize: 20,
+                                fontSize: 15,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black87,
                               ),
@@ -446,7 +446,7 @@ class TechnicianProfile extends StatelessWidget {
 
   static Widget _buildReview(String name, String feedback, String timeAgo) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom:5),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,

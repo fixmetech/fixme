@@ -40,7 +40,7 @@ class _MainNavigationState extends State<MainNavigation> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 10),
         transitionBuilder: (Widget child, Animation<double> animation) {
           return FadeTransition(
             opacity: animation,
