@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'technician_message_popup.dart';
 
 class TechnicianProfile extends StatelessWidget {
   const TechnicianProfile({super.key});
@@ -163,7 +164,14 @@ class TechnicianProfile extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(25),
                               ),
                             ),
-                            onPressed: () {},
+                            onPressed: () async {
+                              final result = await showDialog(
+                                context: context,
+                                builder: (context) => TechnicianMessagePopup(
+                                  technicianName: 'John Doe', // Pass actual name/data
+                                ),
+                              );
+                            },
                             icon: const Icon(Icons.message, size: 18),
                             label: const Text("Message", style: TextStyle(fontWeight: FontWeight.bold)),
                           ),
