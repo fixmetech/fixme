@@ -37,17 +37,19 @@ class _SearchPageState extends State<SearchPage> {
       selectedFilters = filters;
       filterValues = values;
     });
-    // Here you can implement the actual filtering logic
-    // For now, it just updates the state
+    // Here you can implement additional filtering logic if needed
+    // The ResultsSection will handle the display logic
   }
 
   void _resetFilters() {
     setState(() {
       selectedService = '';
+      searchQuery = '';
       selectedFilters.clear();
       filterValues.clear();
     });
-    // Call the reset callback if available
+    
+    // Call the reset callback if available to reset FilterSection state
     if (_resetFiltersCallback != null) {
       _resetFiltersCallback!();
     }
@@ -94,11 +96,13 @@ class _SearchPageState extends State<SearchPage> {
             
             SizedBox(height: 16),
             
-            // Results section
+            // Results section - Now properly receives all filter data
             Expanded(
               child: ResultsSection(
                 selectedService: selectedService,
                 searchQuery: searchQuery,
+                selectedFilters: selectedFilters,
+                filterValues: filterValues,
                 onResetFilters: _resetFilters,
               ),
             ),

@@ -94,11 +94,13 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
           
           SizedBox(height: 8),
           
-          // Results section
+          // Results section - Now properly receives all filter data
           Expanded(
             child: ResultsSection(
-              selectedService: widget.searchQuery,
+              selectedService: widget.category,
               searchQuery: widget.searchQuery,
+              selectedFilters: selectedFilters,
+              filterValues: filterValues,
               onResetFilters: _resetFilters,
             ),
           ),

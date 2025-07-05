@@ -47,4 +47,5 @@ flutter:
     - images/
     - assets/images/
     - assets/animations/
+    - assets/images/service_center/
     - .env
