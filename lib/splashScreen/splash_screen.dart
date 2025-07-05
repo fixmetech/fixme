@@ -4,7 +4,9 @@ import 'package:fixme/Assistants/assistant_methods.dart';
 import 'package:fixme/global/global.dart';
 import 'package:fixme/mainScreen.dart';
 import 'package:fixme/screens/login_screen.dart';
+import 'package:fixme/screens/register_screen.dart';
 import 'package:flutter/material.dart';
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -12,7 +14,8 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with TickerProviderStateMixin {
   late AnimationController _animationController;
   late AnimationController _fadeController;
   late Animation<double> _scaleAnimation;
@@ -21,10 +24,20 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   startTimer() {
     Timer(Duration(seconds: 3), () async {
       if (await firebaseAuth.currentUser != null) {
-        firebaseAuth.currentUser != null ? AssistantMethods.readCurrentOnlineUserInfo() : null;
-        Navigator.push(context, MaterialPageRoute(builder: (c) => MainScreen()));
+        firebaseAuth.currentUser != null
+            ? AssistantMethods.readCurrentOnlineUserInfo()
+            : null;
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => MainScreen()),
+          (Route<dynamic> route) => false,
+        );
       } else {
-        Navigator.push(context, MaterialPageRoute(builder: (c) => LoginScreen()));
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => RegisterScreen()),
+          (Route<dynamic> route) => false,
+        );
       }
     });
   }
@@ -45,21 +58,13 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     );
 
     // Setup animations
-    _scaleAnimation = Tween<double>(
-      begin: 0.5,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.elasticOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
+    );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeInOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
+    );
 
     // Start animations
     _animationController.forward();
@@ -184,7 +189,9 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                         width: 40,
                         height: 40,
                         child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                           strokeWidth: 3,
                         ),
                       ),
