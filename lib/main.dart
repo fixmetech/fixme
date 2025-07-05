@@ -22,8 +22,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'FixMe',
       themeMode: ThemeMode.system,
-      theme: MyThemes.lightTheme,
-      darkTheme: MyThemes.darkTheme,
+      theme: FixMeThemes.lightTheme,
+      darkTheme: FixMeThemes.darkTheme,
       home: SplashScreen(),
     );
   }
