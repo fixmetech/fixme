@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fixme/screens/Profile/customer_profile_account.dart';
 import 'package:fixme/screens/Profile/customer_profile_history.dart';
 import 'package:fixme/screens/Profile/customer_profile_home.dart';
@@ -57,6 +58,7 @@ class CustomerProfilePage extends StatelessWidget {
   }
 
   void _handleLogout(BuildContext context) {
+    FirebaseAuth.instance.signOut();
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => LoginScreen()),
