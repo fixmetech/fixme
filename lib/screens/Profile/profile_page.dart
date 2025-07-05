@@ -1,10 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fixme/screens/Profile/customer_profile_account.dart';
 import 'package:fixme/screens/Profile/customer_profile_history.dart';
-import 'package:fixme/screens/Profile/customer_profile_home.dart';
 import 'package:fixme/screens/Profile/customer_profile_security.dart';
 import 'package:fixme/screens/Profile/customer_profile_support.dart';
-import 'package:fixme/screens/Profile/customer_vehicle_profile.dart';
+import 'package:fixme/screens/Profile/customer_home_profiles.dart';
+import 'package:fixme/screens/Profile/customer_vehicle_profiles.dart';
 import 'package:fixme/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -18,8 +18,8 @@ void main() {
     ),
     home: CustomerProfilePage(),
     routes: {
-      '/home': (context) => CustomerHomeProfile(),
-      '/vehicle': (context) => CustomerVehicleProfile(),
+      '/home': (context) => CustomerHomeProfiles(),
+      '/vehicle': (context) => CustomerVehicleProfiles(),
       '/history': (context) => CustomerProfileHistory(),
       '/support': (context) => CustomerProfileSupport(),
       '/account': (context) => CustomerProfileAccount(),
@@ -41,9 +41,9 @@ class CustomerProfilePage extends StatelessWidget {
   Widget _getPage(String routeName) {
     switch (routeName) {
       case '/home':
-        return CustomerHomeProfile();
+        return CustomerHomeProfiles();
       case '/vehicle':
-        return CustomerVehicleProfile();
+        return CustomerVehicleProfiles();
       case '/history':
         return CustomerProfileHistory();
       case '/support':
