@@ -18,6 +18,7 @@ class onBoardingNavigation extends StatelessWidget {
     return Positioned(
       bottom: 65,
       left: FixMeSizes.defaultSpace,
+      right: 0,
     
       child: SmoothPageIndicator(
         controller: controller.pageController,

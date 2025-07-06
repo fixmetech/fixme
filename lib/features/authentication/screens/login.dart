@@ -2,7 +2,6 @@ import 'package:fixme/utils/constants/colors.dart';
 import 'package:fixme/utils/constants/size.dart';
 import 'package:fixme/utils/device/device_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 
 class LoginScreen extends StatefulWidget {
