@@ -125,7 +125,7 @@ class CustomerProfilePage extends StatelessWidget {
             child: CircleAvatar(
               radius: 50,
               backgroundColor: Colors.grey[300],
-              backgroundImage: AssetImage('assets/boy.jpg'),
+              backgroundImage: NetworkImage('https://wallpapers.com/images/hd/default-user-profile-icon-c8ljd88k8vow846e.png'),
             ),
           ),
           SizedBox(height: 16),
