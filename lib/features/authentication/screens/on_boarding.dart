@@ -8,11 +8,26 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class OnboardingScreen extends StatelessWidget {
-  const OnboardingScreen({super.key});
+  final int initialPage;
+
+   const OnboardingScreen({
+    super.key,
+    this.initialPage = 0, // Default to first page
+  });
+
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(OnboardingController());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (controller.pageController.hasClients) {
+        controller.pageController.animateToPage(
+          initialPage,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
 
     return Scaffold(
       // Solution 1: Prevent keyboard from resizing the body

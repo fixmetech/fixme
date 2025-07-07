@@ -1,10 +1,3 @@
-import 'dart:async';
-
-import 'package:fixme/Assistants/assistant_methods.dart';
-import 'package:fixme/global/global.dart';
-import 'package:fixme/mainScreen.dart';
-import 'package:fixme/screens/login_screen.dart';
-import 'package:fixme/screens/register_screen.dart';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -20,27 +13,6 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _fadeController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
-
-  startTimer() {
-    Timer(Duration(seconds: 3), () async {
-      if (await firebaseAuth.currentUser != null) {
-        firebaseAuth.currentUser != null
-            ? AssistantMethods.readCurrentOnlineUserInfo()
-            : null;
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => MainScreen()),
-          (Route<dynamic> route) => false,
-        );
-      } else {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => RegisterScreen()),
-          (Route<dynamic> route) => false,
-        );
-      }
-    });
-  }
 
   @override
   void initState() {
@@ -69,8 +41,6 @@ class _SplashScreenState extends State<SplashScreen>
     // Start animations
     _animationController.forward();
     _fadeController.forward();
-
-    startTimer();
   }
 
   @override

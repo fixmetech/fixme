@@ -1,7 +1,11 @@
+import 'package:fixme/features/authentication/controller.onboargin/onboarding_controller.dart';
+import 'package:fixme/features/authentication/screens/on_boarding.dart';
 import 'package:fixme/utils/constants/colors.dart';
 import 'package:fixme/utils/constants/size.dart';
 import 'package:fixme/utils/device/device_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -132,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: double.infinity,
                       child: OutlinedButton(
                         onPressed: () {
-                          // Navigate to registration screen
+                          Get.offAll(() => const OnboardingScreen(initialPage: 1));
                         },
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(
