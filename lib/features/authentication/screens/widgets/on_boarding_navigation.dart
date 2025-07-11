@@ -1,4 +1,4 @@
-import 'package:fixme/features/authentication/controller.onboargin/onboarding_controller.dart';
+import 'package:fixme/features/authentication/controller/onboarding_controller.dart';
 import 'package:fixme/utils/constants/colors.dart';
 import 'package:fixme/utils/constants/size.dart';
 import 'package:fixme/utils/device/device_utils.dart';

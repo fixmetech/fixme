@@ -1,8 +1,10 @@
-import 'package:fixme/features/authentication/controller.onboargin/onboarding_controller.dart';
+import 'package:fixme/features/authentication/controller/onboarding_controller.dart';
+import 'package:fixme/features/authentication/controller/signup_controller.dart';
 import 'package:fixme/features/authentication/screens/login.dart';
 import 'package:fixme/utils/constants/colors.dart';
 import 'package:fixme/utils/constants/size.dart';
 import 'package:fixme/utils/device/device_utils.dart';
+import 'package:fixme/utils/helper/helper_functions.dart';
 import 'package:fixme/widgets/form_divider.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -19,6 +21,7 @@ class _RegisteringScreenState extends State<RegisteringScreen> {
   @override
   Widget build(BuildContext context) {
     final darK = FixMeDeviceUtils.isDarkMode(context);
+    final controller = Get.put(SignupController());
     return Padding(
       padding: const EdgeInsets.all(FixMeSizes.defaultSpace),
       child: Column(
@@ -33,6 +36,7 @@ class _RegisteringScreenState extends State<RegisteringScreen> {
 
           // Form
           Form(
+            key: controller.formKey,
             child: Column(
               children: [
                 // First & Last Name
@@ -40,6 +44,12 @@ class _RegisteringScreenState extends State<RegisteringScreen> {
                   children: [
                     Expanded(
                       child: TextFormField(
+                        controller: controller.firstNameController,
+                        validator: (value) =>
+                            FixMeHelperFunctions.validateRequired(
+                              value,
+                              'First Name',
+                            ),
                         expands: false,
                         decoration: const InputDecoration(
                           labelText: 'First Name',
@@ -50,6 +60,12 @@ class _RegisteringScreenState extends State<RegisteringScreen> {
                     const SizedBox(width: FixMeSizes.spaceBtwInputFields),
                     Expanded(
                       child: TextFormField(
+                        controller: controller.lastNameController,
+                        validator: (value) =>
+                            FixMeHelperFunctions.validateRequired(
+                              value,
+                              'Last Name',
+                            ),
                         expands: false,
                         decoration: const InputDecoration(
                           labelText: 'Last Name',
@@ -63,6 +79,9 @@ class _RegisteringScreenState extends State<RegisteringScreen> {
 
                 // Email
                 TextFormField(
+                  controller: controller.emailController,
+                  validator: (value) =>
+                      FixMeHelperFunctions.validateEmail(value),
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     prefixIcon: Icon(Iconsax.direct),
@@ -72,6 +91,9 @@ class _RegisteringScreenState extends State<RegisteringScreen> {
 
                 // Phone Number
                 TextFormField(
+                  controller: controller.phoneNumberController,
+                  validator: (value) =>
+                      FixMeHelperFunctions.validatePhoneNumber(value),
                   decoration: const InputDecoration(
                     labelText: 'Phone Number',
                     prefixIcon: Icon(Iconsax.call),
@@ -80,12 +102,25 @@ class _RegisteringScreenState extends State<RegisteringScreen> {
                 const SizedBox(height: FixMeSizes.spaceBtwInputFields),
 
                 // Password
-                TextFormField(
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: Icon(Iconsax.password_check),
-                    suffixIcon: Icon(Iconsax.eye_slash),
+                Obx(
+                  () => TextFormField(
+                    controller: controller.passwordController,
+                    validator: (value) =>
+                        FixMeHelperFunctions.validatePassword(value),
+                    obscureText: controller.hidePassword.value,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      prefixIcon: Icon(Iconsax.password_check),
+                      suffixIcon: IconButton(
+                        onPressed: () => controller.hidePassword.value =
+                            !controller.hidePassword.value,
+                        icon: Icon(
+                          controller.hidePassword.value
+                              ? Iconsax.eye_slash
+                              : Iconsax.eye,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: FixMeSizes.spaceBtwInputFields),
@@ -96,7 +131,7 @@ class _RegisteringScreenState extends State<RegisteringScreen> {
                     SizedBox(
                       width: 24,
                       height: 24,
-                      child: Checkbox(value: true, onChanged: (value) {}),
+                      child: Obx (() => Checkbox(value: controller.privacyPolicy.value, onChanged: (value) {controller.privacyPolicy.value = value ?? false;})),
                     ),
                     const SizedBox(width: FixMeSizes.spaceBtwButtons),
                     Text.rich(
@@ -142,7 +177,8 @@ class _RegisteringScreenState extends State<RegisteringScreen> {
                 IntrinsicWidth(
                   child: ElevatedButton(
                     onPressed: () {
-                      OnboardingController.instance.nextPage();
+                      // OnboardingController.instance.nextPage();
+                      controller.signup(context);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: darK

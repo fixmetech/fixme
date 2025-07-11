@@ -7,75 +7,110 @@ class FixMeHelperFunctions {
   // ============ SNACKBAR & ALERTS ============
 
   /// Show a simple snackbar with message
-  static void showSnackBar(String message) {
-    ScaffoldMessenger.of(Get.context!).showSnackBar(
-      SnackBar(content: Text(message)),
+  static void showSnackBar(String title, String message) {
+    Get.snackbar(
+      title,
+      message,
+      backgroundColor: Colors.grey[800],
+      colorText: Colors.white,
+      borderRadius: 12,
+      margin: EdgeInsets.all(16),
+      snackPosition: SnackPosition.BOTTOM,
+      duration: Duration(seconds: 3),
+      isDismissible: true,
+      forwardAnimationCurve: Curves.easeOutBack,
     );
   }
 
-  /// Show a colored snackbar with custom styling
-  static void showColoredSnackBar(String message, Color backgroundColor) {
-    ScaffoldMessenger.of(Get.context!).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: backgroundColor,
-      ),
+  /// Show colored snackbar with custom styling
+  static void showColoredSnackBar(
+    String title,
+    String message,
+    Color backgroundColor,
+  ) {
+    Get.snackbar(
+      title,
+      message,
+      backgroundColor: backgroundColor,
+      colorText: Colors.white,
+      borderRadius: 12,
+      margin: EdgeInsets.all(16),
+      snackPosition: SnackPosition.BOTTOM,
+      duration: Duration(seconds: 3),
+      isDismissible: true,
+      forwardAnimationCurve: Curves.easeOutBack,
     );
   }
 
   /// Show success snackbar
-  static void showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(Get.context!).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
+  static void showSuccessSnackBar(String title, String message) {
+    Get.snackbar(
+      title,
+      message,
+      backgroundColor: Color(0xFF4CAF50),
+      colorText: Colors.white,
+      borderRadius: 12,
+      margin: EdgeInsets.all(16),
+      snackPosition: SnackPosition.BOTTOM,
+      duration: Duration(seconds: 3),
+      isDismissible: true,
+      forwardAnimationCurve: Curves.easeOutBack,
+      icon: Icon(Icons.check_circle, color: Colors.white, size: 28),
+      shouldIconPulse: false,
     );
   }
 
   /// Show error snackbar
-  static void showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(Get.context!).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
+  static void showErrorSnackBar(String title, String message) {
+    Get.snackbar(
+      title,
+      message,
+      backgroundColor: Color(0xFFE53E3E),
+      colorText: Colors.white,
+      borderRadius: 12,
+      margin: EdgeInsets.all(16),
+      snackPosition: SnackPosition.BOTTOM,
+      duration: Duration(seconds: 4),
+      isDismissible: true,
+      forwardAnimationCurve: Curves.easeOutBack,
+      icon: Icon(Icons.error, color: Colors.white, size: 28),
+      shouldIconPulse: false,
     );
   }
 
   /// Show warning snackbar
-  static void showWarningSnackBar(String message) {
-    ScaffoldMessenger.of(Get.context!).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.orange,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
+  static void showWarningSnackBar(String title, String message) {
+    Get.snackbar(
+      title,
+      message,
+      backgroundColor: Color(0xFFFF9800),
+      colorText: Colors.white,
+      borderRadius: 12,
+      margin: EdgeInsets.all(16),
+      snackPosition: SnackPosition.BOTTOM,
+      duration: Duration(seconds: 3),
+      isDismissible: true,
+      forwardAnimationCurve: Curves.easeOutBack,
+      icon: Icon(Icons.warning, color: Colors.white, size: 28),
+      shouldIconPulse: false,
     );
   }
 
   /// Show info snackbar
-  static void showInfoSnackBar(String message) {
-    ScaffoldMessenger.of(Get.context!).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.blue,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
+  static void showInfoSnackBar(String title, String message) {
+    Get.snackbar(
+      title,
+      message,
+      backgroundColor: Color(0xFF2196F3),
+      colorText: Colors.white,
+      borderRadius: 12,
+      margin: EdgeInsets.all(16),
+      snackPosition: SnackPosition.BOTTOM,
+      duration: Duration(seconds: 3),
+      isDismissible: true,
+      forwardAnimationCurve: Curves.easeOutBack,
+      icon: Icon(Icons.info, color: Colors.white, size: 28),
+      shouldIconPulse: false,
     );
   }
 
@@ -159,10 +194,7 @@ class FixMeHelperFunctions {
 
   /// Show bottom sheet
   static void showBottomSheet(Widget child) {
-    showModalBottomSheet(
-      context: Get.context!,
-      builder: (context) => child,
-    );
+    showModalBottomSheet(context: Get.context!, builder: (context) => child);
   }
 
   /// Show custom bottom sheet
@@ -262,19 +294,23 @@ class FixMeHelperFunctions {
 
   /// Check if string is phone number
   static bool isValidPhoneNumber(String phone) {
-    return RegExp(r'^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$').hasMatch(phone);
+    return RegExp(
+      r'^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$',
+    ).hasMatch(phone);
   }
 
   /// Check if string is URL
   static bool isValidURL(String url) {
-    return RegExp(r'^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$').hasMatch(url);
+    return RegExp(
+      r'^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$',
+    ).hasMatch(url);
   }
 
   /// Format phone number
   static String formatPhoneNumber(String phone) {
     // Remove all non-digit characters
     phone = phone.replaceAll(RegExp(r'[^0-9]'), '');
-    
+
     // Format as (XXX) XXX-XXXX for US numbers
     if (phone.length == 10) {
       return '(${phone.substring(0, 3)}) ${phone.substring(3, 6)}-${phone.substring(6)}';
@@ -446,8 +482,13 @@ class FixMeHelperFunctions {
 
   /// Generate random string
   static String generateRandomString(int length) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    return List.generate(length, (index) => chars[(DateTime.now().millisecondsSinceEpoch + index) % chars.length]).join();
+    const chars =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    return List.generate(
+      length,
+      (index) =>
+          chars[(DateTime.now().millisecondsSinceEpoch + index) % chars.length],
+    ).join();
   }
 
   /// Show custom toast (requires fluttertoast package)

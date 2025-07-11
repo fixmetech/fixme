@@ -1,3 +1,4 @@
+import 'package:fixme/bindings/general_binding.dart';
 import 'package:flutter/material.dart';
 import 'package:fixme/themeProvider/theme_provider.dart';
 import 'package:fixme/splashScreen/splash_screen.dart';
@@ -16,6 +17,7 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.system,
       theme: FixMeThemes.lightTheme,
       darkTheme: FixMeThemes.darkTheme,
+      initialBinding: GeneralBinding(),
       home: SplashScreen(),
     );
   }

@@ -1,6 +1,5 @@
-import 'package:fixme/features/authentication/controller.onboargin/onboarding_controller.dart';
+import 'package:fixme/features/authentication/controller/onboarding_controller.dart';
 import 'package:fixme/features/authentication/screens/widgets/mobile_verification.dart';
-import 'package:fixme/features/authentication/screens/widgets/next_button.dart';
 import 'package:fixme/features/authentication/screens/widgets/on_boarding_navigation.dart';
 import 'package:fixme/features/authentication/screens/widgets/registering_screen.dart';
 import 'package:fixme/features/authentication/screens/widgets/welcome_screen.dart';
@@ -12,7 +11,7 @@ class OnboardingScreen extends StatelessWidget {
 
    const OnboardingScreen({
     super.key,
-    this.initialPage = 0, // Default to first page
+    this.initialPage = 0,
   });
 
 

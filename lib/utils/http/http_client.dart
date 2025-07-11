@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class THttpHelper {
+  THttpHelper._(); 
   static const String _baseUrl = 'https://your-api-base-url.com'; // Replace with your API base URL
   static const int _timeoutDuration = 30; // Timeout in seconds
   
