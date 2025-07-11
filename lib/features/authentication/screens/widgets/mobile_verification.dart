@@ -36,105 +36,107 @@ class _MobileValidationScreenState extends State<MobileValidationScreen> {
                 children: [
                   FixMeTexts.fixmeTitle(context),
                   const SizedBox(height: FixMeSizes.spaceBtwSections),
-              
+
                   Text(
                     'Please Verify Your Mobile Number',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: dark ? FixMeColors.light : FixMeColors.dark,
-                        ),
+                      fontWeight: FontWeight.bold,
+                      color: dark ? FixMeColors.light : FixMeColors.dark,
+                    ),
                   ),
                   const SizedBox(height: FixMeSizes.spaceBtwItems),
-              
+
                   Text(
                     'Enter the 6-digit code sent to your mobile number',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: dark ? FixMeColors.light : FixMeColors.dark,
-                        ),
+                      color: dark ? FixMeColors.light : FixMeColors.dark,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: FixMeSizes.spaceBtwSections),
-              
-                  Obx(
-                    () => Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: List.generate(
-                        6,
-                        (index) => _buildOtpField(index, dark),
-                      ),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: List.generate(
+                      6,
+                      (index) => _buildOtpField(index, dark),
                     ),
                   ),
                   const SizedBox(height: FixMeSizes.spaceBtwSections),
-              
+
                   Obx(
-                    () => SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: controller.otpCode.value.length == 6 &&
-                                !controller.isVerifying.value
-                            ? () => controller.startVerifyOtp(context)
-                            : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              dark ? FixMeColors.light : FixMeColors.dark,
-                          foregroundColor:
-                              dark ? FixMeColors.dark : FixMeColors.light,
-                          disabledBackgroundColor: dark
-                              ? FixMeColors.light.withOpacity(0.3)
-                              : FixMeColors.dark.withOpacity(0.3),
-                          disabledForegroundColor: dark
-                              ? FixMeColors.dark.withOpacity(0.5)
-                              : FixMeColors.light.withOpacity(0.5),
-                          padding: const EdgeInsets.symmetric(
-                            vertical: FixMeSizes.buttonPaddingVertical,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                    () => ElevatedButton(
+                      onPressed:
+                          controller.otpCode.value.length == 6 &&
+                              !controller.isVerifying.value
+                          ? () => controller.startVerifyOtp(context)
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(
+                          double.infinity,
+                          48,
+                        ), // full width, fixed height
+                        backgroundColor: dark
+                            ? FixMeColors.light
+                            : FixMeColors.dark,
+                        foregroundColor: dark
+                            ? FixMeColors.dark
+                            : FixMeColors.light,
+                        disabledBackgroundColor: dark
+                            ? FixMeColors.light.withOpacity(0.3)
+                            : FixMeColors.dark.withOpacity(0.3),
+                        disabledForegroundColor: dark
+                            ? FixMeColors.dark.withOpacity(0.5)
+                            : FixMeColors.light.withOpacity(0.5),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: FixMeSizes.buttonPaddingVertical,
                         ),
-                        child: controller.isVerifying.value
-                            ? Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                      width: FixMeSizes.spaceBtwItems),
-                                  Text(
-                                    'Verifying...',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: dark
-                                          ? FixMeColors.dark
-                                          : FixMeColors.light,
-                                    ),
-                                  ),
-                                ],
-                              )
-                            : Text(
-                                'Verify OTP',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: dark
-                                      ? FixMeColors.dark
-                                      : FixMeColors.light,
-                                ),
-                              ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
+                      child: controller.isVerifying.value
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: FixMeSizes.spaceBtwItems),
+                                Text(
+                                  'Verifying...',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: dark
+                                        ? FixMeColors.dark
+                                        : FixMeColors.light,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Text(
+                              'Verify OTP',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: dark
+                                    ? FixMeColors.dark
+                                    : FixMeColors.light,
+                              ),
+                            ),
                     ),
                   ),
+
                   const SizedBox(height: FixMeSizes.spaceBtwItems),
-              
+
                   Obx(
                     () => TextButton(
                       onPressed: controller.isVerifying.value
@@ -162,45 +164,46 @@ class _MobileValidationScreenState extends State<MobileValidationScreen> {
   Widget _buildOtpField(int index, bool dark) {
     final controller = Get.find<SignupController>();
     return Container(
-        width: 50,
-        height: 60,
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: controller.focusNodes[index].hasFocus
-                ? (dark ? FixMeColors.light : FixMeColors.dark)
-                : (dark
+      width: 50,
+      height: 60,
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: controller.focusNodes[index].hasFocus
+              ? (dark ? FixMeColors.light : FixMeColors.dark)
+              : (dark
                     ? FixMeColors.light.withOpacity(0.3)
                     : FixMeColors.dark.withOpacity(0.3)),
-            width: controller.focusNodes[index].hasFocus ? 2 : 1,
-          ),
-          borderRadius: BorderRadius.circular(12),
-          color: dark
-              ? FixMeColors.dark.withOpacity(0.1)
-              : FixMeColors.light.withOpacity(0.1),
+          width: controller.focusNodes[index].hasFocus ? 2 : 1,
         ),
-        child: TextField(
-          controller: controller.otpControllers[index],
-          focusNode: controller.focusNodes[index],
-          onChanged: (value) {
-            controller.onOtpChanged(value, index, context, _setState);
-            controller.otpCode.value =
-                controller.otpControllers.map((c) => c.text).join();
-          },
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: dark ? FixMeColors.light : FixMeColors.dark,
-          ),
-          keyboardType: TextInputType.number,
-          maxLength: 1,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          decoration: const InputDecoration(
-            border: InputBorder.none,
-            counterText: '',
-          ),
-          onTap: () => controller.onTextFieldTap(index),
+        borderRadius: BorderRadius.circular(12),
+        color: dark
+            ? FixMeColors.dark.withOpacity(0.1)
+            : FixMeColors.light.withOpacity(0.1),
+      ),
+      child: TextField(
+        controller: controller.otpControllers[index],
+        focusNode: controller.focusNodes[index],
+        onChanged: (value) {
+          controller.onOtpChanged(value, index, context, _setState);
+          controller.otpCode.value = controller.otpControllers
+              .map((c) => c.text)
+              .join();
+        },
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: dark ? FixMeColors.light : FixMeColors.dark,
         ),
+        keyboardType: TextInputType.number,
+        maxLength: 1,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        decoration: const InputDecoration(
+          border: InputBorder.none,
+          counterText: '',
+        ),
+        onTap: () => controller.onTextFieldTap(index),
+      ),
     );
   }
 }

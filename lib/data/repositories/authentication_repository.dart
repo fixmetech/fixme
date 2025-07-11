@@ -73,7 +73,7 @@ class AuthenticationRepository extends GetxController {
     try {
       // Get OTP from SignupController
       final signupController = Get.find<SignupController>();
-      final smsCode = signupController.otpCode.value; // 🔥 .value used here
+      final smsCode = signupController.otpCode.value; 
 
       if (smsCode.length != 6) {
         FixMeHelperFunctions.showErrorSnackBar(
@@ -85,7 +85,7 @@ class AuthenticationRepository extends GetxController {
 
       final credential = PhoneAuthProvider.credential(
         verificationId: _verificationId,
-        smsCode: smsCode, // 🔥 this is now a String, not RxString
+        smsCode: smsCode, //  this is now a String, not RxString
       );
 
       final userCredential = await _auth.signInWithCredential(credential);
