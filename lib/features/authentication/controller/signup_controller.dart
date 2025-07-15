@@ -1,6 +1,7 @@
 import 'package:fixme/data/repositories/authentication_repository.dart';
 import 'package:fixme/features/authentication/controller/onboarding_controller.dart';
 import 'package:fixme/features/authentication/screens/on_boarding.dart';
+import 'package:fixme/mainScreen.dart';
 import 'package:fixme/utils/helper/helper_functions.dart';
 import 'package:fixme/utils/helper/network_manager.dart';
 import 'package:fixme/utils/loader/full_screen_loader.dart';
@@ -23,8 +24,10 @@ class SignupController extends GetxController {
   final phoneNumberController = TextEditingController();
 
   final RxString otpCode = ''.obs;
-  final List<TextEditingController> otpControllers =
-      List.generate(6, (_) => TextEditingController());
+  final List<TextEditingController> otpControllers = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> focusNodes = List.generate(6, (_) => FocusNode());
 
   @override
@@ -121,8 +124,9 @@ class SignupController extends GetxController {
       await AuthenticationRepository.instance.verifyOtp(context, () {
         update();
       });
-
       FullScreenLoader.hideLoader(context);
+
+      Get.offAll(MainScreen());
     } catch (e) {
       FullScreenLoader.hideLoader(context);
       FixMeHelperFunctions.showErrorSnackBar('Error', e.toString());

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fixme/features/authentication/controller/signup_controller.dart';
 import 'package:fixme/features/authentication/screens/login.dart';
 import 'package:fixme/features/authentication/screens/on_boarding.dart';
+import 'package:fixme/mainScreen.dart';
 import 'package:fixme/utils/helper/helper_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -93,8 +94,6 @@ class AuthenticationRepository extends GetxController {
       if (userCredential.user != null) {
         deviceStorage.write('isFirstTime', false);
 
-        Get.offAllNamed('/home');
-
         FixMeHelperFunctions.showSuccessSnackBar(
           'Success',
           'Phone number verified successfully!',
@@ -104,7 +103,7 @@ class AuthenticationRepository extends GetxController {
       print("OTP Verification Failed: $e");
       FixMeHelperFunctions.showErrorSnackBar(
         'Verification Failed',
-        'Invalid OTP. Please try again.',
+        'Invalid OTP or Internal error Please try again.',
       );
     } finally {
       refreshUI();

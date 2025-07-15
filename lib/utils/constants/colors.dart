@@ -4,7 +4,7 @@ class FixMeColors {
   FixMeColors._();
 
   // App Basic Colors
-  static const Color primary = Color(0xFF2563EB);        // Modern blue
+  static const Color primary = Color.fromARGB(255, 23, 87, 225);        // Modern blue
   static const Color secondary = Color(0xFF06B6D4);      // Cyan accent
   static const Color accent = Color(0xFF3B82F6);         // Bright blue
   static const Color tertiary = Color(0xFF8B5CF6);       // Purple accent
