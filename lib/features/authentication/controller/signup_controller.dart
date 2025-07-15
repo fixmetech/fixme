@@ -1,6 +1,6 @@
 import 'package:fixme/data/repositories/authentication_repository.dart';
 import 'package:fixme/features/authentication/controller/onboarding_controller.dart';
-import 'package:fixme/features/authentication/screens/on_boarding.dart';
+import 'package:fixme/features/authentication/screens/login.dart';
 import 'package:fixme/mainScreen.dart';
 import 'package:fixme/utils/helper/helper_functions.dart';
 import 'package:fixme/utils/helper/network_manager.dart';
@@ -117,16 +117,20 @@ class SignupController extends GetxController {
         );
         return;
       }
-
       // Update the reactive OTP code
       otpCode.value = otpControllers.map((c) => c.text).join();
 
-      await AuthenticationRepository.instance.verifyOtp(context, () {
-        update();
-      });
-      FullScreenLoader.hideLoader(context);
-
-      Get.offAll(MainScreen());
+      await AuthenticationRepository.instance
+          .verifyOtp(context, () {
+            update();
+          })
+          .then((success) {
+            FullScreenLoader.hideLoader(context);
+            if (success) {
+              FullScreenLoader.hideLoader(context);
+              Get.offAll(MainScreen());
+            }
+          });
     } catch (e) {
       FullScreenLoader.hideLoader(context);
       FixMeHelperFunctions.showErrorSnackBar('Error', e.toString());
@@ -189,6 +193,33 @@ class SignupController extends GetxController {
         'OTP Sent',
         'A new OTP has been sent to your phone number.',
       );
+    } catch (e) {
+      FullScreenLoader.hideLoader(context);
+      FixMeHelperFunctions.showErrorSnackBar('Error', e.toString());
+    }
+  }
+
+  // Logout function
+  Future<void> logout(BuildContext context) async {
+    try {
+      FullScreenLoader.showLoader(
+        context: context,
+        text: 'Logingout...',
+        lottieAsset: 'assets/animations/loader1.json',
+      );
+
+      final isConnected = await NetworkManager.instance.isConnectedToInternet();
+      if (!isConnected) {
+        FullScreenLoader.hideLoader(context);
+        FixMeHelperFunctions.showWarningSnackBar(
+          'Network Error',
+          'Please check your internet connection and try again.',
+        );
+        return;
+      }
+      await AuthenticationRepository.instance.signOut();
+      FullScreenLoader.hideLoader(context);
+      Get.offAll(LoginScreen());
     } catch (e) {
       FullScreenLoader.hideLoader(context);
       FixMeHelperFunctions.showErrorSnackBar('Error', e.toString());

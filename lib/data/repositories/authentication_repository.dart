@@ -26,8 +26,11 @@ class AuthenticationRepository extends GetxController {
   // Flutter function to show relevant screen
   screenRedirect() async {
     deviceStorage.writeIfNull('isFirstTime', true);
+    deviceStorage.writeIfNull('isLogin', false);
     deviceStorage.read('isFirstTime') != true
-        ? Get.offAll(() => const LoginScreen())
+        ? deviceStorage.read('isLogin') == true
+              ? Get.offAll(() => const MainScreen())
+              : Get.offAll(() => const LoginScreen())
         : Get.offAll(() => const OnboardingScreen());
   }
 
@@ -69,44 +72,61 @@ class AuthenticationRepository extends GetxController {
     }
   }
 
-  // Confirm OTP
-  Future<void> verifyOtp(BuildContext context, VoidCallback refreshUI) async {
+  // Verify OTP
+  Future<bool> verifyOtp(BuildContext context, VoidCallback refreshUI) async {
     try {
-      // Get OTP from SignupController
       final signupController = Get.find<SignupController>();
-      final smsCode = signupController.otpCode.value; 
+      final smsCode = signupController.otpCode.value;
 
       if (smsCode.length != 6) {
         FixMeHelperFunctions.showErrorSnackBar(
           'Invalid OTP',
           'Please enter a valid 6-digit OTP.',
         );
-        return;
+        return false;
       }
 
       final credential = PhoneAuthProvider.credential(
         verificationId: _verificationId,
-        smsCode: smsCode, //  this is now a String, not RxString
+        smsCode: smsCode,
       );
 
       final userCredential = await _auth.signInWithCredential(credential);
 
       if (userCredential.user != null) {
         deviceStorage.write('isFirstTime', false);
-
+        deviceStorage.write('isLogin', true);
         FixMeHelperFunctions.showSuccessSnackBar(
           'Success',
           'Phone number verified successfully!',
         );
+        return true;
       }
+
+      return false;
     } catch (e) {
       print("OTP Verification Failed: $e");
       FixMeHelperFunctions.showErrorSnackBar(
         'Verification Failed',
-        'Invalid OTP or Internal error Please try again.',
+        'Invalid OTP or Internal error. Please try again.',
       );
+      return false;
     } finally {
       refreshUI();
+    }
+  }
+
+  // Sign out
+  Future<void> signOut() async {
+    try {
+      await _auth.signOut();
+      deviceStorage.write('isLogin', false);
+    } catch (e) {
+      print('Sign out failed: $e');
+      FixMeHelperFunctions.showErrorSnackBar(
+        'Sign Out Failed',
+        'An error occurred while signing out. Please try again.',
+      );
     }
   }
 }

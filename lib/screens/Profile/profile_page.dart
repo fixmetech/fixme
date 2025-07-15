@@ -1,5 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:fixme/features/authentication/screens/login.dart';
+import 'package:fixme/features/authentication/controller/signup_controller.dart';
 import 'package:fixme/screens/Profile/customer_profile_account.dart';
 import 'package:fixme/screens/Profile/customer_profile_history.dart';
 import 'package:fixme/screens/Profile/customer_profile_home.dart';
@@ -16,11 +15,6 @@ class CustomerProfilePage extends StatelessWidget {
     Get.to(screen);
   }
 
-  void _handleLogout() async {
-    await FirebaseAuth.instance.signOut();
-    Get.offAll(() => LoginScreen());
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,10 +22,7 @@ class CustomerProfilePage extends StatelessWidget {
       appBar: AppBar(
         title: const Text(
           'Customer Profile',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         backgroundColor: Colors.blue[800],
         iconTheme: const IconThemeData(color: Colors.white),
@@ -45,7 +36,7 @@ class CustomerProfilePage extends StatelessWidget {
             _buildContactCard(),
             _buildMenu(),
             const SizedBox(height: 20),
-            _buildLogoutButton(),
+            _buildLogoutButton(context),
             const SizedBox(height: 30),
           ],
         ),
@@ -81,7 +72,7 @@ class CustomerProfilePage extends StatelessWidget {
             child: CircleAvatar(
               radius: 50,
               backgroundColor: Colors.grey[300],
-              backgroundImage: const AssetImage('assets/boy.jpg'),
+              backgroundImage: const AssetImage('assets/images/car.png'),
             ),
           ),
           const SizedBox(height: 16),
@@ -162,7 +153,12 @@ class CustomerProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildContactItem(IconData icon, String label, String value, Color color) {
+  Widget _buildContactItem(
+    IconData icon,
+    String label,
+    String value,
+    Color color,
+  ) {
     return Row(
       children: [
         Container(
@@ -215,23 +211,58 @@ class CustomerProfilePage extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _buildMenuItem(Icons.home_outlined, 'Home Details', Colors.blue[600]!, CustomerHomeProfile()),
+          _buildMenuItem(
+            Icons.home_outlined,
+            'Home Details',
+            Colors.blue[600]!,
+            CustomerHomeProfile(),
+          ),
           _buildDivider(),
-          _buildMenuItem(Icons.directions_car_outlined, 'Vehicle Details', Colors.orange[600]!, CustomerVehicleProfile()),
+          _buildMenuItem(
+            Icons.directions_car_outlined,
+            'Vehicle Details',
+            Colors.orange[600]!,
+            CustomerVehicleProfile(),
+          ),
           _buildDivider(),
-          _buildMenuItem(Icons.history_outlined, 'History', Colors.purple[600]!, CustomerProfileHistory()),
+          _buildMenuItem(
+            Icons.history_outlined,
+            'History',
+            Colors.purple[600]!,
+            CustomerProfileHistory(),
+          ),
           _buildDivider(),
-          _buildMenuItem(Icons.support_agent_outlined, 'Support Center', Colors.green[600]!, CustomerProfileSupport()),
+          _buildMenuItem(
+            Icons.support_agent_outlined,
+            'Support Center',
+            Colors.green[600]!,
+            CustomerProfileSupport(),
+          ),
           _buildDivider(),
-          _buildMenuItem(Icons.account_circle_outlined, 'Account Settings', Colors.indigo[600]!, CustomerProfileAccount()),
+          _buildMenuItem(
+            Icons.account_circle_outlined,
+            'Account Settings',
+            Colors.indigo[600]!,
+            CustomerProfileAccount(),
+          ),
           _buildDivider(),
-          _buildMenuItem(Icons.security_outlined, 'Security & Privacy', Colors.red[600]!, CustomerProfileSecurity()),
+          _buildMenuItem(
+            Icons.security_outlined,
+            'Security & Privacy',
+            Colors.red[600]!,
+            CustomerProfileSecurity(),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildMenuItem(IconData icon, String title, Color iconColor, Widget screen) {
+  Widget _buildMenuItem(
+    IconData icon,
+    String title,
+    Color iconColor,
+    Widget screen,
+  ) {
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
@@ -269,12 +300,13 @@ class CustomerProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildLogoutButton() {
+  Widget _buildLogoutButton(context) {
+    final controller = Get.put(SignupController());
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _handleLogout,
+        onPressed: () => controller.logout(context),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.red[50],
           foregroundColor: Colors.red[700],
@@ -292,10 +324,7 @@ class CustomerProfilePage extends StatelessWidget {
             SizedBox(width: 8),
             Text(
               'Log Out',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ],
         ),
