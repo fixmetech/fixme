@@ -12,7 +12,6 @@ class SignupController extends GetxController {
   static SignupController get instance => Get.find();
 
   // Form fields and states
-  final formKey = GlobalKey<FormState>();
   final hidePassword = true.obs;
   final privacyPolicy = false.obs;
   final isVerifying = false.obs;
@@ -49,8 +48,6 @@ class SignupController extends GetxController {
   /// Sign up user and request OTP
   Future<void> signup(BuildContext context) async {
     try {
-      if (!validateForm()) return;
-
       if (!privacyPolicy.value) {
         FixMeHelperFunctions.showWarningSnackBar(
           'Privacy Policy',
@@ -85,10 +82,6 @@ class SignupController extends GetxController {
     }
   }
 
-  bool validateForm() {
-    return formKey.currentState?.validate() ?? false;
-  }
-
   void clearForm() {
     firstNameController.clear();
     lastNameController.clear();
@@ -121,9 +114,7 @@ class SignupController extends GetxController {
       otpCode.value = otpControllers.map((c) => c.text).join();
 
       await AuthenticationRepository.instance
-          .verifyOtp(context, () {
-            update();
-          })
+          .verifyOtp(context)
           .then((success) {
             FullScreenLoader.hideLoader(context);
             if (success) {

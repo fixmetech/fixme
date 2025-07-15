@@ -20,8 +20,9 @@ class RegisteringScreen extends StatefulWidget {
 class _RegisteringScreenState extends State<RegisteringScreen> {
   @override
   Widget build(BuildContext context) {
+    final _formKey = GlobalKey<FormState>();
     final darK = FixMeDeviceUtils.isDarkMode(context);
-    final controller = Get.put(SignupController());
+    final controller = Get.find<SignupController>();
     return Padding(
       padding: const EdgeInsets.all(FixMeSizes.defaultSpace),
       child: Column(
@@ -36,7 +37,7 @@ class _RegisteringScreenState extends State<RegisteringScreen> {
 
           // Form
           Form(
-            key: controller.formKey,
+            key: _formKey,
             child: Column(
               children: [
                 // First & Last Name
@@ -131,7 +132,14 @@ class _RegisteringScreenState extends State<RegisteringScreen> {
                     SizedBox(
                       width: 24,
                       height: 24,
-                      child: Obx (() => Checkbox(value: controller.privacyPolicy.value, onChanged: (value) {controller.privacyPolicy.value = value ?? false;})),
+                      child: Obx(
+                        () => Checkbox(
+                          value: controller.privacyPolicy.value,
+                          onChanged: (value) {
+                            controller.privacyPolicy.value = value ?? false;
+                          },
+                        ),
+                      ),
                     ),
                     const SizedBox(width: FixMeSizes.spaceBtwButtons),
                     Text.rich(
@@ -177,8 +185,9 @@ class _RegisteringScreenState extends State<RegisteringScreen> {
                 IntrinsicWidth(
                   child: ElevatedButton(
                     onPressed: () {
-                      // OnboardingController.instance.nextPage();
-                      controller.signup(context);
+                      if (_formKey.currentState!.validate()) {
+                        controller.signup(context);
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: darK

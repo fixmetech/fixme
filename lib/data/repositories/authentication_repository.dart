@@ -73,7 +73,7 @@ class AuthenticationRepository extends GetxController {
   }
 
   // Verify OTP
-  Future<bool> verifyOtp(BuildContext context, VoidCallback refreshUI) async {
+  Future<bool> verifyOtp(BuildContext context) async {
     try {
       final signupController = Get.find<SignupController>();
       final smsCode = signupController.otpCode.value;
@@ -111,8 +111,6 @@ class AuthenticationRepository extends GetxController {
         'Invalid OTP or Internal error. Please try again.',
       );
       return false;
-    } finally {
-      refreshUI();
     }
   }
 
