@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "/Users/akarshashamin/Developer/FixMe/fixme_customer/linux"
+    "cmake.sourceDirectory": "/Users/akarshashamin/Developer/FixMe/fixme_customer/linux",
+    "java.configuration.updateBuildConfiguration": "interactive"
 }
