@@ -1,12 +1,12 @@
 import 'package:fixme/features/authentication/controller/signup_controller.dart';
 import 'package:fixme/screens/Profile/customer_profile_account.dart';
 import 'package:fixme/screens/Profile/customer_profile_history.dart';
-import 'package:fixme/screens/Profile/customer_profile_home.dart';
 import 'package:fixme/screens/Profile/customer_profile_security.dart';
 import 'package:fixme/screens/Profile/customer_profile_support.dart';
 import 'package:fixme/screens/Profile/customer_vehicle_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 
 class CustomerProfilePage extends StatelessWidget {
   const CustomerProfilePage({super.key});
@@ -73,6 +73,7 @@ class CustomerProfilePage extends StatelessWidget {
               radius: 50,
               backgroundColor: Colors.grey[300],
               backgroundImage: const AssetImage('assets/images/car.png'),
+
             ),
           ),
           const SizedBox(height: 16),
