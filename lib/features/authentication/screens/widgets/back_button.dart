@@ -1,9 +1,7 @@
 import 'package:fixme/features/authentication/controller/onboarding_controller.dart';
 import 'package:fixme/utils/constants/colors.dart';
 import 'package:fixme/utils/constants/size.dart';
-import 'package:fixme/utils/device/device_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get_connect/http/src/utils/utils.dart';
 
 class backButton extends StatelessWidget {
   const backButton({
