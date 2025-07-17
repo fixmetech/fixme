@@ -73,17 +73,15 @@ class SignInController extends GetxController {
       }
 
       // Now login with email + password
-      if (emailToUse != null) {
-        await AuthenticationRepository.instance.signInWithEmailAndPassword(
-          emailToUse,
-          password,
-        );
-      }
+      await AuthenticationRepository.instance.signInWithEmailAndPassword(
+        emailToUse,
+        password,
+      );
 
       FullScreenLoader.hideLoader(context);
-      if(AuthenticationRepository.instance.isLoggedIn()) {
+      if (AuthenticationRepository.instance.isLoggedIn()) {
         Get.offAll(() => MainScreen());
-      } 
+      }
     } catch (e) {
       FullScreenLoader.hideLoader(context);
       FixMeHelperFunctions.showErrorSnackBar('Error', e.toString());
