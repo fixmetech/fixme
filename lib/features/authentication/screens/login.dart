@@ -1,7 +1,9 @@
+import 'package:fixme/features/authentication/controller/signIn_controller.dart';
 import 'package:fixme/features/authentication/screens/on_boarding.dart';
 import 'package:fixme/utils/constants/colors.dart';
 import 'package:fixme/utils/constants/size.dart';
 import 'package:fixme/utils/device/device_utils.dart';
+import 'package:fixme/utils/helper/helper_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
@@ -17,14 +19,18 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
+    final _formKey = GlobalKey<FormState>();
     final darK = FixMeDeviceUtils.isDarkMode(context);
+    final controller = Get.put(SignInController());
+
 
     return Scaffold(
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(FixMeSizes.defaultSpace),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start, // This aligns everything to the left
+            crossAxisAlignment:
+                CrossAxisAlignment.start, // This aligns everything to the left
             children: [
               // Top spacing
               SizedBox(height: FixMeDeviceUtils.getAppBarHeight()),
@@ -32,8 +38,8 @@ class _LoginScreenState extends State<LoginScreen> {
               // Logo - aligned to the left
               Center(
                 child: Image(
-                  width: FixMeDeviceUtils.getScreenWidth(context) * 0.4, 
-                  height: FixMeDeviceUtils.getScreenWidth(context) * 0.4, 
+                  width: FixMeDeviceUtils.getScreenWidth(context) * 0.4,
+                  height: FixMeDeviceUtils.getScreenWidth(context) * 0.4,
                   image: AssetImage('assets/images/logo1.png'),
                 ),
               ),
@@ -60,6 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // Form
               Form(
+                key: _formKey,
                 child: Column(
                   children: [
                     // Phone Number or Email
@@ -68,16 +75,38 @@ class _LoginScreenState extends State<LoginScreen> {
                         labelText: 'Phone or Email',
                         prefixIcon: Icon(Iconsax.direct_right),
                       ),
+                      controller: controller.identifierController,
+                      validator: (value) =>
+                          FixMeHelperFunctions.validateRequired(
+                            value,
+                            'Phone or Email',
+                          ),
                     ),
                     const SizedBox(height: FixMeSizes.spaceBtwInputFields),
 
                     // Password
-                    TextFormField(
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Password',
-                        prefixIcon: Icon(Iconsax.password_check),
-                        suffixIcon: Icon(Iconsax.eye_slash),
+                    Obx(
+                      () => TextFormField(
+                        obscureText: controller.hidePassword.value,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          prefixIcon: Icon(Iconsax.password_check),
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              controller.hidePassword.value =
+                                  !controller.hidePassword.value;
+                            },
+                            icon: Icon(controller.hidePassword.value
+                                ? Iconsax.eye_slash
+                                : Iconsax.eye),
+                          ),
+                        ),
+                        controller: controller.passwordController,
+                        validator: (value) =>
+                            FixMeHelperFunctions.validateRequired(
+                              value,
+                              'Password',
+                            ),
                       ),
                     ),
                     const SizedBox(height: FixMeSizes.spaceBtwInputFields),
@@ -107,7 +136,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          // Handle sign in logic
+                          if (_formKey.currentState?.validate() ?? false) {
+                            controller.signIn(context);
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: darK
@@ -135,7 +166,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: double.infinity,
                       child: OutlinedButton(
                         onPressed: () {
-                          Get.offAll(() => const OnboardingScreen(initialPage: 1));
+                          Get.offAll(
+                            () => const OnboardingScreen(initialPage: 1),
+                          );
                         },
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(
