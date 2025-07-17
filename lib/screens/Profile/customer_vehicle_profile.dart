@@ -22,7 +22,6 @@ class _CustomerVehicleProfileState extends State<CustomerVehicleProfile> {
   };
 
   String? _vehicleImageUrl; // Placeholder for vehicle image URL (null for no image)
-  int _currentIndex = 1;
 
   @override
   Widget build(BuildContext context) {

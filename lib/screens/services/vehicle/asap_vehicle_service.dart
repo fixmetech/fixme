@@ -1,4 +1,5 @@
 import 'package:fixme/screens/services/find_help.dart';
+import 'package:fixme/screens/services/vehicle/vehicle_selection_screen.dart';
 import 'package:fixme/widgets/issue_chips.dart';
 import 'package:flutter/material.dart';
 
@@ -39,7 +40,20 @@ class AsapVehicleService extends StatelessWidget {
 
             Center(
               child: TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => VehicleSelectionScreen(
+                        onVehicleSelected: (vehicle) {
+                          // Handle vehicle selection
+                          // The VehicleSelectionScreen will automatically navigate back
+                          // You can add additional logic here to update the selected vehicle
+                        },
+                      ),
+                    ),
+                  );
+                },
                 child: Row(
                   children: [
                     const Text(
