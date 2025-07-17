@@ -1,6 +1,7 @@
 import 'package:fixme/features/authentication/controller/signup_controller.dart';
 import 'package:fixme/screens/Profile/customer_profile_account.dart';
 import 'package:fixme/screens/Profile/customer_profile_history.dart';
+import 'package:fixme/screens/Profile/customer_profile_home.dart';
 import 'package:fixme/screens/Profile/customer_profile_security.dart';
 import 'package:fixme/screens/Profile/customer_profile_support.dart';
 import 'package:fixme/screens/Profile/customer_vehicle_profile.dart';

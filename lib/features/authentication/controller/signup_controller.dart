@@ -114,14 +114,16 @@ class SignupController extends GetxController {
       otpCode.value = otpControllers.map((c) => c.text).join();
 
       await AuthenticationRepository.instance
-          .verifyOtp(context)
+          .verifyOtpAndCreateAccount(context)
           .then((success) {
             FullScreenLoader.hideLoader(context);
             if (success) {
               FullScreenLoader.hideLoader(context);
+              clearForm();
               Get.offAll(MainScreen());
             }
           });
+      clearOtp(context, () {});
     } catch (e) {
       FullScreenLoader.hideLoader(context);
       FixMeHelperFunctions.showErrorSnackBar('Error', e.toString());
