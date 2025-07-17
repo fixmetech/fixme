@@ -3,21 +3,22 @@ import 'package:fixme/app.dart';
 import 'package:fixme/data/repositories/authentication_repository.dart';
 import 'package:fixme/firebase_options.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
-
-Future<void> main() async{
-  final WidgetsBinding widgetsBinding =  WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(); 
+Future<void> main() async {
+  final WidgetsBinding widgetsBinding =
+      WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load();
   await GetStorage.init();
- // FlutterNativeSplashScreen.preserve(widgetsBinding: widgetsBinding);
+
+  // FlutterNativeSplashScreen.preserve(widgetsBinding: widgetsBinding);
   await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform
-  ).then(
-    (FirebaseApp value) => Get.put(AuthenticationRepository()),
-  );
+    options: DefaultFirebaseOptions.currentPlatform,
+  ).then((FirebaseApp value) => Get.put(AuthenticationRepository()));
+  // Lock orientation to portrait only
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(const MyApp());
 }
-

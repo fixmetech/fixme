@@ -23,7 +23,6 @@ class _LoginScreenState extends State<LoginScreen> {
     final darK = FixMeDeviceUtils.isDarkMode(context);
     final controller = Get.put(SignInController());
 
-
     return Scaffold(
       body: SingleChildScrollView(
         child: Padding(
@@ -96,9 +95,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               controller.hidePassword.value =
                                   !controller.hidePassword.value;
                             },
-                            icon: Icon(controller.hidePassword.value
-                                ? Iconsax.eye_slash
-                                : Iconsax.eye),
+                            icon: Icon(
+                              controller.hidePassword.value
+                                  ? Iconsax.eye_slash
+                                  : Iconsax.eye,
+                            ),
                           ),
                         ),
                         controller: controller.passwordController,
