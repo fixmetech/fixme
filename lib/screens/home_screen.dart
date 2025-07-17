@@ -1,3 +1,5 @@
+import 'package:fixme/features/ongoing_request/finish_job.dart';
+import 'package:fixme/features/ongoing_request/share_pin.dart';
 import 'package:fixme/screens/serviceCenterProfile/service_center_profile.dart';
 import 'package:fixme/screens/technicianProfile/technician_profile.dart';
 import 'package:fixme/screens/testCamera.dart';
@@ -52,6 +54,28 @@ class HomeScreen extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => ServiceCenterProfile()),
                 ),
                 child: Text('Service Centre'),
+              ),
+            ),
+            SizedBox(height: 20),
+            // link to camera screen
+            Center(
+              child: ElevatedButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => JobDetailsScreen()),
+                ),
+                child: Text('Share Pin'),
+              ),
+            ),
+            SizedBox(height: 20),
+            // link to camera screen
+            Center(
+              child: ElevatedButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => FinishJobScreen()),
+                ),
+                child: Text('Finish Job'),
               ),
             ),
           ],
