@@ -17,9 +17,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+
   @override
   Widget build(BuildContext context) {
-    final _formKey = GlobalKey<FormState>();
     final darK = FixMeDeviceUtils.isDarkMode(context);
     final controller = Get.put(SignInController());
 
