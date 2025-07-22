@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../screens/serviceCenterProfile/service_center_profile.dart';
 
 class ResultsSection extends StatelessWidget {
   final String selectedService;
@@ -185,22 +186,31 @@ class ResultsSection extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: 16),
             itemCount: 5,
             itemBuilder: (context, index) {
-              return Container(
-                width: 280,
-                margin: EdgeInsets.only(right: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      spreadRadius: 1,
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
+              return InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ServiceCenterProfile(),
                     ),
-                  ],
-                  border: Border.all(color: Colors.grey[200]!),
-                ),
+                  );
+                },
+                child: Container(
+                  width: 280,
+                  margin: EdgeInsets.only(right: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        spreadRadius: 1,
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                    border: Border.all(color: Colors.grey[200]!),
+                  ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -340,7 +350,8 @@ class ResultsSection extends StatelessWidget {
                     ),
                   ],
                 ),
-              );
+                ), // Close Container
+              ); // Close InkWell
             },
           ),
         ),
@@ -394,19 +405,28 @@ class ResultsSection extends StatelessWidget {
             itemCount: filteredResults.length,
             itemBuilder: (context, index) {
               final result = filteredResults[index];
-              return Container(
-                margin: EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      spreadRadius: 1,
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
+              return InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ServiceCenterProfile(),
                     ),
-                  ],
+                  );
+                },
+                child: Container(
+                  margin: EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        spreadRadius: 1,
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
                   border: Border.all(color: Colors.grey[200]!),
                 ),
                 child: Column(
@@ -537,7 +557,8 @@ class ResultsSection extends StatelessWidget {
                     ),
                   ],
                 ),
-              );
+                ), // Close Container
+              ); // Close InkWell
             },
           ),
         ),
