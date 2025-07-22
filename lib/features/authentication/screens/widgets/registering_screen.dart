@@ -17,9 +17,10 @@ class RegisteringScreen extends StatefulWidget {
 }
 
 class _RegisteringScreenState extends State<RegisteringScreen> {
+  final _formKey = GlobalKey<FormState>();
+
   @override
   Widget build(BuildContext context) {
-    final _formKey = GlobalKey<FormState>();
     final darK = FixMeDeviceUtils.isDarkMode(context);
     final controller = Get.find<SignupController>();
     return Padding(

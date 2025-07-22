@@ -1,11 +1,8 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:lottie/lottie.dart';
+import 'package:lottie/lottie.dart' as lottie;
+import 'package:fixme/screens/services/controllers/map_controllers.dart';
+import 'package:fixme/screens/services/found_technician.dart';
 
 class FindHelp extends StatefulWidget {
   const FindHelp({super.key});
@@ -18,9 +15,9 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
   late GoogleMapController mapController;
   late AnimationController _animationController;
   LatLng? _currentPosition;
-  bool _isSearching = false;
   LatLng? _selectedLocation;
-  String _currentAddress = "-";
+  String _currentAddress = "Getting your location...";
+  Set<Marker> _markers = {};
 
   // Search states
   SearchState _searchState = SearchState.initial;
@@ -48,33 +45,34 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
   }
 
   Future<void> _getCurrentLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return;
-
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
+    debugPrint('Getting current location...');
+    final position = await MapControllers.getCurrentLocation();
+    if (position != null) {
+      debugPrint(
+        'Location obtained: ${position.latitude}, ${position.longitude}',
+      );
+      setState(() {
+        _currentPosition = position;
+      });
+      // Load address immediately after getting location
+      _getAddressFromLatLng(position);
+      // Add technician markers after location is available
+      _addTechnicianMarkers();
+    } else {
+      debugPrint('Failed to get current location');
+      setState(() {
+        _currentAddress = "Location not available";
+      });
     }
-
-    final futures = await Future.wait([
-      Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high),
-      Future.delayed(const Duration(seconds: 1)), // Minimum 2 second delay
-    ]);
-
-    final position = futures[0] as Position;
-
-    setState(() {
-      _currentPosition = LatLng(position.latitude, position.longitude);
-    });
   }
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
+    MapControllers.setMapController(controller);
   }
 
   void _startSearching() async {
     setState(() {
-      _isSearching = true;
       _searchState = SearchState.searching;
     });
 
@@ -83,24 +81,27 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
+
+    // Add technician markers when starting search
+    await _addTechnicianMarkers();
+
     // Simulate searching process
     await Future.delayed(const Duration(seconds: 10));
 
     setState(() {
       _searchState = SearchState.found;
       _foundTechnician = {
-        'name': 'John Smith',
+        'name': 'Abishek Korala',
         'rating': 4.8,
-        'experience': '5 years',
-        'specialization': 'AC Repair & Maintenance',
-        'distance': '0.8 km away',
-        'phone': '+1 234 567 8900',
+        'experience': '3 years',
+        'specialization': 'Car Repair & Maintenance',
+        'distance': '2.8 km away',
+        'phone': '+94743383502',
         'image': 'https://via.placeholder.com/80',
         'estimatedArrival': '15-20 minutes',
         'price': '\$45-65',
         'completedJobs': 245,
       };
-      _isSearching = false;
     });
 
     // Auto-expand the bottom sheet when technician is found
@@ -111,40 +112,114 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
     );
   }
 
+  Future<void> _addTechnicianMarkers() async {
+    if (_currentPosition == null) {
+      debugPrint('Cannot add markers: current position is null');
+      return;
+    }
+
+    debugPrint(
+      'Adding technician markers around: ${_currentPosition!.latitude}, ${_currentPosition!.longitude}',
+    );
+
+    final baseLat = _currentPosition!.latitude;
+    final baseLng = _currentPosition!.longitude;
+
+    // Use simpler fallback icon for now
+    BitmapDescriptor technicianIcon;
+    try {
+      technicianIcon = await BitmapDescriptor.fromAssetImage(
+        const ImageConfiguration(size: Size(14, 14)),
+        'assets/images/manpointer1.png',
+      );
+      debugPrint('Successfully loaded custom technician icon');
+    } catch (e) {
+      debugPrint('Failed to load custom icon, using fallback: $e');
+      technicianIcon = BitmapDescriptor.defaultMarkerWithHue(
+        BitmapDescriptor.hueOrange,
+      );
+    }
+
+    // Technician data with closer locations (within ~200-500 meters)
+    List<Map<String, dynamic>> technicians = [
+      {
+        'location': LatLng(baseLat + 0.0008, baseLng + 0.0005), // ~100m away
+      },
+      {
+        'location': LatLng(baseLat - 0.0006, baseLng + 0.0009), // ~150m away
+      },
+      {
+        'location': LatLng(baseLat + 0.0012, baseLng - 0.0008), // ~200m away
+      },
+      {
+        'location': LatLng(baseLat - 0.0015, baseLng - 0.0010), // ~300m away
+      },
+      {
+        'location': LatLng(baseLat - 0.0005, baseLng + 0.0018), // ~400m away
+      },
+    ];
+
+    final newMarkers = technicians.asMap().entries.map((entry) {
+      int index = entry.key;
+      Map<String, dynamic> tech = entry.value;
+      return Marker(
+        markerId: MarkerId('technician_$index'),
+        position: tech['location'],
+        icon: technicianIcon,
+        consumeTapEvents: false, 
+        onTap: () {}, 
+      );
+    }).toList();
+
+    debugPrint('Adding ${newMarkers.length} technician markers to the map');
+
+    setState(() {
+      _markers.addAll(newMarkers);
+    });
+
+    debugPrint('Total markers on map: ${_markers.length}');
+  }
+
   Future<void> _getAddressFromLatLng(LatLng position) async {
-    final apiKey = dotenv.env['GOOGLE_API_KEY'];
-    final url =
-        "https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.latitude},${position.longitude}&key=$apiKey";
+    debugPrint(
+      'Getting address for position: ${position.latitude}, ${position.longitude}',
+    );
+    // Show loading state
+    setState(() {
+      _currentAddress = "Loading address...";
+    });
 
     try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data["status"] == "OK") {
-          final results = data["results"] as List;
-          if (results.isNotEmpty) {
-            setState(() {
-              _currentAddress = results.first["formatted_address"];
-            });
-          }
-        }
-      }
+      final address = await MapControllers.getAddressFromLatLng(position);
+      debugPrint('Address received: $address');
+      setState(() {
+        _currentAddress = address;
+      });
     } catch (e) {
-      debugPrint("Error: $e");
+      debugPrint('Error getting address: $e');
+      // Fallback to coordinates
+      setState(() {
+        _currentAddress = MapControllers.getSimpleAddress(position);
+      });
     }
   }
 
-  void _resetSearch() {
+  void _resetSearch() async {
     setState(() {
       _searchState = SearchState.initial;
       _foundTechnician = null;
-      _isSearching = false;
+      // Clear technician markers when resetting
+      _markers.removeWhere(
+        (marker) => marker.markerId.value.startsWith('technician_'),
+      );
     });
     _dragController.animateTo(
       0.25,
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
+    // Re-add markers after clearing
+    await _addTechnicianMarkers();
   }
 
   @override
@@ -157,12 +232,12 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
                 child: SizedBox(
                   width: 120,
                   height: 120,
-                  child: Lottie.asset(
+                  child: lottie.Lottie.asset(
                     'assets/animations/mapload.json',
                     repeat: true,
                     animate: true,
                     fit: BoxFit.contain,
-                    frameRate: FrameRate.max, // For smooth animation
+                    frameRate: lottie.FrameRate.max, // For smooth animation
                   ),
                 ),
               ),
@@ -175,6 +250,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
                     target: _currentPosition!,
                     zoom: 18,
                   ),
+                  markers: _markers,
                   myLocationEnabled: true,
                   myLocationButtonEnabled: false,
                   compassEnabled: false,
@@ -198,14 +274,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
                     mini: true,
                     backgroundColor: Colors.white,
                     onPressed: () async {
-                      final position = await Geolocator.getCurrentPosition(
-                        desiredAccuracy: LocationAccuracy.high,
-                      );
-                      mapController.animateCamera(
-                        CameraUpdate.newLatLng(
-                          LatLng(position.latitude, position.longitude),
-                        ),
-                      );
+                      await MapControllers.moveToCurrentLocation();
                     },
                     child: const Icon(Icons.my_location, color: Colors.blue),
                   ),
@@ -260,7 +329,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 10,
                           ),
                         ],
@@ -299,7 +368,15 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
       case SearchState.searching:
         return _buildSearchingContent();
       case SearchState.found:
-        return _buildFoundContent();
+        return _foundTechnician != null 
+          ? FoundTechnician(
+              technician: _foundTechnician!,
+              onFindAnother: _resetSearch,
+              onCall: () {
+                // Handle call functionality
+              },
+            )
+          : const SizedBox();
     }
   }
 
@@ -361,7 +438,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
           SizedBox(
             width: 120,
             height: 120,
-            child: Lottie.asset(
+            child: lottie.Lottie.asset(
               'assets/animations/findPerson.json', // Your Lottie file
               repeat: true,
               animate: true,
@@ -387,201 +464,6 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildFoundContent() {
-    if (_foundTechnician == null) return const SizedBox();
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Success header
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.green[50],
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.green[200]!),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.green[600], size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  "Technician Found!",
-                  style: TextStyle(
-                    color: Colors.green[700],
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Technician card
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey[200]!),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundColor: Colors.blue[100],
-                      child: Text(
-                        _foundTechnician!['name']
-                            .split(' ')
-                            .map((n) => n[0])
-                            .join(),
-                        style: TextStyle(
-                          color: Colors.blue[700],
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _foundTechnician!['name'],
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.star,
-                                color: Colors.amber[600],
-                                size: 16,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                "${_foundTechnician!['rating']} • ${_foundTechnician!['completedJobs']} jobs",
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            _foundTechnician!['specialization'],
-                            style: TextStyle(
-                              color: Colors.blue[600],
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                // Quick info row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildInfoChip(
-                      Icons.location_on,
-                      _foundTechnician!['distance'],
-                    ),
-                    _buildInfoChip(
-                      Icons.access_time,
-                      _foundTechnician!['estimatedArrival'],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Action buttons
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _resetSearch,
-                  icon: const Icon(Icons.search),
-                  label: const Text("Find Another"),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Contact button
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                // Handle call
-              },
-              icon: const Icon(Icons.phone),
-              label: Text("Call ${_foundTechnician!['phone']}"),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 32),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoChip(IconData icon, String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.blue[50],
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: Colors.blue[600]),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.blue[700],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   // Helper methods for size management
   double _getInitialSize() {
@@ -614,17 +496,6 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
         return 0.5; // Allow some expansion but not full screen
       case SearchState.found:
         return 0.9;
-    }
-  }
-
-  List<double> _getSnapSizes() {
-    switch (_searchState) {
-      case SearchState.initial:
-        return [0.25, 0.3];
-      case SearchState.searching:
-        return [0.35, 0.4, 0.5];
-      case SearchState.found:
-        return [0.3, 0.6, 0.9];
     }
   }
 }

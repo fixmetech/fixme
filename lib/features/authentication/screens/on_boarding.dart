@@ -14,9 +14,10 @@ class OnboardingScreen extends StatelessWidget {
     this.initialPage = 0,
   });
 
-
+  
   @override
   Widget build(BuildContext context) {
+
     final controller = Get.put(OnboardingController());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (controller.pageController.hasClients) {
@@ -35,7 +36,6 @@ class OnboardingScreen extends StatelessWidget {
       appBar: AppBar(),
       body: Stack(
         children: [
-          // Main content with keyboard handling
           SingleChildScrollView(
             // Only scroll when keyboard is open
             physics: const ClampingScrollPhysics(),

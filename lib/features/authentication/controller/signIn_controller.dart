@@ -73,13 +73,13 @@ class SignInController extends GetxController {
       }
 
       // Now login with email + password
-      await AuthenticationRepository.instance.signInWithEmailAndPassword(
+      final isSuccess = await AuthenticationRepository.instance.signInWithEmailAndPassword(
         emailToUse,
         password,
       );
 
       FullScreenLoader.hideLoader(context);
-      if (AuthenticationRepository.instance.isLoggedIn()) {
+      if (isSuccess) {
         Get.offAll(() => MainScreen());
       }
     } catch (e) {
