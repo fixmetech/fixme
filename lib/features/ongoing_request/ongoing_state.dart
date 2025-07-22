@@ -1,18 +1,30 @@
-import 'package:fixme/features/ongoing_request/completed_job.dart';
-import 'package:fixme/features/ongoing_request/make_payment.dart';
+import 'package:fixme/features/ongoing_request/finish_job.dart';
 import 'package:flutter/material.dart';
 
-class FinishJobScreen extends StatelessWidget {
+class OngoingScreen extends StatefulWidget {
   final String pin;
   final int requestId;
   final int estimatedCost;
 
-  const FinishJobScreen({
+  const OngoingScreen({
     Key? key,
     this.pin = "434024",
     this.requestId = 16,
     this.estimatedCost = 5000,
   }) : super(key: key);
+
+  @override
+  State<OngoingScreen> createState() => _OngoingScreenState();
+}
+
+class _OngoingScreenState extends State<OngoingScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(seconds: 3), () {
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => FinishJobScreen()));
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +38,7 @@ class FinishJobScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Job Details: #$requestId',
+          'Ongoing Request: #${widget.requestId}',
           style: const TextStyle(
             color: Colors.black,
             fontSize: 18,
@@ -35,76 +47,43 @@ class FinishJobScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(30.0),
-        child: Column(
-          children: [
-            // Step 1: Share PIN
-            _buildStepItem(
-              stepNumber: 1,
-              isCompleted: true,
-              isActive: false,
-              title: 'Share PIN',
-              description: 'Share this PIN with the technician to verify their arrival.',
-              child: _PinBox(pin: pin),
-            ),
-            const SizedBox(height: 24),
-
-            // Step 2: Estimated Job Cost
-            _buildStepItem(
-              stepNumber: 2,
-              isCompleted: true,
-              isActive: false,
-              title: 'Estimated Job Cost',
-              description: 'You accepted the estimated job cost.',
-              child: _CostSection(cost: estimatedCost),
-            ),
-            const SizedBox(height: 24),
-
-            // Step 3: Ongoing
-            _buildStepItem(
-              stepNumber: 3,
-              isCompleted: true,
-              isActive: false,
-              title: 'Ongoing',
-              description: 'Technician finished working on your job.',
-            ),
-            const SizedBox(height: 24),
-
-            // Step 4: Finish Job
-            _buildStepItem(
-              stepNumber: 4,
-              isCompleted: false,
-              isActive: true,
-              title: 'Finish Job',
-              description: 'Finalize the Job by sharing an OTP with the technician.',
-              child: Container(
-                margin: const EdgeInsets.only(top: 12),
-                child: ElevatedButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => MakePaymentScreen()),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    elevation: 2,
-                  ),
-                  child: const Text(
-                    'Finish Job',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(30.0),
+          child: Column(
+            children: [
+              // Step 1: Share PIN
+              _buildStepItem(
+                stepNumber: 1,
+                isCompleted: true,
+                isActive: false,
+                title: 'Share PIN',
+                description: 'Share this PIN with the technician to verify their arrival.',
+                child: _PinBox(pin: widget.pin),
               ),
-            ),
-          ],
+              const SizedBox(height: 24),
+
+              // Step 2: Estimated Job Cost
+              _buildStepItem(
+                stepNumber: 2,
+                isCompleted: true,
+                isActive: false,
+                title: 'Estimated Job Cost',
+                description: 'You accepted the estimated job cost.',
+                child: _CostSection(cost: widget.estimatedCost),
+              ),
+              const SizedBox(height: 24),
+
+              // Step 3: Ongoing
+              _buildStepItem(
+                stepNumber: 3,
+                isCompleted: false,
+                isActive: true,
+                title: 'Ongoing',
+                description: 'Technician is currently working on your job.',
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -121,13 +100,13 @@ class FinishJobScreen extends StatelessWidget {
     Color getStepColor() {
       if (isCompleted) return Colors.green;
       if (isActive) return Colors.blue;
-      return Colors.grey;
+      return Colors.grey[400]!;
     }
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Step number circle
+        // Step number or check
         Container(
           width: 32,
           height: 32,
@@ -137,24 +116,18 @@ class FinishJobScreen extends StatelessWidget {
           ),
           child: Center(
             child: isCompleted
-                ? const Icon(
-              Icons.check,
-              color: Colors.white,
-              size: 18,
-            )
+                ? const Icon(Icons.check, color: Colors.white, size: 18)
                 : Text(
               '$stepNumber',
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 16,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
         ),
         const SizedBox(width: 16),
-
-        // Content
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -164,7 +137,7 @@ class FinishJobScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: isActive ? Colors.blue : Colors.black87,
+                  color: isActive ? Colors.blue : Colors.black,
                 ),
               ),
               const SizedBox(height: 4),
@@ -173,10 +146,12 @@ class FinishJobScreen extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 14,
                   color: Colors.grey,
-                  height: 1.4,
                 ),
               ),
-              if (child != null) child,
+              if (child != null) ...[
+                const SizedBox(height: 12),
+                child,
+              ],
             ],
           ),
         ),
