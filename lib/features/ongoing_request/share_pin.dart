@@ -1,3 +1,4 @@
+import 'package:fixme/features/ongoing_request/estimated_job_cost.dart';
 import 'package:flutter/material.dart';
 
 class JobDetailsScreen extends StatelessWidget {
@@ -40,38 +41,56 @@ class JobDetailsScreen extends StatelessWidget {
                   color: Colors.grey[200],
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Text(
-                  'PIN: 434024',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'PIN: 434024',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ServiceRequestScreen(),
+                          ),
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('PIN sharing completed'),
+                            duration: Duration(seconds: 2),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'DONE',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
 
             SizedBox(height: 24),
 
-            // Step 2 - Ongoing
-            _buildStepItem(
-              stepNumber: 2,
-              title: 'Ongoing',
-              description: 'Technician is currently working on your job.',
-              isCompleted: false,
-              isActive: true,
-            ),
-
-            SizedBox(height: 24),
-
-            // Step 3 - Finish Contract
-            _buildStepItem(
-              stepNumber: 3,
-              title: 'Finish Contract',
-              description: 'Finalize the job by sharing an OTP with the technician.',
-              isCompleted: false,
-              isActive: false,
-            ),
           ],
         ),
       ),
@@ -152,11 +171,6 @@ class JobDetailsScreen extends StatelessWidget {
       ],
     );
   }
-}
-
-// Example usage in main.dart
-void main() {
-  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
