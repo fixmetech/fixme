@@ -25,39 +25,17 @@ class HomeScreen extends StatelessWidget {
             // testing
             SizedBox(height: 20), 
             // link to camera screen
-            Center(
-              child: ElevatedButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => TestCameraScreen()),
-                ),
-                child: Text('Open Camera Screen'),
-              ),
-            ),
-             SizedBox(height: 20), 
-            // link to camera screen
-            Center(
-              child: ElevatedButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => TechnicianProfile()),
-                ),
-                child: Text('Technician Profile'),
-              ),
-            ),
-             SizedBox(height: 20), 
-            // link to camera screen
-            Center(
-              child: ElevatedButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ServiceCenterProfile()),
-                ),
-                child: Text('Service Centre'),
-              ),
-            ),
-            SizedBox(height: 20),
-            // link to camera screen
+            // Center(
+            //   child: ElevatedButton(
+            //     onPressed: () => Navigator.push(
+            //       context,
+            //       MaterialPageRoute(builder: (context) => TestCameraScreen()),
+            //     ),
+            //     child: Text('Open Camera Screen'),
+            //   ),
+            // ),
+            //  SizedBox(height: 20),
+            // // link to camera screen
             Center(
               child: ElevatedButton(
                 onPressed: () => Navigator.push(
