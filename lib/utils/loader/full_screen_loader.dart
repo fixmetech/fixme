@@ -4,9 +4,9 @@ import 'package:lottie/lottie.dart';
 import 'package:fixme/utils/constants/colors.dart';
 import 'package:fixme/utils/constants/size.dart';
 
-Color colorWithOpacity(Color color, double opacity) {
-  assert(opacity >= 0.0 && opacity <= 1.0);
-  return color.withAlpha((opacity * 255).round());
+// Helper function to ensure opacity is within valid range
+double _clampOpacity(double opacity) {
+  return opacity.clamp(0.0, 1.0);
 }
 
 class FullScreenLoader {
@@ -27,28 +27,28 @@ class FullScreenLoader {
       builder: (ctx) => BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          color: colorWithOpacity(Colors.black, 0.2),
+          color: Colors.black.withOpacity(_clampOpacity(0.2)),
           child: Center(
             child: TweenAnimationBuilder(
               tween: Tween(begin: 0.0, end: 1.0),
               duration: Duration(milliseconds: 300),
               curve: Curves.easeOutBack,
               builder: (context, value, child) => Transform.scale(
-                scale: value,
+                scale: value.clamp(0.0, 1.0),
                 child: Opacity(
-                  opacity: value,
+                  opacity: value.clamp(0.0, 1.0),
                   child: Container(
                     padding: EdgeInsets.all(32),
                     margin: EdgeInsets.symmetric(horizontal: 40),
                     decoration: BoxDecoration(
-                      color: colorWithOpacity(Colors.white, 0.9),
+                      color: Colors.white.withOpacity(_clampOpacity(0.9)),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: colorWithOpacity(Colors.white, 0.3),
+                        color: Colors.white.withOpacity(_clampOpacity(0.3)),
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: colorWithOpacity(Colors.black, 0.1),
+                          color: Colors.black.withOpacity(_clampOpacity(0.1)),
                           blurRadius: 20,
                           offset: Offset(0, 10),
                         ),
@@ -108,9 +108,9 @@ class FullScreenLoader {
             duration: Duration(milliseconds: 400),
             curve: Curves.easeOutCubic,
             builder: (context, value, child) => Transform.translate(
-              offset: Offset(0, 20 * (1 - value)),
+              offset: Offset(0, 20 * (1 - value.clamp(0.0, 1.0))),
               child: Opacity(
-                opacity: value,
+                opacity: value.clamp(0.0, 1.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -164,9 +164,9 @@ class FullScreenLoader {
             duration: Duration(milliseconds: 500),
             curve: Curves.easeOutCubic,
             builder: (context, value, child) => Transform.translate(
-              offset: Offset(0, 30 * (1 - value)),
+              offset: Offset(0, 30 * (1 - value.clamp(0.0, 1.0))),
               child: Opacity(
-                opacity: value,
+                opacity: value.clamp(0.0, 1.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -178,12 +178,12 @@ class FullScreenLoader {
                         duration: Duration(milliseconds: 1200),
                         curve: Curves.linear,
                         builder: (context, rotation, child) => Transform.rotate(
-                          angle: rotation * 2 * 3.14159,
+                          angle: rotation.clamp(0.0, 1.0) * 2 * 3.14159,
                           child: Container(
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: colorWithOpacity(primaryColor, 0.2),
+                                color: primaryColor.withOpacity(_clampOpacity(0.2)),
                                 width: 3,
                               ),
                             ),
@@ -198,7 +198,7 @@ class FullScreenLoader {
                                   end: Alignment.bottomRight,
                                   colors: [
                                     primaryColor,
-                                    colorWithOpacity(primaryColor, 0.3),
+                                    primaryColor.withOpacity(_clampOpacity(0.3)),
                                   ],
                                 ),
                               ),

@@ -26,14 +26,14 @@ class AuthenticationRepository extends GetxController {
   }
 
   // Flutter function to show relevant screen
-  screenRedirect() async {
+    screenRedirect() async {
     deviceStorage.writeIfNull('isFirstTime', true);
     deviceStorage.writeIfNull('isLogin', false);
-    deviceStorage.read('isFirstTime') != true
-        ? deviceStorage.read('isLogin') == true
-              ? Get.offAll(() => const MainScreen())
+    deviceStorage.read('isLogin') != true
+        ? deviceStorage.read('isFirstTime') == true
+              ? Get.offAll(() => const OnboardingScreen())
               : Get.offAll(() => const LoginScreen())
-        : Get.offAll(() => const OnboardingScreen());
+        : Get.offAll(() => const MainScreen());
   }
 
   // isLoggedIn
@@ -219,25 +219,41 @@ class AuthenticationRepository extends GetxController {
   }
 
   // Sign in with Email and Password
-  Future<void> signInWithEmailAndPassword(
+  Future<bool> signInWithEmailAndPassword(
     String email,
     String password,
   ) async {
     try {
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
-      deviceStorage.write('isLogin', true);
+      final UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email, 
+        password: password
+      );
+      
+      // Check if user is successfully authenticated
+      if (userCredential.user != null) {
+        deviceStorage.write('isLogin', true);
+        FixMeHelperFunctions.showSuccessSnackBar(
+          'Success',
+          'Login successful!',
+        );
+        return true; // Authentication successful
+      } else {
+        return false; // Authentication failed
+      }
     } on FirebaseAuthException catch (e) {
       print('Login failed: ${e.message}');
       FixMeHelperFunctions.showErrorSnackBar(
         'Login Failed',
         e.message ?? 'An error occurred during login.',
       );
+      return false; // Authentication failed
     } catch (e) {
       print('Error in signInWithEmailAndPassword: $e');
       FixMeHelperFunctions.showErrorSnackBar(
         'Error',
         'Failed to sign in with email and password. Please try again.',
       );
+      return false; // Authentication failed
     }
   }
 
