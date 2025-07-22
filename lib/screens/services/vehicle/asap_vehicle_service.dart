@@ -1,5 +1,6 @@
 import 'package:fixme/screens/services/find_help.dart';
 import 'package:fixme/screens/services/vehicle/vehicle_selection_screen.dart';
+import 'package:fixme/utils/helper/helper_functions.dart';
 import 'package:fixme/widgets/issue_chips.dart';
 import 'package:flutter/material.dart';
 
@@ -81,15 +82,18 @@ class _AsapVehicleServiceState extends State<AsapVehicleService> {
         context,
         MaterialPageRoute(builder: (_) => const FindHelp()),
       );
-    } else {
-      // Show validation messages
-      if (selectedIssues.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select at least one issue'),
-            backgroundColor: Colors.red,
-          ),
-        );
+    }else{
+      if(selectedIssues.isEmpty){
+        FixMeHelperFunctions.showInfoSnackBar('Incomplete request', "Please select at least one issue.");
+        return;
+      }
+      if(_descriptionController.text.trim().isEmpty && selectedIssues.contains("Unknown")){
+        FixMeHelperFunctions.showInfoSnackBar('Incomplete request', "Please provide a description for the unknown issue.");
+        return;
+      }
+      if(!agreeToTerms){
+        FixMeHelperFunctions.showInfoSnackBar('Incomplete request', "Please agree to the terms.");
+        return;
       }
     }
   }
@@ -367,7 +371,7 @@ class _AsapVehicleServiceState extends State<AsapVehicleService> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: _canProceed() ? _handleFindTap : null,
+                  onPressed: _handleFindTap,
                   child: const Text(
                     "Find",
                     style: TextStyle(

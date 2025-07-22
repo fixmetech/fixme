@@ -1,11 +1,7 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:lottie/lottie.dart';
+import 'package:lottie/lottie.dart' as lottie;
+import 'package:fixme/screens/services/controllers/map_controllers.dart';
 
 class FindHelp extends StatefulWidget {
   const FindHelp({super.key});
@@ -18,13 +14,15 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
   late GoogleMapController mapController;
   late AnimationController _animationController;
   LatLng? _currentPosition;
-  bool _isSearching = false;
   LatLng? _selectedLocation;
-  String _currentAddress = "-";
+  String _currentAddress = "Getting your location...";
+  Set<Marker> _markers = {};
+
 
   // Search states
   SearchState _searchState = SearchState.initial;
   Map<String, dynamic>? _foundTechnician;
+  
 
   // Draggable sheet controller
   final DraggableScrollableController _dragController =
@@ -38,6 +36,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
       vsync: this,
     );
     _getCurrentLocation();
+    _addTechnicianMarkers();
   }
 
   @override
@@ -48,33 +47,30 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
   }
 
   Future<void> _getCurrentLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return;
-
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
+    debugPrint('Getting current location...');
+    final position = await MapControllers.getCurrentLocation();
+    if (position != null) {
+      debugPrint('Location obtained: ${position.latitude}, ${position.longitude}');
+      setState(() {
+        _currentPosition = position;
+      });
+      // Load address immediately after getting location
+      _getAddressFromLatLng(position);
+    } else {
+      debugPrint('Failed to get current location');
+      setState(() {
+        _currentAddress = "Location not available";
+      });
     }
-
-    final futures = await Future.wait([
-      Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high),
-      Future.delayed(const Duration(seconds: 1)), // Minimum 2 second delay
-    ]);
-
-    final position = futures[0] as Position;
-
-    setState(() {
-      _currentPosition = LatLng(position.latitude, position.longitude);
-    });
   }
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
+    MapControllers.setMapController(controller);
   }
 
   void _startSearching() async {
     setState(() {
-      _isSearching = true;
       _searchState = SearchState.searching;
     });
 
@@ -100,7 +96,6 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
         'price': '\$45-65',
         'completedJobs': 245,
       };
-      _isSearching = false;
     });
 
     // Auto-expand the bottom sheet when technician is found
@@ -111,26 +106,54 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
     );
   }
 
-  Future<void> _getAddressFromLatLng(LatLng position) async {
-    final apiKey = dotenv.env['GOOGLE_API_KEY'];
-    final url =
-        "https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.latitude},${position.longitude}&key=$apiKey";
+  void _addTechnicianMarkers() {
+  if (_currentPosition == null) return;
 
+  final baseLat = _currentPosition!.latitude;
+  final baseLng = _currentPosition!.longitude;
+
+  List<LatLng> technicianLocations = [
+    LatLng(baseLat + 0.001, baseLng + 0.001),
+    LatLng(baseLat - 0.001, baseLng + 0.001),
+    LatLng(baseLat + 0.001, baseLng - 0.001),
+    LatLng(baseLat - 0.001, baseLng - 0.001),
+    LatLng(baseLat, baseLng + 0.0015),
+  ];
+
+  setState(() {
+    _markers.addAll(technicianLocations.asMap().entries.map((entry) {
+      int idx = entry.key;
+      LatLng loc = entry.value;
+      return Marker(
+        markerId: MarkerId('technician_$idx'),
+        position: loc,
+        infoWindow: InfoWindow(title: 'Technician ${idx + 1}'),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+      );
+    }));
+  });
+}
+
+
+  Future<void> _getAddressFromLatLng(LatLng position) async {
+    debugPrint('Getting address for position: ${position.latitude}, ${position.longitude}');
+    // Show loading state
+    setState(() {
+      _currentAddress = "Loading address...";
+    });
+    
     try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data["status"] == "OK") {
-          final results = data["results"] as List;
-          if (results.isNotEmpty) {
-            setState(() {
-              _currentAddress = results.first["formatted_address"];
-            });
-          }
-        }
-      }
+      final address = await MapControllers.getAddressFromLatLng(position);
+      debugPrint('Address received: $address');
+      setState(() {
+        _currentAddress = address;
+      });
     } catch (e) {
-      debugPrint("Error: $e");
+      debugPrint('Error getting address: $e');
+      // Fallback to coordinates
+      setState(() {
+        _currentAddress = MapControllers.getSimpleAddress(position);
+      });
     }
   }
 
@@ -138,7 +161,6 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
     setState(() {
       _searchState = SearchState.initial;
       _foundTechnician = null;
-      _isSearching = false;
     });
     _dragController.animateTo(
       0.25,
@@ -157,12 +179,12 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
                 child: SizedBox(
                   width: 120,
                   height: 120,
-                  child: Lottie.asset(
+                  child: lottie.Lottie.asset(
                     'assets/animations/mapload.json',
                     repeat: true,
                     animate: true,
                     fit: BoxFit.contain,
-                    frameRate: FrameRate.max, // For smooth animation
+                    frameRate: lottie.FrameRate.max, // For smooth animation
                   ),
                 ),
               ),
@@ -175,6 +197,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
                     target: _currentPosition!,
                     zoom: 18,
                   ),
+                  markers: _markers,
                   myLocationEnabled: true,
                   myLocationButtonEnabled: false,
                   compassEnabled: false,
@@ -198,14 +221,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
                     mini: true,
                     backgroundColor: Colors.white,
                     onPressed: () async {
-                      final position = await Geolocator.getCurrentPosition(
-                        desiredAccuracy: LocationAccuracy.high,
-                      );
-                      mapController.animateCamera(
-                        CameraUpdate.newLatLng(
-                          LatLng(position.latitude, position.longitude),
-                        ),
-                      );
+                      await MapControllers.moveToCurrentLocation();
                     },
                     child: const Icon(Icons.my_location, color: Colors.blue),
                   ),
@@ -260,7 +276,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 10,
                           ),
                         ],
@@ -361,7 +377,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
           SizedBox(
             width: 120,
             height: 120,
-            child: Lottie.asset(
+            child: lottie.Lottie.asset(
               'assets/animations/findPerson.json', // Your Lottie file
               repeat: true,
               animate: true,
@@ -614,17 +630,6 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
         return 0.5; // Allow some expansion but not full screen
       case SearchState.found:
         return 0.9;
-    }
-  }
-
-  List<double> _getSnapSizes() {
-    switch (_searchState) {
-      case SearchState.initial:
-        return [0.25, 0.3];
-      case SearchState.searching:
-        return [0.35, 0.4, 0.5];
-      case SearchState.found:
-        return [0.3, 0.6, 0.9];
     }
   }
 }
