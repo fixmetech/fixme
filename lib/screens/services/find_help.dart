@@ -129,8 +129,8 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
     BitmapDescriptor technicianIcon;
     try {
       technicianIcon = await BitmapDescriptor.fromAssetImage(
-        const ImageConfiguration(size: Size(18, 18)),
-        'assets/images/pointer.png',
+        const ImageConfiguration(size: Size(14, 14)),
+        'assets/images/manpointer1.png',
       );
       debugPrint('Successfully loaded custom technician icon');
     } catch (e) {
