@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../screens/technicianProfile/technician_profile.dart';
 
 class ResultsSection extends StatelessWidget {
   final String selectedService;
@@ -105,30 +106,30 @@ class ResultsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (_hasActiveFilters) {
-      return _buildFilteredResults();
+      return _buildFilteredResults(context);
     } else {
-      return _buildDefaultSections();
+      return _buildDefaultSections(context);
     }
   }
 
-  Widget _buildDefaultSections() {
+  Widget _buildDefaultSections(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHorizontalSection('Featured in FixMe'),
+          _buildHorizontalSection(context, 'Featured in FixMe'),
           SizedBox(height: 20),
-          _buildHorizontalSection('Top Technicians'),
+          _buildHorizontalSection(context, 'Top Technicians'),
           SizedBox(height: 20),
-          _buildHorizontalSection('Previous Services'),
+          _buildHorizontalSection(context, 'Previous Services'),
           SizedBox(height: 20),
-          _buildHorizontalSection('Offers'),
+          _buildHorizontalSection(context, 'Offers'),
         ],
       ),
     );
   }
 
-  Widget _buildHorizontalSection(String title) {
+  Widget _buildHorizontalSection(BuildContext context, String title) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -157,107 +158,117 @@ class ResultsSection extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: 16),
             itemCount: 5,
             itemBuilder: (context, index) {
-              return Container(
-                width: 280,
-                margin: EdgeInsets.only(right: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      spreadRadius: 1,
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
+              return InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const TechnicianProfile(),
                     ),
-                  ],
-                  border: Border.all(color: Colors.grey[200]!),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      height: 120,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+                  );
+                },
+                child: Container(
+                  width: 280,
+                  margin: EdgeInsets.only(right: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        spreadRadius: 1,
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
                       ),
-                      child: Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-                            child: Image.asset(
-                              _getServiceImage(_getServiceTypeForIndex(index, title), index),
-                              width: double.infinity,
-                              height: double.infinity,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                  color: Colors.grey[200],
-                                  child: Icon(
-                                    Icons.image,
-                                    color: Colors.grey[400],
-                                    size: 40,
+                    ],
+                    border: Border.all(color: Colors.grey[200]!),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        height: 120,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+                        ),
+                        child: Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+                              child: Image.asset(
+                                _getServiceImage(_getServiceTypeForIndex(index, title), index),
+                                width: double.infinity,
+                                height: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                    color: Colors.grey[200],
+                                    child: Icon(
+                                      Icons.image,
+                                      color: Colors.grey[400],
+                                      size: 40,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            if (title == 'Offers')
+                              Positioned(
+                                top: 8,
+                                left: 8,
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green,
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                );
-                              },
-                            ),
-                          ),
-                          if (title == 'Offers')
-                            Positioned(
-                              top: 8,
-                              left: 8,
-                              child: Container(
-                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.green,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  'Save 20%',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
+                                  child: Text(
+                                    'Save 20%',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${title.split(' ')[0]} Service ${index + 1}',
-                            style: TextStyle(
-                              color: Colors.black87,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                      Padding(
+                        padding: EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${title.split(' ')[0]} Service ${index + 1}',
+                              style: TextStyle(
+                                color: Colors.black87,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(Icons.star, color: Colors.orange, size: 16),
-                              Text(
-                                ' 4.${5 + index}',
-                                style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                              ),
-                              Text(
-                                ' • Rs.${(index + 1) * 500} Fee',
-                                style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                              ),
-                            ],
-                          ),
-                        ],
+                            SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(Icons.star, color: Colors.orange, size: 16),
+                                Text(
+                                  ' 4.${5 + index}',
+                                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                                ),
+                                Text(
+                                  ' • Rs.${(index + 1) * 500} Fee',
+                                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },
@@ -266,7 +277,8 @@ class ResultsSection extends StatelessWidget {
       ],
     );
   }
-Widget _buildFilteredResults() {
+
+Widget _buildFilteredResults(BuildContext context) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -338,7 +350,7 @@ Widget _buildFilteredResults() {
           padding: EdgeInsets.symmetric(horizontal: 16),
           itemCount: _filteredResultsCount > 10 ? 10 : _filteredResultsCount,
           itemBuilder: (context, index) {
-            return _buildResultCard(index);
+            return _buildResultCard(index, context);
           },
         ),
       ),
@@ -346,7 +358,7 @@ Widget _buildFilteredResults() {
   );
 }
 
-  Widget _buildResultCard(int index) {
+  Widget _buildResultCard(int index, BuildContext context) {
     // Simulate filtered data based on applied filters
     bool isHighlyRated = selectedFilters.contains('Highly Rated') ? true : (index % 3 == 0);
     double rating = selectedFilters.contains('Rating') 
@@ -362,22 +374,31 @@ Widget _buildFilteredResults() {
       }
     }
     
-    return Container(
-      margin: EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: Offset(0, 2),
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const TechnicianProfile(),
           ),
-        ],
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Column(
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
+          ],
+          border: Border.all(color: Colors.grey[200]!),
+        ),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
@@ -516,6 +537,6 @@ Widget _buildFilteredResults() {
           ),
         ],
       ),
-    );
+    ));
   }
 }
