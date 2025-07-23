@@ -36,16 +36,16 @@ class HomeScreen extends StatelessWidget {
             // ),
             //  SizedBox(height: 20),
             // // link to camera screen
-            Center(
-              child: ElevatedButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => JobDetailsScreen()),
-                ),
-                child: Text('Share Pin'),
-              ),
-            ),
-            SizedBox(height: 20),
+            // Center(
+            //   child: ElevatedButton(
+            //     onPressed: () => Navigator.push(
+            //       context,
+            //       MaterialPageRoute(builder: (context) => JobDetailsScreen()),
+            //     ),
+            //     child: Text('Share Pin'),
+            //   ),
+            // ),
+            // SizedBox(height: 20),
           ],
         ),
       ),
