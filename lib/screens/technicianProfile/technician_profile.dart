@@ -1,6 +1,7 @@
 import 'package:fixme/screens/report_technician.dart';
 import 'package:flutter/material.dart';
 import 'technician_message_popup.dart';
+import 'technician_request_screen.dart';
 
 class TechnicianProfile extends StatelessWidget {
   const TechnicianProfile({super.key});
@@ -140,7 +141,18 @@ class TechnicianProfile extends StatelessWidget {
                               ),
                               elevation: 0,
                             ),
-                            onPressed: () {},
+                            onPressed: () {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => TechnicianRequestScreen(
+        technicianName: "Kasun Mendis", // Pass the actual technician name
+        technicianImage: 'assets/images/select-user-technician.png', // Pass the actual image
+        visitingFee: 75.0, // Pass the actual visiting fee
+      ),
+    ),
+  );
+},
                             icon: const Icon(Icons.handyman, size: 16),
                             label: const Text("Request", style: TextStyle(fontWeight: FontWeight.bold)),
                           ),
