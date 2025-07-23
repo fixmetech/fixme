@@ -1,3 +1,4 @@
+import 'package:fixme/screens/report_technician.dart';
 import 'package:flutter/material.dart';
 import 'technician_message_popup.dart';
 
@@ -168,7 +169,7 @@ class TechnicianProfile extends StatelessWidget {
                               final result = await showDialog(
                                 context: context,
                                 builder: (context) => TechnicianMessagePopup(
-                                  technicianName: 'John Doe', // Pass actual name/data
+                                  technicianName: 'Kasun Mendis', // Pass actual name/data
                                 ),
                               );
                             },
@@ -294,9 +295,9 @@ class TechnicianProfile extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 20),
-                        _buildReview("John Doe", "Great service, arrived on time and fixed my issue quickly!", "2 days ago"),
-                        _buildReview("Alice Smith", "Very professional and courteous. Highly recommend.", "1 week ago"),
-                        _buildReview("Michael Lee", "Affordable and reliable technician. Will book again.", "2 weeks ago"),
+                        _buildReview("Kasun Mendis", "Great service, arrived on time and fixed my issue quickly!", "2 days ago"),
+                        _buildReview("Akith Jayalath", "Very professional and courteous. Highly recommend.", "1 week ago"),
+                        _buildReview("Madusha Pabasara", "Affordable and reliable technician. Will book again.", "2 weeks ago"),
                       ],
                     ),
                   ),
@@ -411,7 +412,12 @@ class TechnicianProfile extends StatelessWidget {
               ),
               onPressed: () {
                 Navigator.of(context).pop();
-                // Handle report submission
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FileComplaintScreen(),
+                  ),
+                );
               },
               child: const Text("Report"),
             ),
