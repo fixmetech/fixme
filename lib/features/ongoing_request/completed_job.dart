@@ -1,4 +1,7 @@
+import 'package:fixme/screens/home_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/utils.dart';
 
 class CompletedJobScreen extends StatelessWidget {
   final String pin;
@@ -459,6 +462,7 @@ class _RatingModalState extends State<RatingModal> {
 
     // Close modal
     Navigator.pop(context);
+    Get.offAll(HomeScreen());
   }
 }
 

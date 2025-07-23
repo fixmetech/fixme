@@ -19,11 +19,11 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             const Text(
-              'John Doe',
+              'Saduni Gamage',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            const Text('john.doe@example.com'),
+            const Text('saduniGamage@gmail.com'),
             const SizedBox(height: 30),
             ListTile(
               leading: const Icon(Icons.history),
