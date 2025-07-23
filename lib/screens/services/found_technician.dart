@@ -1,7 +1,9 @@
+import 'package:fixme/features/ongoing_request/share_pin.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
-import 'package:fixme/utils/constants/size.dart';
 
 enum TechnicianStatus { gettingReady, onTheWay, arrived }
 
@@ -27,23 +29,26 @@ class _FoundTechnicianState extends State<FoundTechnician>
   Timer? _statusTimer;
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(seconds: 1),
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
-    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+    _pulseAnimation = Tween<double>(begin: 0.9, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
     );
 
     _startStatusFlow();
   }
 
   void _startStatusFlow() {
-    // Start with getting ready, then transition every 6 seconds
     _statusTimer = Timer.periodic(const Duration(seconds: 6), (timer) {
       if (mounted) {
         setState(() {
@@ -53,10 +58,9 @@ class _FoundTechnicianState extends State<FoundTechnician>
               break;
             case TechnicianStatus.onTheWay:
               _currentStatus = TechnicianStatus.arrived;
-              timer.cancel(); // Stop the timer when arrived
+              timer.cancel();
               break;
             case TechnicianStatus.arrived:
-              // Already arrived, do nothing
               break;
           }
         });
@@ -82,59 +86,56 @@ class _FoundTechnicianState extends State<FoundTechnician>
       } else {
         debugPrint('Cannot launch phone call - no app available');
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No phone app available to make calls'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          _showErrorSnackBar(context, 'No phone app available to make calls');
         }
       }
     } catch (e) {
       debugPrint('Error making phone call: $e');
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error making phone call: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showErrorSnackBar(context, 'Error making phone call: $e');
       }
     }
+  }
+
+  void _showErrorSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red.shade600,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
   }
 
   Widget _buildStatusChip() {
     String text;
     Color backgroundColor;
     Color textColor;
-    Color borderColor;
     IconData icon;
     bool shouldAnimate = false;
 
     switch (_currentStatus) {
       case TechnicianStatus.gettingReady:
         text = "Getting Ready";
-        backgroundColor = Colors.amber[50]!;
-        textColor = Colors.amber[700]!;
-        borderColor = Colors.amber[200]!;
-        icon = Icons.schedule;
+        backgroundColor = Colors.amber.shade100;
+        textColor = Colors.amber.shade800;
+        icon = Icons.schedule_rounded;
         shouldAnimate = true;
         break;
       case TechnicianStatus.onTheWay:
         text = "Arrive in 10min";
-        backgroundColor = Colors.blue[50]!;
-        textColor = Colors.blue[700]!;
-        borderColor = Colors.blue[200]!;
-        icon = Icons.directions_car;
-
+        backgroundColor = Colors.blue.shade100;
+        textColor = Colors.blue.shade800;
+        icon = Icons.directions_car_rounded;
+        shouldAnimate = true;
         break;
       case TechnicianStatus.arrived:
         text = "Arrived";
-        backgroundColor = Colors.green[50]!;
-        textColor = Colors.green[700]!;
-        borderColor = Colors.green[200]!;
-        icon = Icons.check_circle;
-        shouldAnimate = false;
+        backgroundColor = Colors.green.shade100;
+        textColor = Colors.green.shade800;
+        icon = Icons.check_circle_rounded;
         break;
     }
 
@@ -146,25 +147,32 @@ class _FoundTechnicianState extends State<FoundTechnician>
     }
 
     Widget chipContent = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: borderColor),
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: textColor.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: textColor),
-          const SizedBox(width: 6),
+          Icon(icon, size: 18, color: textColor),
+          const SizedBox(width: 8),
           Flexible(
             child: Text(
               text,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 13,
                 color: textColor,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.3,
               ),
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
@@ -179,8 +187,7 @@ class _FoundTechnicianState extends State<FoundTechnician>
         animation: _pulseAnimation,
         builder: (context, child) {
           return Transform.scale(
-            scale:
-                1.0 + (_pulseAnimation.value - 1.0) * 0.3, // Reduce scale range
+            scale: _pulseAnimation.value,
             child: chipContent,
           );
         },
@@ -192,48 +199,70 @@ class _FoundTechnicianState extends State<FoundTechnician>
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Success header
+          // Glassy success header - smaller and less focused
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             decoration: BoxDecoration(
-              color: Colors.green[50],
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.green[200]!),
+              color: Colors.green.shade500.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.green.shade300.withOpacity(0.3),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.green.shade200.withOpacity(0.2),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.check_circle, color: Colors.green[600], size: 20),
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade500.withOpacity(0.8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check_rounded,
+                    color: Colors.white,
+                    size: 12,
+                  ),
+                ),
                 const SizedBox(width: 8),
                 Text(
-                  "Technician Found!",
+                  "Technician Found",
                   style: TextStyle(
-                    color: Colors.green[700],
-                    fontWeight: FontWeight.bold,
+                    color: Colors.green.shade700,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    letterSpacing: 0.2,
                   ),
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: FixMeSizes.defaultSpace),
+          const SizedBox(height: 20),
 
           // Technician card
           Stack(
             children: [
               Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[200]!),
-                ),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(color: Colors.white),
                 child: Row(
                   children: [
+                    // Keep profile exactly as it was
                     CircleAvatar(
                       radius: 30,
                       backgroundColor: Colors.blue[100],
@@ -257,34 +286,51 @@ class _FoundTechnicianState extends State<FoundTechnician>
                           Text(
                             widget.technician['name'],
                             style: const TextStyle(
-                              fontSize: 18,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
+                              letterSpacing: 0.3,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 6),
                           Row(
                             children: [
                               Icon(
-                                Icons.star,
-                                color: Colors.amber[600],
-                                size: 16,
+                                Icons.star_rounded,
+                                color: Colors.amber.shade600,
+                                size: 18,
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: 6),
                               Text(
                                 "${widget.technician['rating']} • ${widget.technician['completedJobs']} jobs",
                                 style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 14,
+                                  color: Colors.grey.shade600,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            widget.technician['specialization'],
-                            style: TextStyle(
-                              color: Colors.blue[600],
-                              fontSize: 14,
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.blue.shade200,
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              widget.technician['specialization'],
+                              style: TextStyle(
+                                color: Colors.blue.shade700,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
@@ -293,9 +339,9 @@ class _FoundTechnicianState extends State<FoundTechnician>
                   ],
                 ),
               ),
-              // Circular phone button positioned at top-left corner
+              // Keep phone button exactly as it was
               Positioned(
-                top: 8,
+                top: 18,
                 left: 8,
                 child: GestureDetector(
                   onTap: () =>
@@ -325,95 +371,207 @@ class _FoundTechnicianState extends State<FoundTechnician>
             ],
           ),
 
-          const SizedBox(height: FixMeSizes.defaultSpace),
+          const SizedBox(height: 20),
 
-          // Distance and status chips outside the card
+          // Stylish info chips
           Row(
             children: [
               Expanded(
                 child: _buildInfoChip(
-                  Icons.location_on,
+                  Icons.location_on_rounded,
                   widget.technician['distance'],
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               Expanded(child: _buildStatusChip()),
             ],
           ),
 
-          const SizedBox(height: FixMeSizes.defaultSpace),
+          const SizedBox(height: 24),
 
-          // Visiting fee text
+          // Clean visiting fee section
           Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
             decoration: BoxDecoration(
-              color: Colors.orange[50],
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.orange[200]!),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.shade200, width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Row(
               children: [
-                Icon(Icons.monetization_on, color: Colors.orange[600], size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  "Visiting fee: Rs.200",
-                  style: TextStyle(
-                    color: Colors.orange[700],
-                    fontWeight: FontWeight.w600,
-                    fontSize: FixMeSizes.md,
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.drive_eta,
+                    color: Colors.orange.shade700,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Visiting Fee",
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            "Rs. 200",
+                            style: TextStyle(
+                              color: Colors.grey.shade800,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "This fee covers the technician's travel to your location.",
+                        style: TextStyle(
+                          color: Colors.grey.shade500,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: FixMeSizes.defaultSpace),
+          const SizedBox(height: 28),
 
-          // Cancel button
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: () {
-                // Show confirmation dialog before canceling
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: const Text("Cancel Booking"),
-                      content: const Text(
-                        "Are you sure you want to cancel this booking?",
+          // Show "Let's Start" button when technician has arrived
+          if (_currentStatus == TechnicianStatus.arrived) ...[
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.shade200.withOpacity(0.6),
+                    blurRadius: 15,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: ElevatedButton(
+                onPressed: () {
+                  Get.offAll(() => JobDetailsScreen());
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue.shade600,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 0,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Let's Start",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.3,
                       ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text("No"),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            // Handle cancel action here
-                            widget
-                                .onFindAnother(); // or create a separate onCancel callback
-                          },
-                          child: const Text("Yes, Cancel"),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.red[600],
-                side: BorderSide(color: Colors.red[600]!),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.keyboard_arrow_right, size: 22),
+                  ],
                 ),
               ),
-              child: const Text(
-                "Cancel Booking",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // Cancel button (disabled when arrived)
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: _currentStatus != TechnicianStatus.arrived
+                  ? [
+                      BoxShadow(
+                        color: Colors.red.shade100.withOpacity(0.5),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : [],
+            ),
+            child: OutlinedButton(
+              onPressed: _currentStatus != TechnicianStatus.arrived
+                  ? () => _showCancelDialog(context)
+                  : null,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _currentStatus != TechnicianStatus.arrived
+                    ? Colors.red.shade700
+                    : Colors.grey.shade400,
+                side: BorderSide(
+                  color: _currentStatus != TechnicianStatus.arrived
+                      ? Colors.red.shade300
+                      : Colors.grey.shade300,
+                  width: 2,
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                backgroundColor: _currentStatus != TechnicianStatus.arrived
+                    ? Colors.red.shade50
+                    : Colors.grey.shade100,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.cancel_rounded,
+                    color: _currentStatus != TechnicianStatus.arrived
+                        ? Colors.red.shade700
+                        : Colors.grey.shade400,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _currentStatus != TechnicianStatus.arrived
+                        ? "Cancel Booking"
+                        : "Cannot Cancel",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.3,
+                      color: _currentStatus != TechnicianStatus.arrived
+                          ? Colors.red.shade700
+                          : Colors.grey.shade400,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -422,27 +580,91 @@ class _FoundTechnicianState extends State<FoundTechnician>
     );
   }
 
+  void _showCancelDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.warning_rounded, color: Colors.orange.shade600),
+              const SizedBox(width: 8),
+              const Text("Cancel Booking"),
+            ],
+          ),
+          content: const Text(
+            "Are you sure you want to cancel this booking?",
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                "No",
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                widget.onFindAnother();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade600,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                "Yes, Cancel",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildInfoChip(IconData icon, String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.blue[50],
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.blue[100]!),
+        color: Colors.blue.shade50.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(
+          color: Colors.blue.shade100.withOpacity(0.8),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.shade100.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: Colors.blue[600]),
-          const SizedBox(width: 6),
+          Icon(icon, size: 18, color: Colors.blue.shade600.withOpacity(0.8)),
+          const SizedBox(width: 8),
           Flexible(
             child: Text(
               text,
               style: TextStyle(
-                fontSize: 12,
-                color: Colors.blue[700],
-                fontWeight: FontWeight.w500,
+                fontSize: 13,
+                color: Colors.blue.shade700.withOpacity(0.9),
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
               ),
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,

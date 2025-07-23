@@ -39,97 +39,99 @@ class CompletedJobScreen extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(30.0),
-        child: Column(
-          children: [
-            // Step 1: Share PIN (Completed)
-            _buildStepItem(
-              stepNumber: 1,
-              title: 'Share PIN',
-              description: 'Share this PIN with the technician to verify their arrival.',
-              isCompleted: true,
-              isActive: false,
-              child: _PinBox(pin: pin),
-            ),
-            const SizedBox(height: 24),
-
-            // Step 2: Estimated Job Cost (Completed)
-            _buildStepItem(
-              stepNumber: 2,
-              title: 'Estimated Job Cost',
-              description: 'You accepted the estimated job cost.',
-              isCompleted: true,
-              isActive: false,
-              child: _CostSection(cost: estimatedCost),
-            ),
-            const SizedBox(height: 24),
-
-            // Step 3: Ongoing (Completed)
-            _buildStepItem(
-              stepNumber: 3,
-              isCompleted: true,
-              isActive: false,
-              title: 'Ongoing',
-              description: 'Technician finished working on your job.',
-            ),
-            const SizedBox(height: 24),
-
-            // Step 4: Finish Job (Completed)
-            _buildStepItem(
-              stepNumber: 4,
-              title: 'Finish Job',
-              description: 'Finalize the Job by sharing an OTP with the technician.',
-              isCompleted: true,
-              isActive: false,
-              child: _FinishOtpSection(finishOtp: finishOtp),
-            ),
-            const SizedBox(height: 24),
-
-            // Step 5: Payment Completed (Completed)
-            _buildStepItem(
-              stepNumber: 5,
-              title: 'Payment Method Selected',
-              description: 'You have selected to pay by cash.',
-              isCompleted: true,
-              isActive: false,
-              child: _PaymentSummary(
-                method: paymentMethod
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Step 1: Share PIN (Completed)
+              _buildStepItem(
+                stepNumber: 1,
+                title: 'Share PIN',
+                description: 'Share this PIN with the technician to verify their arrival.',
+                isCompleted: true,
+                isActive: false,
+                child: _PinBox(pin: pin),
               ),
-            ),
-            const SizedBox(height: 24),
-
-            // Step 6: Review (Active)
-            _buildStepItem(
-              stepNumber: 6,
-              title: 'Review',
-              description: 'Rate the technician and leave a review.',
-              isCompleted: false,
-              isActive: true,
-              child: Container(
-                margin: const EdgeInsets.only(top: 12),
-                child: ElevatedButton(
-                  onPressed: () {
-                    _showRatingModal(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
+              const SizedBox(height: 24),
+          
+              // Step 2: Estimated Job Cost (Completed)
+              _buildStepItem(
+                stepNumber: 2,
+                title: 'Estimated Job Cost',
+                description: 'You accepted the estimated job cost.',
+                isCompleted: true,
+                isActive: false,
+                child: _CostSection(cost: estimatedCost),
+              ),
+              const SizedBox(height: 24),
+          
+              // Step 3: Ongoing (Completed)
+              _buildStepItem(
+                stepNumber: 3,
+                isCompleted: true,
+                isActive: false,
+                title: 'Ongoing',
+                description: 'Technician finished working on your job.',
+              ),
+              const SizedBox(height: 24),
+          
+              // Step 4: Finish Job (Completed)
+              _buildStepItem(
+                stepNumber: 4,
+                title: 'Finish Job',
+                description: 'Finalize the Job by sharing an OTP with the technician.',
+                isCompleted: true,
+                isActive: false,
+                child: _FinishOtpSection(finishOtp: finishOtp),
+              ),
+              const SizedBox(height: 24),
+          
+              // Step 5: Payment Completed (Completed)
+              _buildStepItem(
+                stepNumber: 5,
+                title: 'Payment Method Selected',
+                description: 'You have selected to pay by cash.',
+                isCompleted: true,
+                isActive: false,
+                child: _PaymentSummary(
+                  method: paymentMethod
+                ),
+              ),
+              const SizedBox(height: 24),
+          
+              // Step 6: Review (Active)
+              _buildStepItem(
+                stepNumber: 6,
+                title: 'Review',
+                description: 'Rate the technician and leave a review.',
+                isCompleted: false,
+                isActive: true,
+                child: Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      _showRatingModal(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      elevation: 2,
                     ),
-                    elevation: 2,
-                  ),
-                  child: const Text(
-                    'Rate Technician',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                    child: const Text(
+                      'Rate Technician',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -490,16 +492,30 @@ class _CostSection extends StatelessWidget {
   const _CostSection({required this.cost});
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Accepted Estimated Price: ',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
+        Row(
+          children: [
+            Flexible(
+              child: Text(
+                'Accepted Estimated Price:',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Text(
+              '✅',
+              style: TextStyle(fontSize: 20),
+            ),
+          ],
         ),
+        const SizedBox(height: 8),
         Text(
           'Rs. $cost',
           style: const TextStyle(
@@ -507,11 +523,6 @@ class _CostSection extends StatelessWidget {
             fontWeight: FontWeight.bold,
             color: Colors.black,
           ),
-        ),
-        const SizedBox(width: 6),
-        const Text(
-          '✅',
-          style: TextStyle(fontSize: 20),
         ),
       ],
     );

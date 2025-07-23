@@ -298,17 +298,31 @@ class _CostSection extends StatelessWidget {
   final int cost;
   const _CostSection({required this.cost});
   @override
-  Widget build(BuildContext context) {
-    return Row(
+   Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Accepted Estimated Price: ',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
+        Row(
+          children: [
+            Flexible(
+              child: Text(
+                'Accepted Estimated Price:',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Text(
+              '✅',
+              style: TextStyle(fontSize: 20),
+            ),
+          ],
         ),
+        const SizedBox(height: 8),
         Text(
           'Rs. $cost',
           style: const TextStyle(
@@ -316,11 +330,6 @@ class _CostSection extends StatelessWidget {
             fontWeight: FontWeight.bold,
             color: Colors.black,
           ),
-        ),
-        const SizedBox(width: 6),
-        const Text(
-          '✅',
-          style: TextStyle(fontSize: 20),
         ),
       ],
     );
