@@ -7,7 +7,7 @@ import 'package:fixme/screens/Profile/customer_profile_support.dart';
 import 'package:fixme/screens/Profile/customer_vehicle_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
+import 'package:fixme/utils/constants/size.dart';
 
 class CustomerProfilePage extends StatelessWidget {
   const CustomerProfilePage({super.key});
@@ -20,27 +20,148 @@ class CustomerProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text(
-          'Customer Profile',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: Colors.blue[800],
-        iconTheme: const IconThemeData(color: Colors.white),
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildProfileHeader(),
-            _buildContactCard(),
-            _buildMenu(),
-            const SizedBox(height: 20),
-            _buildLogoutButton(context),
-            const SizedBox(height: 30),
-          ],
-        ),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 280.0,
+            floating: false,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: Colors.blue[800],
+            flexibleSpace: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                // Calculate collapse progress (0.0 = fully expanded, 1.0 = fully collapsed)
+                final double appBarHeight = constraints.biggest.height;
+                final double statusBarHeight = MediaQuery.of(
+                  context,
+                ).padding.top;
+                final double minHeight = kToolbarHeight + statusBarHeight;
+                final double maxHeight = 280.0 + statusBarHeight;
+                final double collapseProgress =
+                    ((maxHeight - appBarHeight) / (maxHeight - minHeight))
+                        .clamp(0.0, 1.0);
+
+                return FlexibleSpaceBar(
+                  titlePadding: EdgeInsets.only(
+                    left: 16,
+                    bottom: 16,
+                    right: collapseProgress > 0.5 ? 16 : 0,
+                  ),
+                  centerTitle: collapseProgress < 0.5,
+                  title: AnimatedContainer(
+                    duration: const Duration(milliseconds: 100),
+                    child: collapseProgress > 0.5
+                        ? Row(
+                            mainAxisSize:
+                                MainAxisSize.max, 
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'My Profile',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: CircleAvatar(
+                                  radius: 16,
+                                  backgroundColor: Colors.grey[300],
+                                  backgroundImage: const AssetImage(
+                                    'assets/images/car.png',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        : const Text(
+                            'My Profile',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
+                  background: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.blue[800]!, Colors.blue[600]!],
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 60),
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 200),
+                          opacity: 1.0 - collapseProgress,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 4),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 10,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: CircleAvatar(
+                              radius: 50,
+                              backgroundColor: Colors.grey[300],
+                              backgroundImage: const AssetImage(
+                                'assets/images/car.png',
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 200),
+                          opacity: 1.0 - collapseProgress,
+                          child: const Text(
+                            'Ishan Chamika',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
+                _buildContactCard(),
+                _buildMenu(),
+                const SizedBox(height: FixMeSizes.defaultSpace),
+                _buildLogoutButton(context),
+                const SizedBox(height: 100),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -57,7 +178,16 @@ class CustomerProfilePage extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const SizedBox(height: 20),
+          const SizedBox(height: FixMeSizes.appBarHeight),
+          const Text(
+            'My Profile',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: FixMeSizes.defaultSpace),
           Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
@@ -74,10 +204,9 @@ class CustomerProfilePage extends StatelessWidget {
               radius: 50,
               backgroundColor: Colors.grey[300],
               backgroundImage: const AssetImage('assets/images/car.png'),
-
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: FixMeSizes.spaceBtwItems),
           const Text(
             'Ishan Chamika',
             style: TextStyle(
@@ -86,23 +215,7 @@ class CustomerProfilePage extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 4),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.green[400],
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Text(
-              'Premium Customer',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          const SizedBox(height: 30),
+          const SizedBox(height: FixMeSizes.spaceBtwItems),
         ],
       ),
     );
