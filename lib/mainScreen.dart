@@ -1,14 +1,19 @@
+import 'package:fixme/data/repositories/user_repository.dart';
+import 'package:fixme/features/profile/controller/profile_controller.dart';
 import 'package:fixme/screens/Profile/profile_page.dart';
 import 'package:fixme/screens/booking_screen.dart';
 import 'package:fixme/screens/home_screen.dart';
 import 'package:fixme/screens/search_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class MainScreen extends StatelessWidget {
   const MainScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    Get.put(UserRepository());
+    Get.put(ProfileController());
     return const MainNavigation();
   }
 }
@@ -23,7 +28,7 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
 
-  static const List<Widget> _widgetOptions = [
+  static const List<Widget> _widgetOptions = <Widget>[
     HomeScreen(),
     SearchPage(),
     BookingsScreen(),
@@ -39,18 +44,9 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 10),
-        transitionBuilder: (Widget child, Animation<double> animation) {
-          return FadeTransition(
-            opacity: animation,
-            child: child,
-          );
-        },
-        child: _widgetOptions.elementAt(_selectedIndex),
-      ),
+      body: _widgetOptions.elementAt(_selectedIndex),
       bottomNavigationBar: BottomNavigationBar(
-        items: const [
+        items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
@@ -70,6 +66,7 @@ class _MainNavigationState extends State<MainNavigation> {
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.grey[800],
+        unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
         onTap: _onItemTapped,
       ),

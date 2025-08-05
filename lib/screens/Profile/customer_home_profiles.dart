@@ -1,5 +1,8 @@
+import 'package:fixme/features/profile/controller/profile_controller.dart';
+import 'package:fixme/models/home_profile.dart';
 import 'package:fixme/screens/Profile/customer_profile_home.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class CustomerHomeProfiles extends StatefulWidget {
   const CustomerHomeProfiles({super.key});
@@ -9,58 +12,10 @@ class CustomerHomeProfiles extends StatefulWidget {
 }
 
 class _CustomerHomeProfilesState extends State<CustomerHomeProfiles> {
-  // Sample data for home profiles
-  List<HomeProfile> homeProfiles = [
-    HomeProfile(
-      id: '1',
-      name: 'Primary Residence',
-      address: '123 Main Street, Colombo 05',
-      city: 'Colombo',
-      postalCode: '00500',
-      homeType: 'Apartment',
-      imageUrl: 'assets/home1.jpg',
-      isDefault: true,
-      bedrooms: 3,
-      bathrooms: 2,
-      area: '1200 sq ft',
-      phone: '+94 77 123 4567',
-    ),
-    HomeProfile(
-      id: '2',
-      name: 'Weekend House',
-      address: '456 Beach Road, Galle',
-      city: 'Galle',
-      postalCode: '80000',
-      homeType: 'House',
-      imageUrl: 'assets/home2.jpg',
-      isDefault: false,
-      bedrooms: 4,
-      bathrooms: 3,
-      area: '2000 sq ft',
-      phone: '+94 77 987 6543',
-    ),
-    HomeProfile(
-      id: '3',
-      name: 'Office Space',
-      address: '789 Business District, Kandy',
-      city: 'Kandy',
-      postalCode: '20000',
-      homeType: 'Commercial',
-      imageUrl: 'assets/home3.jpg',
-      isDefault: false,
-      bedrooms: 0,
-      bathrooms: 2,
-      area: '800 sq ft',
-      phone: '+94 77 555 9999',
-    ),
-  ];
+  final profileController = Get.find<ProfileController>();
 
   void _setAsDefault(String homeId) {
-    setState(() {
-      for (var home in homeProfiles) {
-        home.isDefault = home.id == homeId;
-      }
-    });
+    profileController.setDefaultHome(homeId);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Default home updated successfully!'),
@@ -102,13 +57,7 @@ class _CustomerHomeProfilesState extends State<CustomerHomeProfiles> {
             ),
             TextButton(
               onPressed: () {
-                setState(() {
-                  homeProfiles.removeWhere((h) => h.id == home.id);
-                  // If deleted home was default, set first home as default
-                  if (home.isDefault && homeProfiles.isNotEmpty) {
-                    homeProfiles.first.isDefault = true;
-                  }
-                });
+                profileController.deleteHomeProfile(home.id);
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -154,15 +103,16 @@ class _CustomerHomeProfilesState extends State<CustomerHomeProfiles> {
       body: Column(
         children: [
           Expanded(
-            child: homeProfiles.isEmpty
+            child: Obx(() => profileController.userHomeProfiles.isEmpty
                 ? _buildEmptyState()
                 : ListView.builder(
                     padding: EdgeInsets.all(16),
-                    itemCount: homeProfiles.length,
+                    itemCount: profileController.userHomeProfiles.length,
                     itemBuilder: (context, index) {
-                      return _buildHomeCard(homeProfiles[index]);
+                      return _buildHomeCard(profileController.userHomeProfiles[index]);
                     },
                   ),
+            ),
           ),
           _buildAddHomeButton(),
         ],
@@ -369,23 +319,6 @@ class _CustomerHomeProfilesState extends State<CustomerHomeProfiles> {
     );
   }
 
-  Widget _buildStatItem(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: Colors.grey[600]),
-        SizedBox(width: 4),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildAddHomeButton() {
     return Container(
       padding: EdgeInsets.all(16),
@@ -420,37 +353,6 @@ class _CustomerHomeProfilesState extends State<CustomerHomeProfiles> {
       ),
     );
   }
-}
-
-// Home Profile Model
-class HomeProfile {
-  final String id;
-  final String name;
-  final String address;
-  final String city;
-  final String postalCode;
-  final String homeType;
-  final String imageUrl;
-  bool isDefault;
-  final int bedrooms;
-  final int bathrooms;
-  final String area;
-  final String phone;
-
-  HomeProfile({
-    required this.id,
-    required this.name,
-    required this.address,
-    required this.city,
-    required this.postalCode,
-    required this.homeType,
-    required this.imageUrl,
-    required this.isDefault,
-    required this.bedrooms,
-    required this.bathrooms,
-    required this.area,
-    required this.phone,
-  });
 }
 
 // Placeholder pages for navigation

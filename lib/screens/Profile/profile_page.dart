@@ -1,10 +1,14 @@
 import 'package:fixme/features/authentication/controller/signup_controller.dart';
+import 'package:fixme/features/profile/controller/profile_controller.dart';
+import 'package:fixme/screens/Profile/customer_home_profiles.dart';
 import 'package:fixme/screens/Profile/customer_profile_account.dart';
 import 'package:fixme/screens/Profile/customer_profile_history.dart';
 import 'package:fixme/screens/Profile/customer_profile_home.dart';
 import 'package:fixme/screens/Profile/customer_profile_security.dart';
 import 'package:fixme/screens/Profile/customer_profile_support.dart';
 import 'package:fixme/screens/Profile/customer_vehicle_profile.dart';
+import 'package:fixme/screens/Profile/customer_vehicle_profiles.dart';
+import 'package:fixme/screens/Profile/edit_profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:fixme/utils/constants/size.dart';
@@ -18,6 +22,9 @@ class CustomerProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Initialize and get profile controller
+    final profileController = Get.put(ProfileController());
+    
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: CustomScrollView(
@@ -73,13 +80,13 @@ class CustomerProfilePage extends StatelessWidget {
                                     width: 2,
                                   ),
                                 ),
-                                child: CircleAvatar(
+                                child: Obx(() => CircleAvatar(
                                   radius: 16,
                                   backgroundColor: Colors.grey[300],
-                                  backgroundImage: const AssetImage(
-                                    'assets/images/car.png',
-                                  ),
-                                ),
+                                  backgroundImage: profileController.profileImageUrl.value.isNotEmpty
+                                      ? NetworkImage(profileController.profileImageUrl.value)
+                                      : const AssetImage('assets/images/car.png') as ImageProvider,
+                                )),
                               ),
                             ],
                           )
@@ -120,27 +127,29 @@ class CustomerProfilePage extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            child: CircleAvatar(
+                            child: Obx(() => CircleAvatar(
                               radius: 50,
                               backgroundColor: Colors.grey[300],
-                              backgroundImage: const AssetImage(
-                                'assets/images/car.png',
-                              ),
-                            ),
+                              backgroundImage: profileController.profileImageUrl.value.isNotEmpty
+                                  ? NetworkImage(profileController.profileImageUrl.value)
+                                  : const AssetImage('assets/images/car.png') as ImageProvider,
+                            )),
                           ),
                         ),
                         const SizedBox(height: 16),
                         AnimatedOpacity(
                           duration: const Duration(milliseconds: 200),
                           opacity: 1.0 - collapseProgress,
-                          child: const Text(
-                            'Ishan Chamika',
-                            style: TextStyle(
+                          child: Obx(() => Text(
+                            profileController.fullName.value.isNotEmpty 
+                                ? profileController.fullName.value 
+                                : 'Loading...',
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                             ),
-                          ),
+                          )),
                         ),
                         const SizedBox(height: 20),
                       ],
@@ -165,63 +174,9 @@ class CustomerProfilePage extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildProfileHeader() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.blue[800]!, Colors.blue[600]!],
-        ),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: FixMeSizes.appBarHeight),
-          const Text(
-            'My Profile',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: FixMeSizes.defaultSpace),
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 4),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 10,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            child: CircleAvatar(
-              radius: 50,
-              backgroundColor: Colors.grey[300],
-              backgroundImage: const AssetImage('assets/images/car.png'),
-            ),
-          ),
-          const SizedBox(height: FixMeSizes.spaceBtwItems),
-          const Text(
-            'Ishan Chamika',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: FixMeSizes.spaceBtwItems),
-        ],
-      ),
-    );
-  }
-
   Widget _buildContactCard() {
+    final profileController = Get.find<ProfileController>();
+    
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -240,28 +195,42 @@ class CustomerProfilePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Contact Information',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Contact Information',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                // icon of edit profile
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.blue),
+                  onPressed: () => Get.to(() => const EditProfilePage()),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
-            _buildContactItem(
+            Obx(() => _buildContactItem(
               Icons.email_outlined,
               'Email',
-              'ishanchami@gmail.com',
+              profileController.email.value.isNotEmpty 
+                  ? profileController.email.value 
+                  : 'Loading...',
               Colors.blue[600]!,
-            ),
+            )),
             const SizedBox(height: 12),
-            _buildContactItem(
+            Obx(() => _buildContactItem(
               Icons.phone_outlined,
               'Phone',
-              '+94 77 838 8456',
+              profileController.phone.value.isNotEmpty 
+                  ? profileController.phone.value 
+                  : 'Loading...',
               Colors.green[600]!,
-            ),
+            )),
           ],
         ),
       ),
@@ -330,14 +299,14 @@ class CustomerProfilePage extends StatelessWidget {
             Icons.home_outlined,
             'Home Details',
             Colors.blue[600]!,
-            CustomerHomeProfile(),
+            CustomerHomeProfiles(),
           ),
           _buildDivider(),
           _buildMenuItem(
             Icons.directions_car_outlined,
             'Vehicle Details',
             Colors.orange[600]!,
-            CustomerVehicleProfile(),
+            CustomerVehicleProfiles(),
           ),
           _buildDivider(),
           _buildMenuItem(
