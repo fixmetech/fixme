@@ -1,5 +1,6 @@
 import 'package:fixme/data/repositories/user_repository.dart';
 import 'package:fixme/models/home_profile.dart';
+import 'package:fixme/models/vehicle_profile.dart';
 import 'package:fixme/utils/helper/helper_functions.dart';
 import 'package:get/get.dart';
 
@@ -12,7 +13,12 @@ class ProfileController extends GetxController {
   final phone = ''.obs;
   final profileImageUrl = ''.obs;
   final isLoading = false.obs;
+
   final userHomeProfiles = <HomeProfile>[].obs;
+  final homeCount = 0.obs;
+
+  final userVehicleProfiles = <VehicleProfile>[].obs;
+  final vehicleCount = 0.obs;
 
   final userRepository = Get.put(UserRepository());
 
@@ -20,6 +26,7 @@ class ProfileController extends GetxController {
   void onInit() {
     super.onInit();
     loadUserData();
+    // loadUserHomes(); // Let the UI call this when needed
   }
 
   /// Load user data from Firestore
@@ -36,48 +43,6 @@ class ProfileController extends GetxController {
         email.value = userData['email'] ?? '';
         phone.value = userData['phone'] ?? '';
         profileImageUrl.value = userData['profileImage'] ?? '';
-        userHomeProfiles.value =
-            (userData['homeProfiles'] as List<dynamic>?)
-                ?.map((homeData) => HomeProfile.fromMap(homeData))
-                .toList() ??
-            [
-              HomeProfile(
-                id: '1',
-                name: 'My Home',
-                address: '123 Main Street, Apartment 4B',
-                city: 'Colombo',
-                postalCode: '10100',
-                homeType: 'Apartment',
-                imageUrl: '',
-                isDefault: true,
-                area: '1200 sq ft',
-                phone: '+94 77 123 4567',
-              ),
-              HomeProfile(
-                id: '2',
-                name: 'Parent\'s House',
-                address: '456 Oak Avenue',
-                city: 'Kandy',
-                postalCode: '20000',
-                homeType: 'House',
-                imageUrl: '',
-                isDefault: false,
-                area: '2000 sq ft',
-                phone: '+94 81 234 5678',
-              ),
-              HomeProfile(
-                id: '3',
-                name: 'Office Space',
-                address: '789 Business District',
-                city: 'Colombo',
-                postalCode: '10300',
-                homeType: 'Office',
-                imageUrl: '',
-                isDefault: false,
-                area: '800 sq ft',
-                phone: '+94 11 345 6789',
-              ),
-            ];
       }
     } catch (e) {
       FixMeHelperFunctions.showErrorSnackBar(
@@ -142,6 +107,98 @@ class ProfileController extends GetxController {
     await loadUserData();
   }
 
+  /// Load user's homes
+  Future<void> loadUserHomes() async {
+    try {
+      isLoading.value = true;
+      print('Starting to load user homes from backend...');
+
+      final homes = await userRepository.getUserProperties('homes');
+      print('Received homes data: $homes');
+
+      if (homes['success'] == true && homes['data'] != null) {
+        // Parse the data from API
+        final List<dynamic> homeData = homes['data'] as List<dynamic>;
+        userHomeProfiles.value = homeData
+            .map((data) => HomeProfile.fromMap(data as Map<String, dynamic>))
+            .toList();
+        homeCount.value = homes['count'] ?? userHomeProfiles.length;
+        print(
+          'Successfully loaded ${userHomeProfiles.length} homes from backend',
+        );
+      } else {
+        // No data from backend - clear the list
+        userHomeProfiles.clear();
+        homeCount.value = 0;
+        print('No homes found in backend or API call failed');
+
+        if (homes['message'] != null) {
+          FixMeHelperFunctions.showErrorSnackBar(
+            'No Homes Found',
+            homes['message'],
+          );
+        }
+      }
+    } catch (e) {
+      print('Error loading user homes: $e');
+      // Clear data on error
+      userHomeProfiles.clear();
+      homeCount.value = 0;
+      FixMeHelperFunctions.showErrorSnackBar(
+        'Connection Error',
+        'Failed to load homes from server. Please check your internet connection.',
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Load user's vehicles
+  Future<void> loadUserVehicles() async {
+    try {
+      isLoading.value = true;
+      print('Starting to load user vehicles from backend...');
+
+      final vehicles = await userRepository.getUserProperties('vehicles');
+      print('Received vehicles data: $vehicles');
+
+      if (vehicles['success'] == true && vehicles['data'] != null) {
+        // Parse the data from API
+        final List<dynamic> vehicleData = vehicles['data'] as List<dynamic>;
+        userVehicleProfiles.value = vehicleData
+            .map((data) => VehicleProfile.fromMap(data as Map<String, dynamic>))
+            .toList();
+        vehicleCount.value = vehicles['count'] ?? userVehicleProfiles.length;
+        print(
+          'Successfully loaded ${userVehicleProfiles.length} vehicles from backend',
+        );
+      } else {
+        // No data from backend - clear the list
+        userVehicleProfiles.clear();
+        vehicleCount.value = 0;
+        print('No vehicles found in backend or API call failed');
+
+        if (vehicles['message'] != null) {
+          FixMeHelperFunctions.showErrorSnackBar(
+            'No Vehicles Found',
+            vehicles['message'],
+          );
+        }
+      }
+    } catch (e) {
+      print('Error loading user vehicles: $e');
+      // Clear data on error
+      userVehicleProfiles.clear();
+      vehicleCount.value = 0;
+      FixMeHelperFunctions.showErrorSnackBar(
+        'Connection Error',
+        'Failed to load vehicles from server. Please check your internet connection.',
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   /// Set a home as default
   void setDefaultHome(String homeId) {
     for (var home in userHomeProfiles) {
@@ -167,16 +224,114 @@ class ProfileController extends GetxController {
   }
 
   /// Delete a home profile
-  void deleteHomeProfile(String homeId) {
+  void deleteHomeProfile(String homeId) async {
     final homeToDelete = userHomeProfiles.firstWhere(
       (home) => home.id == homeId,
     );
-    userHomeProfiles.removeWhere((home) => home.id == homeId);
+    try {
+      final isDeleted = await userRepository.deleteUserProperty(homeId, 'homes');
+      if (isDeleted) {
+        userHomeProfiles.removeWhere((home) => home.id == homeId);
+        FixMeHelperFunctions.showSuccessSnackBar(
+          'Success',
+          'Home deleted successfully!',
+        );
+      } else {
+        FixMeHelperFunctions.showErrorSnackBar(
+          'Error',
+          'Failed to delete home. Please try again later1.',
+        );
+      }
+    } catch (e) {
+      FixMeHelperFunctions.showErrorSnackBar(
+        'Error',
+        'Failed to delete home. Please try again later2.',
+      );
+    }
 
     // If deleted home was default, set first home as default
     if (homeToDelete.isDefault && userHomeProfiles.isNotEmpty) {
       userHomeProfiles.first.isDefault = true;
       userHomeProfiles.refresh(); // Notify observers
+    }
+    homeCount.value = userHomeProfiles.length;
+  }
+
+  /// Get a specific home by ID
+  HomeProfile? getHomeById(String homeId) {
+    try {
+      return userHomeProfiles.firstWhere((home) => home.id == homeId);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Get the default home
+  HomeProfile? getDefaultHome() {
+    try {
+      return userHomeProfiles.firstWhere((home) => home.isDefault);
+    } catch (e) {
+      return userHomeProfiles.isNotEmpty ? userHomeProfiles.first : null;
+    }
+  }
+
+  /// Set a vehicle as default
+  void setDefaultVehicle(String vehicleId) {
+    for (var vehicle in userVehicleProfiles) {
+      vehicle.isDefault = vehicle.id == vehicleId;
+    }
+    userVehicleProfiles.refresh(); // Notify observers
+  }
+
+  /// Add a new vehicle profile
+  void addVehicleProfile(VehicleProfile vehicle) {
+    userVehicleProfiles.add(vehicle);
+    vehicleCount.value = userVehicleProfiles.length;
+  }
+
+  /// Update an existing vehicle profile
+  void updateVehicleProfile(VehicleProfile updatedVehicle) {
+    final index = userVehicleProfiles.indexWhere(
+      (vehicle) => vehicle.id == updatedVehicle.id,
+    );
+    if (index != -1) {
+      userVehicleProfiles[index] = updatedVehicle;
+      userVehicleProfiles.refresh(); // Notify observers
+    }
+  }
+
+  /// Delete a vehicle profile
+  void deleteVehicleProfile(String vehicleId) {
+    final vehicleToDelete = userVehicleProfiles.firstWhere(
+      (vehicle) => vehicle.id == vehicleId,
+    );
+    userVehicleProfiles.removeWhere((vehicle) => vehicle.id == vehicleId);
+
+    // If deleted vehicle was default, set first vehicle as default
+    if (vehicleToDelete.isDefault && userVehicleProfiles.isNotEmpty) {
+      userVehicleProfiles.first.isDefault = true;
+      userVehicleProfiles.refresh(); // Notify observers
+    }
+    vehicleCount.value = userVehicleProfiles.length;
+  }
+
+  /// Get a specific vehicle by ID
+  VehicleProfile? getVehicleById(String vehicleId) {
+    try {
+      return userVehicleProfiles.firstWhere(
+        (vehicle) => vehicle.id == vehicleId,
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Get the default vehicle
+  VehicleProfile? getDefaultVehicle() {
+    try {
+      return userVehicleProfiles.firstWhere((vehicle) => vehicle.isDefault);
+    } catch (e) {
+      return userVehicleProfiles.isNotEmpty ? userVehicleProfiles.first : null;
     }
   }
 }

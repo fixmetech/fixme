@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fixme/utils/http/http_client.dart';
 import 'package:get/get.dart';
 
 class UserRepository extends GetxController {
@@ -68,5 +69,41 @@ class UserRepository extends GetxController {
   Future<String> getPhone() async {
     final userData = await getCurrentUserData();
     return userData?['phone'] ?? _auth.currentUser?.phoneNumber ?? '';
+  }
+
+  // Get user's Properties
+  Future<Map<String, dynamic>> getUserProperties(String propertyType) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        print('No authenticated user found');
+        return {'success': false, 'message': 'User not authenticated', 'data': [], 'count': 0};
+      }
+      final endpoint = 'api/customers/profile/${user.uid}/properties?propertyType=$propertyType';
+      final res = await FixMeHttpHelper.get(endpoint);
+      if (res['success'] == true) {
+        return res;
+      } else {
+        print('API returned success: false');
+        return {'success': false, 'message': res['message'] ?? 'Unknown error', 'data': [], 'count': 0};
+      }
+    } catch (e) {
+      print('Error in getUserProperties: $e');
+      return {'success': false, 'message': e.toString(), 'data': [], 'count': 0};
+    }
+  }
+
+  // Delete user's property using property id
+  Future<bool> deleteUserProperty(String propertyId, String propertyType) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return false;
+      final endpoint = 'api/customers/profile/${user.uid}/property/$propertyId?propertyType=$propertyType';
+      final res = await FixMeHttpHelper.delete(endpoint);
+      return res['success'] == true;
+    } catch (e) {
+      print('Error in deleteUserProperty: $e');
+      return false;
+    }
   }
 }

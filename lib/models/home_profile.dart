@@ -9,6 +9,9 @@ class HomeProfile {
   bool isDefault;
   final String area;
   final String phone;
+  final String? landmark;
+  final Map<String, dynamic>? map;
+  final Map<String, dynamic>? owner;
 
   HomeProfile({
     required this.id,
@@ -21,9 +24,11 @@ class HomeProfile {
     required this.isDefault,
     required this.area,
     required this.phone,
+    this.landmark,
+    this.map,
+    this.owner,
   });
 
-  // Convert from Map (Firestore data) to HomeProfile object
   factory HomeProfile.fromMap(Map<String, dynamic> map) {
     return HomeProfile(
       id: map['id'] ?? '',
@@ -36,6 +41,9 @@ class HomeProfile {
       isDefault: map['isDefault'] ?? false,
       area: map['area'] ?? '',
       phone: map['phone'] ?? '',
+      landmark: map['landmark'],
+      map: map['map'],
+      owner: map['owner'],
     );
   }
 
@@ -52,6 +60,9 @@ class HomeProfile {
       'isDefault': isDefault,
       'area': area,
       'phone': phone,
+      'landmark': landmark,
+      'map': map,
+      'owner': owner,
     };
   }
 
@@ -67,6 +78,9 @@ class HomeProfile {
     bool? isDefault,
     String? area,
     String? phone,
+    String? landmark,
+    Map<String, dynamic>? map,
+    Map<String, dynamic>? owner,
   }) {
     return HomeProfile(
       id: id ?? this.id,
@@ -79,6 +93,9 @@ class HomeProfile {
       isDefault: isDefault ?? this.isDefault,
       area: area ?? this.area,
       phone: phone ?? this.phone,
+      landmark: landmark ?? this.landmark,
+      map: map ?? this.map,
+      owner: owner ?? this.owner,
     );
   }
 }

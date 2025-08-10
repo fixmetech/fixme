@@ -1,6 +1,8 @@
 import 'package:fixme/features/profile/controller/profile_controller.dart';
 import 'package:fixme/models/home_profile.dart';
 import 'package:fixme/screens/Profile/customer_profile_home.dart';
+import 'package:fixme/utils/device/device_utils.dart';
+import 'package:fixme/utils/helper/helper_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -13,6 +15,13 @@ class CustomerHomeProfiles extends StatefulWidget {
 
 class _CustomerHomeProfilesState extends State<CustomerHomeProfiles> {
   final profileController = Get.find<ProfileController>();
+
+  // Run when the widget is first created
+  @override
+  void initState() {
+    super.initState();
+    profileController.loadUserHomes();
+  }
 
   void _setAsDefault(String homeId) {
     profileController.setDefaultHome(homeId);
@@ -29,7 +38,7 @@ class _CustomerHomeProfilesState extends State<CustomerHomeProfiles> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => CustomerHomeProfile(),
+        builder: (context) => CustomerHomeProfile(homeId: home.id),
       ),
     );
   }
@@ -59,12 +68,6 @@ class _CustomerHomeProfilesState extends State<CustomerHomeProfiles> {
               onPressed: () {
                 profileController.deleteHomeProfile(home.id);
                 Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Home deleted successfully!'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
               },
               child: Text('Delete', style: TextStyle(color: Colors.red)),
             ),
@@ -125,28 +128,51 @@ class _CustomerHomeProfilesState extends State<CustomerHomeProfiles> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.home_outlined,
-            size: 80,
-            color: Colors.grey[400],
-          ),
+          Obx(() => profileController.isLoading.value
+              ? CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue[600]!),
+                )
+              : Icon(
+                  Icons.home_outlined,
+                  size: 80,
+                  color: Colors.grey[400],
+                )),
           SizedBox(height: 16),
-          Text(
-            'No Home Profiles Added',
+          Obx(() => Text(
+            profileController.isLoading.value
+                ? 'Loading Home Profiles...'
+                : 'No Home Profiles Found',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: Colors.grey[600],
             ),
-          ),
+          )),
           SizedBox(height: 8),
-          Text(
-            'Add your first home profile to get started',
+          Obx(() => Text(
+            profileController.isLoading.value
+                ? 'Fetching your homes from server'
+                : 'Add your first home profile to get started',
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[500],
             ),
-          ),
+          )),
+          if (!profileController.isLoading.value) ...[
+            SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () => profileController.loadUserHomes(),
+              icon: Icon(Icons.refresh),
+              label: Text('Retry'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue[600],
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

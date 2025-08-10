@@ -13,7 +13,6 @@ class MainScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Get.put(UserRepository());
-    Get.put(ProfileController());
     return const MainNavigation();
   }
 }

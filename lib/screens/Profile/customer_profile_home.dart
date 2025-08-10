@@ -1,11 +1,16 @@
+import 'package:fixme/features/profile/controller/profile_controller.dart';
+import 'package:fixme/models/home_profile.dart';
 import 'package:fixme/screens/Profile/customer_profile_home_edit.dart';
 import 'package:flutter/material.dart' show AlertDialog, Alignment, AppBar, Border, BorderRadius,  BoxDecoration, BoxFit, BuildContext, Card, Center, Color, Colors, Column, Container, CrossAxisAlignment, DecorationImage, Divider, EdgeInsets, ElevatedButton, Expanded, FontWeight, GestureDetector, Icon, IconButton, IconThemeData, Icons, LinearGradient, MainAxisAlignment, MaterialPageRoute, Navigator, NetworkImage, Padding, PreferredSizeWidget, RoundedRectangleBorder, Row, Scaffold, ScaffoldMessenger, SingleChildScrollView, SizedBox, SnackBar, State, StatefulWidget, Text, TextButton, TextDecoration, TextStyle, Widget, showDialog;
+import 'package:get/get.dart';
 
 
 
 
 class CustomerHomeProfile extends StatefulWidget {
-  const CustomerHomeProfile({super.key});
+  final String? homeId;
+  
+  const CustomerHomeProfile({super.key, this.homeId});
 
   @override
   State<CustomerHomeProfile> createState() => _CustomerHomeProfileState();
@@ -15,19 +20,63 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
   static const Color _primaryColor = Color(0xFF1565C0);
   static const Color _accentColor = Color(0xFF42A5F5);
 
-  // Sample data - in a real app, this would come from a data source
-  final Map<String, String> homeDetails = {
-    'homeName': 'Sripali',
-    'address': '1/A, Colombo, 7',
-    'city': 'Colombo',
-    'district': 'Colombo',
-    'location': 'www.colombo7.com',
-  };
+  late ProfileController profileController;
+  HomeProfile? currentHome;
 
-  String? _imageUrl; // Placeholder for image URL (null for no image)
+  @override
+  void initState() {
+    super.initState();
+    profileController = Get.find<ProfileController>();
+    _loadHomeData();
+  }
+
+  void _loadHomeData() {
+    if (widget.homeId != null) {
+      currentHome = profileController.getHomeById(widget.homeId!);
+    } else {
+      currentHome = profileController.getDefaultHome();
+    }
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (currentHome == null) {
+      return Scaffold(
+        backgroundColor: Colors.grey[100],
+        appBar: _buildAppBar(),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.home_outlined,
+                size: 80,
+                color: Colors.grey[400],
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Home Not Found',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[600],
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'The requested home profile could not be loaded',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[500],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: _buildAppBar(),
@@ -41,6 +90,14 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
             _buildHomeImageSection(),
             const SizedBox(height: 32),
             _buildHomeDetailsGrid(),
+            if (currentHome!.owner != null) ...[
+              const SizedBox(height: 32),
+              _buildOwnerSection(),
+            ],
+            if (currentHome!.map != null) ...[
+              const SizedBox(height: 32),
+              _buildLocationSection(),
+            ],
           ],
         ),
       ),
@@ -49,8 +106,8 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      title: const Text(
-        'Customer Profile',
+      title: Text(
+        currentHome?.name ?? 'Home Profile',
         style: TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.w700,
@@ -132,7 +189,7 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
                     color: Colors.black87,
                   ),
                 ),
-                if (_imageUrl != null)
+                if (currentHome!.imageUrl.isNotEmpty)
                   Row(
                     children: [
                       IconButton(
@@ -150,7 +207,7 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
             const SizedBox(height: 12),
             Center(
               child: GestureDetector(
-                onTap: _imageUrl == null ? _handleImageEdit : null,
+                onTap: currentHome!.imageUrl.isEmpty ? _handleImageEdit : null,
                 child: Container(
                   width: double.infinity,
                   height: 200,
@@ -158,14 +215,14 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
                     color: Colors.grey[200],
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.grey[300]!, width: 1.5),
-                    image: _imageUrl != null
+                    image: currentHome!.imageUrl.isNotEmpty
                         ? DecorationImage(
-                      image: NetworkImage(_imageUrl!),
+                      image: NetworkImage(currentHome!.imageUrl),
                       fit: BoxFit.cover,
                     )
                         : null,
                   ),
-                  child: _imageUrl == null
+                  child: currentHome!.imageUrl.isEmpty
                       ? Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -215,23 +272,39 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
               ),
             ),
             const SizedBox(height: 20),
-            _buildDetailRow('Home Name (Nick Name)', homeDetails['homeName']!),
+            _buildDetailRow('Home Name', currentHome!.name),
             const Divider(height: 24),
-            _buildDetailRow('Address', homeDetails['address']!),
+            _buildDetailRow('Address', currentHome!.address),
+            if (currentHome!.landmark != null) ...[
+              const Divider(height: 24),
+              _buildDetailRow('Landmark', currentHome!.landmark!),
+            ],
             const Divider(height: 24),
             Row(
               children: [
                 Expanded(
-                  child: _buildDetailRow('City', homeDetails['city']!),
+                  child: _buildDetailRow('City', currentHome!.city),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: _buildDetailRow('District', homeDetails['district']!),
+                  child: _buildDetailRow('Home Type', currentHome!.homeType),
                 ),
               ],
             ),
             const Divider(height: 24),
-            _buildLocationRow(),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildDetailRow('Area', currentHome!.area),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildDetailRow('Postal Code', currentHome!.postalCode),
+                ),
+              ],
+            ),
+            const Divider(height: 24),
+            _buildDetailRow('Phone', currentHome!.phone),
           ],
         ),
       ),
@@ -263,12 +336,72 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
     );
   }
 
+  Widget _buildOwnerSection() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Owner Information',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildDetailRow('Owner Name', currentHome!.owner!['name'] ?? ''),
+            const Divider(height: 24),
+            _buildDetailRow('Owner Email', currentHome!.owner!['email'] ?? ''),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocationSection() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Location Information',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildDetailRow('Latitude', currentHome!.map!['latitude'].toString()),
+            const Divider(height: 24),
+            _buildDetailRow('Longitude', currentHome!.map!['longitude'].toString()),
+            const Divider(height: 24),
+            _buildLocationRow(),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildLocationRow() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Location',
+          'Google Maps',
           style: TextStyle(
             fontSize: 14,
             color: Colors.grey[600],
@@ -277,9 +410,9 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
         ),
         const SizedBox(height: 6),
         GestureDetector(
-          onTap: () => _openLocation(homeDetails['location']!),
+          onTap: () => _openLocation(currentHome!.map!['googleMapUrl'] ?? ''),
           child: Text(
-            homeDetails['location']!,
+            'Open in Google Maps',
             style: TextStyle(
               fontSize: 16,
               color: _primaryColor,
@@ -335,7 +468,7 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
   void _handleImageEdit() {
     // Simulate image picking (in a real app, use image_picker package)
     setState(() {
-      _imageUrl = 'https://via.placeholder.com/300'; // Placeholder image
+      currentHome = currentHome!.copyWith(imageUrl: 'https://via.placeholder.com/300');
     });
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Image updated successfully')),
@@ -361,7 +494,7 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
             ElevatedButton(
               onPressed: () {
                 setState(() {
-                  _imageUrl = null;
+                  currentHome = currentHome!.copyWith(imageUrl: '');
                 });
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
