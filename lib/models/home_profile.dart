@@ -1,5 +1,5 @@
 class HomeProfile {
-  final String id;
+  final String? id;
   final String name;
   final String address;
   final String city;
@@ -14,7 +14,7 @@ class HomeProfile {
   final Map<String, dynamic>? owner;
 
   HomeProfile({
-    required this.id,
+    this.id,
     required this.name,
     required this.address,
     required this.city,

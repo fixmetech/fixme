@@ -208,8 +208,41 @@ class ProfileController extends GetxController {
   }
 
   /// Add a new home profile
-  void addHomeProfile(HomeProfile home) {
-    userHomeProfiles.add(home);
+  Future<void> addHomeProfile(HomeProfile home) async {
+    try {
+      isLoading.value = true;
+      print('Adding new home profile to backend...');
+      
+      final propertyData = home.toMap();
+      final isAdded = await userRepository.addUserProperty(propertyData, 'homes');
+      
+      if (isAdded) {
+        // Add to local list and update UI
+        userHomeProfiles.add(home);
+        homeCount.value = userHomeProfiles.length;
+        userHomeProfiles.refresh(); // Notify observers
+        
+        FixMeHelperFunctions.showSuccessSnackBar(
+          'Success',
+          'Home added successfully!',
+        );
+        print('Home added successfully to backend and local list');
+      } else {
+        FixMeHelperFunctions.showErrorSnackBar(
+          'Error',
+          'Failed to add home. Please try again.',
+        );
+        print('Failed to add home to backend');
+      }
+    } catch (e) {
+      print('Error adding home: $e');
+      FixMeHelperFunctions.showErrorSnackBar(
+        'Connection Error',
+        'Failed to add home. Please check your internet connection.',
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   /// Update an existing home profile
@@ -224,12 +257,22 @@ class ProfileController extends GetxController {
   }
 
   /// Delete a home profile
-  void deleteHomeProfile(String homeId) async {
+  void deleteHomeProfile(String? homeId) async {
     final homeToDelete = userHomeProfiles.firstWhere(
       (home) => home.id == homeId,
     );
     try {
-      final isDeleted = await userRepository.deleteUserProperty(homeId, 'homes');
+      if(homeId == null) {
+        FixMeHelperFunctions.showErrorSnackBar(
+          'Error',
+          'Home ID cannot be null',
+        );
+        return;
+      }
+      final isDeleted = await userRepository.deleteUserProperty(
+        homeId,
+        'homes',
+      );
       if (isDeleted) {
         userHomeProfiles.removeWhere((home) => home.id == homeId);
         FixMeHelperFunctions.showSuccessSnackBar(

@@ -1,5 +1,6 @@
 import 'package:fixme/features/profile/controller/profile_controller.dart';
 import 'package:fixme/models/home_profile.dart';
+import 'package:fixme/screens/Profile/customer_add_home.dart';
 import 'package:fixme/screens/Profile/customer_profile_home.dart';
 import 'package:fixme/utils/device/device_utils.dart';
 import 'package:fixme/utils/helper/helper_functions.dart';
@@ -23,7 +24,10 @@ class _CustomerHomeProfilesState extends State<CustomerHomeProfiles> {
     profileController.loadUserHomes();
   }
 
-  void _setAsDefault(String homeId) {
+  void _setAsDefault(String? homeId) {
+    if (homeId == null) {
+      return;
+    }
     profileController.setDefaultHome(homeId);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -44,12 +48,7 @@ class _CustomerHomeProfilesState extends State<CustomerHomeProfiles> {
   }
 
   void _editHome(HomeProfile home) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditHomePage(home: home),
-      ),
-    );
+
   }
 
   void _deleteHome(HomeProfile home) {
@@ -78,12 +77,7 @@ class _CustomerHomeProfilesState extends State<CustomerHomeProfiles> {
   }
 
   void _addNewHome() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddHomePage(),
-      ),
-    );
+    Get.to(CustomerAddHome());
   }
 
   @override
@@ -376,65 +370,6 @@ class _CustomerHomeProfilesState extends State<CustomerHomeProfiles> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-// Placeholder pages for navigation
-class HomeDetailsPage extends StatelessWidget {
-  final HomeProfile home;
-
-  const HomeDetailsPage({super.key, required this.home});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Home Details'),
-        backgroundColor: Colors.blue[800],
-        foregroundColor: Colors.white,
-      ),
-      body: Center(
-        child: Text('Home Details Page for ${home.name}'),
-      ),
-    );
-  }
-}
-
-class EditHomePage extends StatelessWidget {
-  final HomeProfile home;
-
-  const EditHomePage({super.key, required this.home});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Edit Home'),
-        backgroundColor: Colors.blue[800],
-        foregroundColor: Colors.white,
-      ),
-      body: Center(
-        child: Text('Edit Home Page for ${home.name}'),
-      ),
-    );
-  }
-}
-
-class AddHomePage extends StatelessWidget {
-  const AddHomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Add New Home'),
-        backgroundColor: Colors.blue[800],
-        foregroundColor: Colors.white,
-      ),
-      body: Center(
-        child: Text('Add New Home Page'),
       ),
     );
   }

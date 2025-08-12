@@ -100,7 +100,7 @@ static Map<String, dynamic> _handleResponse(http.Response response) {
     try {
       final response = await http
           .post(
-            Uri.parse('$_baseUrl/$endpoint'),
+            Uri.parse('$_baseUrl$endpoint'),
             headers: _defaultHeaders,
             body: json.encode(data),
           )

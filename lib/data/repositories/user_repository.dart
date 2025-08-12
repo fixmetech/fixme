@@ -106,4 +106,33 @@ class UserRepository extends GetxController {
       return false;
     }
   }
+
+  /// Add new property
+  Future<bool> addUserProperty(Map<String, dynamic> propertyData, String propertyType) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        print('No authenticated user found for adding property');
+        return false;
+      }
+      
+      final endpoint = 'api/customers/profile/${user.uid}/property?propertyType=$propertyType';
+      print('Adding property with endpoint: $endpoint');
+      print('Property data: $propertyData');
+      
+      final res = await FixMeHttpHelper.post(endpoint, propertyData);
+      print('Add property response: $res');
+      
+      if (res['success'] == true) {
+        print('Property added successfully');
+        return true;
+      } else {
+        print('Failed to add property: ${res['message']}');
+        return false;
+      }
+    } catch (e) {
+      print('Error in addUserProperty: $e');
+      return false;
+    }
+  }
 }
