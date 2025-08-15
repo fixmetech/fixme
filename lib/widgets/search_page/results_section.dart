@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../screens/technicianProfile/technician_profile.dart';
+import '../../features/technician_profile/screens/technician_profile.dart';
 
 class ResultsSection extends StatelessWidget {
   final String selectedService;
