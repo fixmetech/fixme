@@ -1,3 +1,4 @@
+import 'package:fixme/features/technician_profile/controller/technician_message_controller.dart';
 import 'package:flutter/material.dart';
 
 class TechnicianMessagePopup extends StatefulWidget {
@@ -15,52 +16,54 @@ class TechnicianMessagePopup extends StatefulWidget {
 class _TechnicianMessagePopupState extends State<TechnicianMessagePopup> {
   final TextEditingController _messageController = TextEditingController();
   final List<ChatMessage> _messages = [];
+  late final TechnicianMessageController _chatController;
+  final String chatId = "1"; // You should set this appropriately!
+  final String senderId = "llDbEONrE3aq376BBuqIXE0Vev73";
 
   @override
   void initState() {
     super.initState();
-    _loadDummyMessages();
+    _chatController = TechnicianMessageController();
+    _loadMessages();
   }
 
-  void _loadDummyMessages() {
-    // Add some dummy messages
-    _messages.addAll([
-      ChatMessage(
-        message: "Hello! I'm here to help you with your technical issues.",
-        sender: widget.technicianName,
-        timestamp: "2:30 PM",
-        isMe: false,
-      ),
-      ChatMessage(
-        message: "Hi! I'm having trouble with my internet connection.",
-        sender: "You",
-        timestamp: "2:32 PM",
-        isMe: true,
-      ),
-      ChatMessage(
-        message: "I can help you with that. Can you tell me what specific issues you're experiencing?",
-        sender: widget.technicianName,
-        timestamp: "2:33 PM",
-        isMe: false,
-      ),
-    ]);
-  }
-
-  void _sendMessage() {
-    if (_messageController.text.trim().isNotEmpty) {
+  void _loadMessages() async {
+    try {
+      final messages = await _chatController.fetchMessages(chatId);
       setState(() {
-        _messages.add(
-          ChatMessage(
-            message: _messageController.text.trim(),
-            sender: "You",
-            timestamp: _getCurrentTime(),
-            isMe: true,
-          ),
-        );
+        _messages.clear();
+        _messages.addAll(messages.map((msg) => ChatMessage(
+          message: msg['text'] ?? '',
+          sender: msg['senderId'] == senderId ? "You" : widget.technicianName,
+          timestamp: _formatTimestamp(msg['timestamp']),
+          isMe: msg['senderId'] == senderId,
+        )));
       });
-      _messageController.clear();
+    } catch (e) {
+      // Optionally, show error in UI
     }
   }
+
+  String _formatTimestamp(dynamic millis) {
+    if (millis == null) return "";
+    final dt = DateTime.fromMillisecondsSinceEpoch(millis is int ? millis : int.tryParse(millis.toString()) ?? 0);
+    return "${dt.hour}:${dt.minute.toString().padLeft(2, '0')}";
+  }
+
+
+  void _sendMessage() async {
+    final text = _messageController.text.trim();
+    if (text.isEmpty) return;
+
+    try {
+      await _chatController.sendMessage(chatId, senderId, text);
+      _messageController.clear();
+      _loadMessages(); // Refresh messages after sending
+    } catch (e) {
+      // Optionally, show error in UI
+    }
+  }
+
 
   String _getCurrentTime() {
     final now = DateTime.now();
