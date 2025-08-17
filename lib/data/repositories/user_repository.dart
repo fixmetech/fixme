@@ -135,4 +135,22 @@ class UserRepository extends GetxController {
       return false;
     }
   }
+
+  // Edit user property
+  Future<bool> editUserProperty(String propertyId, Map<String, dynamic> propertyData, String propertyType) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        print('No authenticated user found for editing property');
+        return false;
+      }
+
+      final endpoint = 'api/customers/profile/${user.uid}/property/$propertyId?propertyType=$propertyType';
+      final res = await FixMeHttpHelper.put(endpoint, propertyData);
+      return res['success'] == true;
+    } catch (e) {
+      print('Error in editUserProperty: $e');
+      return false;
+    }
+  }
 }

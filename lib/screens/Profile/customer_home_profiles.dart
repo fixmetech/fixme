@@ -1,9 +1,8 @@
 import 'package:fixme/features/profile/controller/profile_controller.dart';
 import 'package:fixme/models/home_profile.dart';
 import 'package:fixme/screens/Profile/customer_add_home.dart';
+import 'package:fixme/screens/Profile/customer_edit_home.dart';
 import 'package:fixme/screens/Profile/customer_profile_home.dart';
-import 'package:fixme/utils/device/device_utils.dart';
-import 'package:fixme/utils/helper/helper_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -48,7 +47,15 @@ class _CustomerHomeProfilesState extends State<CustomerHomeProfiles> {
   }
 
   void _editHome(HomeProfile home) {
-
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CustomerEditHome(homeProfile: home),
+      ),
+    ).then((_) {
+      // Refresh the home list when returning from edit page
+      profileController.loadUserHomes();
+    });
   }
 
   void _deleteHome(HomeProfile home) {

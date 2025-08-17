@@ -5,19 +5,20 @@ import 'package:fixme/utils/device/device_utils.dart';
 import 'package:fixme/utils/helper/helper_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
 
-// Import your home page - replace with your actual home page import
-// import 'home_page.dart';
-
-class CustomerAddHome extends StatefulWidget {
-  const CustomerAddHome({super.key});
+class CustomerEditHome extends StatefulWidget {
+  final HomeProfile homeProfile;
+  
+  const CustomerEditHome({
+    super.key,
+    required this.homeProfile,
+  });
 
   @override
-  State<CustomerAddHome> createState() => _CustomerAddHomeState();
+  State<CustomerEditHome> createState() => _CustomerEditHomeState();
 }
 
-class _CustomerAddHomeState extends State<CustomerAddHome> {
+class _CustomerEditHomeState extends State<CustomerEditHome> {
   final _formKey = GlobalKey<FormState>();
   final _scrollController = ScrollController();
   final profileController = Get.find<ProfileController>();
@@ -46,6 +47,25 @@ class _CustomerAddHomeState extends State<CustomerAddHome> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _initializeWithExistingData();
+  }
+
+  void _initializeWithExistingData() {
+    // Populate form fields with existing home data
+    _homenameController.text = widget.homeProfile.name;
+    _addressController.text = widget.homeProfile.address;
+    _cityController.text = widget.homeProfile.city;
+    _postalCodeController.text = widget.homeProfile.postalCode;
+    _phoneController.text = widget.homeProfile.phone;
+    _areaController.text = widget.homeProfile.area;
+    _landmarkController.text = widget.homeProfile.landmark ?? '';
+    _selectedHomeType = widget.homeProfile.homeType;
+    _isDefault = widget.homeProfile.isDefault;
+  }
+
+  @override
   void dispose() {
     _homenameController.dispose();
     _addressController.dispose();
@@ -58,65 +78,45 @@ class _CustomerAddHomeState extends State<CustomerAddHome> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    try {
-      final pickedImage = await ImagePicker().pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 85,
-      );
-
-      if (pickedImage != null) {
-        setState(() {
-          _homeImage = File(pickedImage.path);
-        });
-      }
-    } catch (e) {
-      FixMeHelperFunctions.showWarningSnackBar('Error', 'Error picking image: $e');
-    }
-  }
-
-  Future<void> _saveForm() async {
+  Future<void> _updateForm() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
     try {
-      final newHome = HomeProfile(
+      // Create updated home profile
+      final updatedHome = widget.homeProfile.copyWith(
         name: _homenameController.text.trim(),
         address: _addressController.text.trim(),
         city: _cityController.text.trim(),
         postalCode: _postalCodeController.text.trim(),
         homeType: _selectedHomeType,
-        imageUrl: '', // For now, we'll handle image uploads later
-        isDefault: _isDefault,
         area: _areaController.text.trim(),
         phone: _phoneController.text.trim(),
         landmark: _landmarkController.text.trim().isEmpty 
             ? null 
             : _landmarkController.text.trim(),
+        isDefault: _isDefault,
+        // Keep existing image URL if no new image is selected
+        imageUrl: widget.homeProfile.imageUrl,
       );
-      print('Saving new home profile: $newHome');
 
-      await profileController.addHomeProfile(newHome);
+      // Update the home using the controller
+      await profileController.updateHomeProfile(updatedHome);
       
       // If successful, go back and refresh the list
       if (!profileController.isLoading.value) {
-        FixMeHelperFunctions.showSuccessSnackBar('Saved','Home profile saved successfully!' );
-        print('11');
         _navigateToHome();
-        print('12');
         profileController.loadUserHomes();
       }
 
     } catch (e) {
-      FixMeHelperFunctions.showWarningSnackBar('Error', 'Error saving profile: $e');
+      FixMeHelperFunctions.showWarningSnackBar('Error','Updating profile: $e');
     }
   }
 
   void _navigateToHome() {
-    Get.back();
+    Navigator.of(context).pop();
   }
 
   void _onClosePressed() {
@@ -128,16 +128,16 @@ class _CustomerAddHomeState extends State<CustomerAddHome> {
   }
 
   bool _hasUnsavedChanges() {
-    return _homenameController.text.isNotEmpty ||
-        _addressController.text.isNotEmpty ||
-        _cityController.text.isNotEmpty ||
-        _postalCodeController.text.isNotEmpty ||
-        _phoneController.text.isNotEmpty ||
-        _areaController.text.isNotEmpty ||
-        _landmarkController.text.isNotEmpty ||
-        _homeImage != null ||
-        _selectedHomeType != _homeTypes.first ||
-        _isDefault != false;
+    return _homenameController.text != widget.homeProfile.name ||
+        _addressController.text != widget.homeProfile.address ||
+        _cityController.text != widget.homeProfile.city ||
+        _postalCodeController.text != widget.homeProfile.postalCode ||
+        _phoneController.text != widget.homeProfile.phone ||
+        _areaController.text != widget.homeProfile.area ||
+        _landmarkController.text != (widget.homeProfile.landmark ?? '') ||
+        _selectedHomeType != widget.homeProfile.homeType ||
+        _isDefault != widget.homeProfile.isDefault ||
+        _homeImage != null;
   }
 
   void _showDiscardDialog() {
@@ -150,13 +150,15 @@ class _CustomerAddHomeState extends State<CustomerAddHome> {
           content: const Text('You have unsaved changes. Are you sure you want to discard them?'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+              },
               child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
-                _navigateToHome();
+                Navigator.of(context).pop(); // Close dialog
+                _navigateToHome(); // Navigate back
               },
               style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: const Text('Discard'),
@@ -169,51 +171,55 @@ class _CustomerAddHomeState extends State<CustomerAddHome> {
 
   Widget _buildHeader() {
     return Container(
+      padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.blue.shade600, Colors.blue.shade400],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.3),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Row(
-          children: [
-            Container(
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: _onClosePressed,
+            child: Container(
               padding: const EdgeInsets.all(4),
               child: const Icon(
-                Icons.home_outlined,
-                color: Colors.white,
-                size: 24,
+                Icons.arrow_back_ios,
+                color: Colors.blue,
               ),
             ),
-            const SizedBox(width: 16),
-            const Expanded(
-              child: Text(
-                'Add New Home Profile',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Edit Home Profile',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade800,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 4),
+                Text(
+                  'Update your home details',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
             ),
-            IconButton(
-              onPressed: _onClosePressed,
-              icon: const Icon(Icons.close, color: Colors.white),
-              tooltip: 'Close',
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -227,7 +233,7 @@ class _CustomerAddHomeState extends State<CustomerAddHome> {
     TextInputType? keyboardType,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: 20, top: 10),
       child: TextFormField(
         controller: controller,
         maxLines: maxLines,
@@ -384,50 +390,58 @@ class _CustomerAddHomeState extends State<CustomerAddHome> {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+              color: Colors.grey.shade800,
             ),
           ),
           const SizedBox(height: 12),
           GestureDetector(
-            onTap: _pickImage,
+            onTap: () {
+              // TODO: Implement image picker if needed
+              FixMeHelperFunctions.showSnackBar('not yet','Image update coming soon!');
+            },
             child: Container(
               height: 200,
               width: double.infinity,
               decoration: BoxDecoration(
-                border: Border.all(
-                  color: _homeImage != null ? Colors.blue.shade600 : Colors.grey.shade300,
-                  width: 2,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                color: Colors.grey.shade50,
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300, width: 2),
               ),
               child: _homeImage != null
                   ? ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: Stack(
-                  children: [
-                    Image.file(
-                      _homeImage!,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: double.infinity,
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.6),
-                          borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(10),
+                child: Image.file(
+                  _homeImage!,
+                  fit: BoxFit.cover,
+                ),
+              )
+                  : widget.homeProfile.imageUrl.isNotEmpty
+                  ? ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(
+                  widget.homeProfile.imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.image_not_supported,
+                          size: 48,
+                          color: Colors.grey.shade400,
                         ),
-                        child: IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.white, size: 20),
-                          onPressed: _pickImage,
-                          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Image not available',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
+                      ],
+                    );
+                  },
                 ),
               )
                   : Column(
@@ -445,14 +459,6 @@ class _CustomerAddHomeState extends State<CustomerAddHome> {
                       fontSize: 16,
                       color: Colors.grey.shade600,
                       fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'JPG, PNG up to 10MB',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade500,
                     ),
                   ),
                 ],
@@ -487,7 +493,7 @@ class _CustomerAddHomeState extends State<CustomerAddHome> {
           Expanded(
             flex: 2,
             child: ElevatedButton(
-              onPressed: profileController.isLoading.value ? null : _saveForm,
+              onPressed: profileController.isLoading.value ? null : _updateForm,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue.shade600,
                 foregroundColor: Colors.white,
@@ -502,7 +508,7 @@ class _CustomerAddHomeState extends State<CustomerAddHome> {
                 child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
               )
                   : const Text(
-                'Save Profile',
+                'Update Profile',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
             ),
@@ -536,7 +542,7 @@ class _CustomerAddHomeState extends State<CustomerAddHome> {
                         _buildTextField(
                           controller: _homenameController,
                           label: 'Home Name',
-                          hint: 'Enter your home name',
+                          hint: 'Enter a name for your home',
                           prefixIcon: Icons.home,
                         ),
                         _buildTextField(
@@ -555,13 +561,13 @@ class _CustomerAddHomeState extends State<CustomerAddHome> {
                         _buildTextField(
                           controller: _postalCodeController,
                           label: 'Postal Code',
-                          hint: 'Enter your postal code',
-                          prefixIcon: Icons.local_post_office,
+                          hint: 'Enter postal code',
+                          prefixIcon: Icons.mail,
                         ),
                         _buildTextField(
                           controller: _areaController,
                           label: 'Area',
-                          hint: 'Enter area/neighborhood',
+                          hint: 'Enter area details',
                           prefixIcon: Icons.map,
                         ),
                         _buildTextField(

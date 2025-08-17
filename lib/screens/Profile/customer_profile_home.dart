@@ -1,15 +1,61 @@
 import 'package:fixme/features/profile/controller/profile_controller.dart';
 import 'package:fixme/models/home_profile.dart';
-import 'package:fixme/screens/Profile/customer_profile_home_edit.dart';
-import 'package:flutter/material.dart' show AlertDialog, Alignment, AppBar, Border, BorderRadius,  BoxDecoration, BoxFit, BuildContext, Card, Center, Color, Colors, Column, Container, CrossAxisAlignment, DecorationImage, Divider, EdgeInsets, ElevatedButton, Expanded, FontWeight, GestureDetector, Icon, IconButton, IconThemeData, Icons, LinearGradient, MainAxisAlignment, MaterialPageRoute, Navigator, NetworkImage, Padding, PreferredSizeWidget, RoundedRectangleBorder, Row, Scaffold, ScaffoldMessenger, SingleChildScrollView, SizedBox, SnackBar, State, StatefulWidget, Text, TextButton, TextDecoration, TextStyle, Widget, showDialog;
+import 'package:fixme/screens/Profile/customer_edit_home.dart';
+import 'package:flutter/material.dart'
+    show
+        AlertDialog,
+        Alignment,
+        AppBar,
+        Border,
+        BorderRadius,
+        BoxDecoration,
+        BoxFit,
+        BuildContext,
+        Card,
+        Center,
+        Color,
+        Colors,
+        Column,
+        Container,
+        CrossAxisAlignment,
+        DecorationImage,
+        Divider,
+        EdgeInsets,
+        ElevatedButton,
+        Expanded,
+        FontWeight,
+        GestureDetector,
+        Icon,
+        IconButton,
+        IconThemeData,
+        Icons,
+        LinearGradient,
+        MainAxisAlignment,
+        MaterialPageRoute,
+        Navigator,
+        NetworkImage,
+        Padding,
+        PreferredSizeWidget,
+        RoundedRectangleBorder,
+        Row,
+        Scaffold,
+        ScaffoldMessenger,
+        SingleChildScrollView,
+        SizedBox,
+        SnackBar,
+        State,
+        StatefulWidget,
+        Text,
+        TextButton,
+        TextDecoration,
+        TextStyle,
+        Widget,
+        showDialog;
 import 'package:get/get.dart';
-
-
-
 
 class CustomerHomeProfile extends StatefulWidget {
   final String? homeId;
-  
+
   const CustomerHomeProfile({super.key, this.homeId});
 
   @override
@@ -49,11 +95,7 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.home_outlined,
-                size: 80,
-                color: Colors.grey[400],
-              ),
+              Icon(Icons.home_outlined, size: 80, color: Colors.grey[400]),
               SizedBox(height: 16),
               Text(
                 'Home Not Found',
@@ -66,10 +108,7 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
               SizedBox(height: 8),
               Text(
                 'The requested home profile could not be loaded',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[500],
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey[500]),
               ),
             ],
           ),
@@ -133,9 +172,7 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
   Widget _buildHeader() {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Row(
@@ -159,7 +196,10 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 textStyle: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
@@ -193,11 +233,19 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
                   Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.edit, color: _primaryColor, size: 20),
+                        icon: const Icon(
+                          Icons.edit,
+                          color: _primaryColor,
+                          size: 20,
+                        ),
                         onPressed: _handleImageEdit,
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                        icon: const Icon(
+                          Icons.delete,
+                          color: Colors.red,
+                          size: 20,
+                        ),
                         onPressed: _showDeleteImageDialog,
                       ),
                     ],
@@ -217,31 +265,31 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
                     border: Border.all(color: Colors.grey[300]!, width: 1.5),
                     image: currentHome!.imageUrl.isNotEmpty
                         ? DecorationImage(
-                      image: NetworkImage(currentHome!.imageUrl),
-                      fit: BoxFit.cover,
-                    )
+                            image: NetworkImage(currentHome!.imageUrl),
+                            fit: BoxFit.cover,
+                          )
                         : null,
                   ),
                   child: currentHome!.imageUrl.isEmpty
                       ? Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.add_a_photo,
-                        size: 60,
-                        color: Colors.grey[600],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Tap to add image',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  )
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.add_a_photo,
+                              size: 60,
+                              color: Colors.grey[600],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Tap to add image',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        )
                       : null,
                 ),
               ),
@@ -255,9 +303,7 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
   Widget _buildHomeDetailsGrid() {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -282,9 +328,7 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
             const Divider(height: 24),
             Row(
               children: [
-                Expanded(
-                  child: _buildDetailRow('City', currentHome!.city),
-                ),
+                Expanded(child: _buildDetailRow('City', currentHome!.city)),
                 const SizedBox(width: 16),
                 Expanded(
                   child: _buildDetailRow('Home Type', currentHome!.homeType),
@@ -294,12 +338,13 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
             const Divider(height: 24),
             Row(
               children: [
-                Expanded(
-                  child: _buildDetailRow('Area', currentHome!.area),
-                ),
+                Expanded(child: _buildDetailRow('Area', currentHome!.area)),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: _buildDetailRow('Postal Code', currentHome!.postalCode),
+                  child: _buildDetailRow(
+                    'Postal Code',
+                    currentHome!.postalCode,
+                  ),
                 ),
               ],
             ),
@@ -339,9 +384,7 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
   Widget _buildOwnerSection() {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -368,9 +411,7 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
   Widget _buildLocationSection() {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -385,9 +426,15 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
               ),
             ),
             const SizedBox(height: 20),
-            _buildDetailRow('Latitude', currentHome!.map!['latitude'].toString()),
+            _buildDetailRow(
+              'Latitude',
+              currentHome!.map!['latitude'].toString(),
+            ),
             const Divider(height: 24),
-            _buildDetailRow('Longitude', currentHome!.map!['longitude'].toString()),
+            _buildDetailRow(
+              'Longitude',
+              currentHome!.map!['longitude'].toString(),
+            ),
             const Divider(height: 24),
             _buildLocationRow(),
           ],
@@ -430,7 +477,9 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           title: const Text(
             'Edit Home Details',
             style: TextStyle(fontWeight: FontWeight.w700),
@@ -439,23 +488,25 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: _primaryColor),
-              ),
+              child: Text('Cancel', style: TextStyle(color: _primaryColor)),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const CustomerProfileHomeEdit()),
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        CustomerEditHome(homeProfile: currentHome!),
+                  ),
                 );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: _primaryColor,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: const Text('Edit'),
             ),
@@ -468,11 +519,13 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
   void _handleImageEdit() {
     // Simulate image picking (in a real app, use image_picker package)
     setState(() {
-      currentHome = currentHome!.copyWith(imageUrl: 'https://via.placeholder.com/300');
+      currentHome = currentHome!.copyWith(
+        imageUrl: 'https://via.placeholder.com/300',
+      );
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Image updated successfully')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Image updated successfully')));
   }
 
   void _showDeleteImageDialog() {
@@ -480,16 +533,15 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           title: const Text('Delete Image'),
           content: const Text('Are you sure you want to delete this image?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: _primaryColor),
-              ),
+              child: Text('Cancel', style: TextStyle(color: _primaryColor)),
             ),
             ElevatedButton(
               onPressed: () {
@@ -504,7 +556,9 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red[600],
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: const Text('Delete'),
             ),
@@ -515,8 +569,8 @@ class _CustomerHomeProfileState extends State<CustomerHomeProfile> {
   }
 
   void _openLocation(String location) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Opening location: $location')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Opening location: $location')));
   }
 }

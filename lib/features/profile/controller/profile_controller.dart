@@ -212,16 +212,19 @@ class ProfileController extends GetxController {
     try {
       isLoading.value = true;
       print('Adding new home profile to backend...');
-      
+
       final propertyData = home.toMap();
-      final isAdded = await userRepository.addUserProperty(propertyData, 'homes');
-      
+      final isAdded = await userRepository.addUserProperty(
+        propertyData,
+        'homes',
+      );
+
       if (isAdded) {
         // Add to local list and update UI
         userHomeProfiles.add(home);
         homeCount.value = userHomeProfiles.length;
         userHomeProfiles.refresh(); // Notify observers
-        
+
         FixMeHelperFunctions.showSuccessSnackBar(
           'Success',
           'Home added successfully!',
@@ -246,29 +249,74 @@ class ProfileController extends GetxController {
   }
 
   /// Update an existing home profile
-  void updateHomeProfile(HomeProfile updatedHome) {
-    final index = userHomeProfiles.indexWhere(
-      (home) => home.id == updatedHome.id,
-    );
-    if (index != -1) {
-      userHomeProfiles[index] = updatedHome;
-      userHomeProfiles.refresh(); // Notify observers
+  Future<void> updateHomeProfile(HomeProfile updatedHome) async {
+    try {
+      isLoading.value = true;
+      print('Updating home profile in backend...');
+
+      if (updatedHome.id == null || updatedHome.id!.isEmpty) {
+        FixMeHelperFunctions.showErrorSnackBar(
+          'Error',
+          'Invalid home ID for update',
+        );
+        return;
+      }
+
+      final propertyData = updatedHome.toMap();
+      final isUpdated = await userRepository.editUserProperty(
+        updatedHome.id!,
+        propertyData,
+        'homes',
+      );
+
+      if (isUpdated) {
+        // Update local list
+        final index = userHomeProfiles.indexWhere(
+          (home) => home.id == updatedHome.id,
+        );
+        if (index != -1) {
+          userHomeProfiles[index] = updatedHome;
+          userHomeProfiles.refresh(); // Notify observers
+          
+          FixMeHelperFunctions.showSuccessSnackBar(
+            'Success',
+            'Home updated successfully!',
+          );
+          print('Home updated successfully in backend and local list');
+        } else {
+          FixMeHelperFunctions.showErrorSnackBar(
+            'Error',
+            'Home not found for update',
+          );
+        }
+      } else {
+        FixMeHelperFunctions.showErrorSnackBar(
+          'Error',
+          'Failed to update home. Please try again.',
+        );
+        print('Failed to update home in backend');
+      }
+    } catch (e) {
+      print('Error updating home: $e');
+      FixMeHelperFunctions.showErrorSnackBar(
+        'Connection Error',
+        'Failed to update home. Please check your internet connection.',
+      );
+    } finally {
+      isLoading.value = false;
     }
   }
 
   /// Delete a home profile
   void deleteHomeProfile(String? homeId) async {
+    if (homeId == null || homeId == "") {
+      FixMeHelperFunctions.showErrorSnackBar('Error', 'Home ID cannot be null');
+      return;
+    }
     final homeToDelete = userHomeProfiles.firstWhere(
       (home) => home.id == homeId,
     );
     try {
-      if(homeId == null) {
-        FixMeHelperFunctions.showErrorSnackBar(
-          'Error',
-          'Home ID cannot be null',
-        );
-        return;
-      }
       final isDeleted = await userRepository.deleteUserProperty(
         homeId,
         'homes',
