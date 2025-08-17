@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:fixme/features/profile/controller/profile_controller.dart';
 import 'package:fixme/models/home_profile.dart';
-import 'package:fixme/utils/device/device_utils.dart';
 import 'package:fixme/utils/helper/helper_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
