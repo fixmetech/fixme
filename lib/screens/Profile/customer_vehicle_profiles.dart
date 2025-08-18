@@ -1,4 +1,9 @@
+import 'package:fixme/features/profile/controller/profile_controller.dart';
+import 'package:fixme/models/vehicle_profile.dart';
+import 'package:fixme/screens/Profile/customer_add_vehicle.dart';
+import 'package:fixme/screens/Profile/customer_edit_vehicle.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'customer_vehicle_profile.dart';
 
 class CustomerVehicleProfiles extends StatefulWidget {
@@ -9,72 +14,20 @@ class CustomerVehicleProfiles extends StatefulWidget {
 }
 
 class _CustomerVehicleProfilesState extends State<CustomerVehicleProfiles> {
-  // Sample data for vehicle profiles
-  List<VehicleProfile> vehicleProfiles = [
-    VehicleProfile(
-      id: '1',
-      plateNumber: 'KX-6065',
-      make: 'Toyota',
-      model: 'Corolla',
-      year: '2018',
-      color: 'White',
-      vehicleType: 'Car',
-      isDefault: true,
-      fuelType: 'Petrol',
-      transmission: 'Manual',
-      engineCapacity: '1.5L',
-      mileage: '45,000 km',
-    ),
-    VehicleProfile(
-      id: '2',
-      plateNumber: 'ABC-1234',
-      make: 'Honda',
-      model: 'Civic',
-      year: '2020',
-      color: 'Black',
-      vehicleType: 'Car',
-      isDefault: false,
-      fuelType: 'Petrol',
-      transmission: 'Automatic',
-      engineCapacity: '1.8L',
-      mileage: '25,000 km',
-    ),
-    VehicleProfile(
-      id: '3',
-      plateNumber: 'MN-7890',
-      make: 'Yamaha',
-      model: 'FZ-S',
-      year: '2019',
-      color: 'Blue',
-      vehicleType: 'Motorcycle',
-      isDefault: false,
-      fuelType: 'Petrol',
-      transmission: 'Manual',
-      engineCapacity: '150cc',
-      mileage: '15,000 km',
-    ),
-    VehicleProfile(
-      id: '4',
-      plateNumber: 'XY-5678',
-      make: 'Mahindra',
-      model: 'Bolero',
-      year: '2017',
-      color: 'Silver',
-      vehicleType: 'SUV',
-      isDefault: false,
-      fuelType: 'Diesel',
-      transmission: 'Manual',
-      engineCapacity: '2.5L',
-      mileage: '80,000 km',
-    ),
-  ];
+  final profileController = Get.find<ProfileController>();
 
-  void _setAsDefault(String vehicleId) {
-    setState(() {
-      for (var vehicle in vehicleProfiles) {
-        vehicle.isDefault = vehicle.id == vehicleId;
-      }
-    });
+  // Run when the widget is first created
+  @override
+  void initState() {
+    super.initState();
+    profileController.loadUserVehicles();
+  }
+
+  void _setAsDefault(String? vehicleId) {
+    if (vehicleId == null) {
+      return;
+    }
+    profileController.setDefaultVehicle(vehicleId);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Default vehicle updated successfully!'),
@@ -97,9 +50,11 @@ class _CustomerVehicleProfilesState extends State<CustomerVehicleProfiles> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => EditVehiclePage(vehicle: vehicle),
+        builder: (context) => CustomerEditVehicle(vehicleProfile: vehicle),
       ),
-    );
+    ).then((_) {
+      profileController.loadUserVehicles();
+    });
   }
 
   void _deleteVehicle(VehicleProfile vehicle) {
@@ -116,20 +71,8 @@ class _CustomerVehicleProfilesState extends State<CustomerVehicleProfiles> {
             ),
             TextButton(
               onPressed: () {
-                setState(() {
-                  vehicleProfiles.removeWhere((v) => v.id == vehicle.id);
-                  // If deleted vehicle was default, set first vehicle as default
-                  if (vehicle.isDefault && vehicleProfiles.isNotEmpty) {
-                    vehicleProfiles.first.isDefault = true;
-                  }
-                });
+                profileController.deleteVehicleProfile(vehicle.id);
                 Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Vehicle deleted successfully!'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
               },
               child: Text('Delete', style: TextStyle(color: Colors.red)),
             ),
@@ -143,9 +86,12 @@ class _CustomerVehicleProfilesState extends State<CustomerVehicleProfiles> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AddVehiclePage(),
+        builder: (context) => CustomerAddVehicle(),
       ),
-    );
+    ).then((_) {
+      // Refresh the vehicle list when returning from add page
+      profileController.loadUserVehicles();
+    });
   }
 
   IconData _getVehicleIcon(String vehicleType) {
@@ -185,15 +131,16 @@ class _CustomerVehicleProfilesState extends State<CustomerVehicleProfiles> {
       body: Column(
         children: [
           Expanded(
-            child: vehicleProfiles.isEmpty
+            child: Obx(() => profileController.userVehicleProfiles.isEmpty
                 ? _buildEmptyState()
                 : ListView.builder(
                     padding: EdgeInsets.all(16),
-                    itemCount: vehicleProfiles.length,
+                    itemCount: profileController.userVehicleProfiles.length,
                     itemBuilder: (context, index) {
-                      return _buildVehicleCard(vehicleProfiles[index]);
+                      return _buildVehicleCard(profileController.userVehicleProfiles[index]);
                     },
                   ),
+            ),
           ),
           _buildAddVehicleButton(),
         ],
@@ -206,28 +153,58 @@ class _CustomerVehicleProfilesState extends State<CustomerVehicleProfiles> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.directions_car_outlined,
-            size: 80,
-            color: Colors.grey[400],
-          ),
+          Obx(() => profileController.isLoading.value
+              ? CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue[600]!),
+                )
+              : Icon(
+                  Icons.directions_car_outlined,
+                  size: 80,
+                  color: Colors.grey[400],
+                )),
           SizedBox(height: 16),
-          Text(
-            'No Vehicle Profiles Added',
+          Obx(() => Text(
+            profileController.isLoading.value
+                ? 'Loading Vehicle Profiles...'
+                : 'No Vehicle Profiles Found',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: Colors.grey[600],
             ),
-          ),
+          )),
           SizedBox(height: 8),
-          Text(
-            'Add your first vehicle profile to get started',
+          Obx(() => Text(
+            profileController.isLoading.value
+                ? 'Fetching your vehicles from server'
+                : 'Add your first vehicle profile to get started',
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[500],
             ),
-          ),
+          )),
+          if (!profileController.isLoading.value) ...[
+            SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => profileController.loadUserVehicles(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue[600],
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.refresh, size: 18),
+                  SizedBox(width: 8),
+                  Text('Retry'),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -434,92 +411,4 @@ class _CustomerVehicleProfilesState extends State<CustomerVehicleProfiles> {
   }
 }
 
-// Vehicle Profile Model
-class VehicleProfile {
-  final String id;
-  final String plateNumber;
-  final String make;
-  final String model;
-  final String year;
-  final String color;
-  final String vehicleType;
-  bool isDefault;
-  final String fuelType;
-  final String transmission;
-  final String engineCapacity;
-  final String mileage;
 
-  VehicleProfile({
-    required this.id,
-    required this.plateNumber,
-    required this.make,
-    required this.model,
-    required this.year,
-    required this.color,
-    required this.vehicleType,
-    required this.isDefault,
-    required this.fuelType,
-    required this.transmission,
-    required this.engineCapacity,
-    required this.mileage,
-  });
-}
-
-// Placeholder pages for navigation
-class VehicleDetailsPage extends StatelessWidget {
-  final VehicleProfile vehicle;
-
-  const VehicleDetailsPage({super.key, required this.vehicle});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Vehicle Details'),
-        backgroundColor: Colors.blue[800],
-        foregroundColor: Colors.white,
-      ),
-      body: Center(
-        child: Text('Vehicle Details Page for ${vehicle.plateNumber}'),
-      ),
-    );
-  }
-}
-
-class EditVehiclePage extends StatelessWidget {
-  final VehicleProfile vehicle;
-
-  const EditVehiclePage({super.key, required this.vehicle});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Edit Vehicle'),
-        backgroundColor: Colors.blue[800],
-        foregroundColor: Colors.white,
-      ),
-      body: Center(
-        child: Text('Edit Vehicle Page for ${vehicle.plateNumber}'),
-      ),
-    );
-  }
-}
-
-class AddVehiclePage extends StatelessWidget {
-  const AddVehiclePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Add New Vehicle'),
-        backgroundColor: Colors.blue[800],
-        foregroundColor: Colors.white,
-      ),
-      body: Center(
-        child: Text('Add New Vehicle Page'),
-      ),
-    );
-  }
-}

@@ -375,28 +375,139 @@ class ProfileController extends GetxController {
   }
 
   /// Add a new vehicle profile
-  void addVehicleProfile(VehicleProfile vehicle) {
-    userVehicleProfiles.add(vehicle);
-    vehicleCount.value = userVehicleProfiles.length;
+  Future<void> addVehicleProfile(VehicleProfile vehicle) async {
+    try {
+      isLoading.value = true;
+      print('Adding new vehicle profile to backend...');
+
+      final propertyData = vehicle.toMap();
+      final isAdded = await userRepository.addUserProperty(
+        propertyData,
+        'vehicles',
+      );
+
+      if (isAdded) {
+        // Add to local list and update UI
+        userVehicleProfiles.add(vehicle);
+        vehicleCount.value = userVehicleProfiles.length;
+        userVehicleProfiles.refresh(); // Notify observers
+
+        FixMeHelperFunctions.showSuccessSnackBar(
+          'Success',
+          'Vehicle added successfully!',
+        );
+        print('Vehicle added successfully to backend and local list');
+      } else {
+        FixMeHelperFunctions.showErrorSnackBar(
+          'Error',
+          'Failed to add vehicle. Please try again.',
+        );
+        print('Failed to add vehicle to backend');
+      }
+    } catch (e) {
+      print('Error adding vehicle: $e');
+      FixMeHelperFunctions.showErrorSnackBar(
+        'Connection Error',
+        'Failed to add vehicle. Please check your internet connection.',
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   /// Update an existing vehicle profile
-  void updateVehicleProfile(VehicleProfile updatedVehicle) {
-    final index = userVehicleProfiles.indexWhere(
-      (vehicle) => vehicle.id == updatedVehicle.id,
-    );
-    if (index != -1) {
-      userVehicleProfiles[index] = updatedVehicle;
-      userVehicleProfiles.refresh(); // Notify observers
+  Future<void> updateVehicleProfile(VehicleProfile updatedVehicle) async {
+    try {
+      isLoading.value = true;
+      print('Updating vehicle profile in backend...');
+
+      if (updatedVehicle.id.isEmpty) {
+        FixMeHelperFunctions.showErrorSnackBar(
+          'Error',
+          'Invalid vehicle ID for update',
+        );
+        return;
+      }
+
+      final propertyData = updatedVehicle.toMap();
+      final isUpdated = await userRepository.editUserProperty(
+        updatedVehicle.id,
+        propertyData,
+        'vehicles',
+      );
+
+      if (isUpdated) {
+        // Update local list
+        final index = userVehicleProfiles.indexWhere(
+          (vehicle) => vehicle.id == updatedVehicle.id,
+        );
+        if (index != -1) {
+          userVehicleProfiles[index] = updatedVehicle;
+          userVehicleProfiles.refresh(); // Notify observers
+          
+          FixMeHelperFunctions.showSuccessSnackBar(
+            'Success',
+            'Vehicle updated successfully!',
+          );
+          print('Vehicle updated successfully in backend and local list');
+        } else {
+          FixMeHelperFunctions.showErrorSnackBar(
+            'Error',
+            'Vehicle not found for update',
+          );
+        }
+      } else {
+        FixMeHelperFunctions.showErrorSnackBar(
+          'Error',
+          'Failed to update vehicle. Please try again.',
+        );
+        print('Failed to update vehicle in backend');
+      }
+    } catch (e) {
+      print('Error updating vehicle: $e');
+      FixMeHelperFunctions.showErrorSnackBar(
+        'Connection Error',
+        'Failed to update vehicle. Please check your internet connection.',
+      );
+    } finally {
+      isLoading.value = false;
     }
   }
 
   /// Delete a vehicle profile
-  void deleteVehicleProfile(String vehicleId) {
+  Future<void> deleteVehicleProfile(String vehicleId) async {
+    if (vehicleId.isEmpty) {
+      FixMeHelperFunctions.showErrorSnackBar('Error', 'Vehicle ID cannot be empty');
+      return;
+    }
+    
     final vehicleToDelete = userVehicleProfiles.firstWhere(
       (vehicle) => vehicle.id == vehicleId,
     );
-    userVehicleProfiles.removeWhere((vehicle) => vehicle.id == vehicleId);
+    
+    try {
+      final isDeleted = await userRepository.deleteUserProperty(
+        vehicleId,
+        'vehicles',
+      );
+      if (isDeleted) {
+        userVehicleProfiles.removeWhere((vehicle) => vehicle.id == vehicleId);
+        FixMeHelperFunctions.showSuccessSnackBar(
+          'Success',
+          'Vehicle deleted successfully!',
+        );
+      } else {
+        FixMeHelperFunctions.showErrorSnackBar(
+          'Error',
+          'Failed to delete vehicle. Please try again.',
+        );
+      }
+    } catch (e) {
+      FixMeHelperFunctions.showErrorSnackBar(
+        'Error',
+        'Failed to delete vehicle. Please try again.',
+      );
+    }
 
     // If deleted vehicle was default, set first vehicle as default
     if (vehicleToDelete.isDefault && userVehicleProfiles.isNotEmpty) {
