@@ -41,7 +41,7 @@ class _CustomerVehicleProfilesState extends State<CustomerVehicleProfiles> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => CustomerVehicleProfile(),
+        builder: (context) => CustomerVehicleProfile(vehicleProfile: vehicle),
       ),
     );
   }
