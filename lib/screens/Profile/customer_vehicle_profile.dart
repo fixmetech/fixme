@@ -14,169 +14,152 @@ class CustomerVehicleProfile extends StatefulWidget {
 }
 
 class _CustomerVehicleProfileState extends State<CustomerVehicleProfile> {
-  static const Color _primaryColor = Color(0xFF1976D2);
-  static const Color _accentColor = Color(0xFF42A5F5);
+  static const Color _primaryColor = Color(0xFF2563EB);
+  static const Color _primaryLight = Color(0xFF60A5FA);
+  static const Color _surface = Color(0xFFFAFBFC);
+  static const Color _cardColor = Colors.white;
+  
   final profileController = Get.find<ProfileController>();
-
-  // Get vehicle details from the passed vehicle profile
-  Map<String, String> get vehicleDetails => {
-    'Plate Number': widget.vehicleProfile.plateNumber,
-    'Make': widget.vehicleProfile.make,
-    'Model': widget.vehicleProfile.model,
-    'Year': widget.vehicleProfile.year,
-    'Color': widget.vehicleProfile.color,
-    'Vehicle Type': widget.vehicleProfile.vehicleType,
-    'Fuel Type': widget.vehicleProfile.fuelType,
-    'Transmission': widget.vehicleProfile.transmission,
-    'Engine Capacity': widget.vehicleProfile.engineCapacity,
-    'Mileage': widget.vehicleProfile.mileage,
-    'Default Vehicle': widget.vehicleProfile.isDefault ? 'Yes' : 'No',
-  };
 
   String? get _vehicleImageUrl => widget.vehicleProfile.imageUrl;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: _buildAppBar(),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 32),
-            _buildVehicleImageSection(),
-            const SizedBox(height: 32),
-            _buildVehicleDetailsSection(),
-          ],
-        ),
+      backgroundColor: _surface,
+      body: CustomScrollView(
+        slivers: [
+          _buildSliverAppBar(),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                children: [
+                  _buildVehicleImageCard(),
+                  const SizedBox(height: 20),
+                  _buildVehicleDetailsCard(),
+                  const SizedBox(height: 20),
+                  _buildEditButton(),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      title: const Text(
-        'Vehicle Profile',
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w700,
-          fontSize: 20,
-        ),
-      ),
-      centerTitle: true,
+  Widget _buildSliverAppBar() {
+    return SliverAppBar(
+      expandedHeight: 90.0,
+      floating: false,
+      pinned: true,
       backgroundColor: _primaryColor,
-      iconTheme: const IconThemeData(color: Colors.white),
+      foregroundColor: Colors.white,
       elevation: 0,
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [_primaryColor, _accentColor],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      flexibleSpace: FlexibleSpaceBar(
+        title: const Text(
+          'Vehicle Profile',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
+        ),
+        centerTitle: true,
+        background: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [_primaryColor, _primaryLight],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Vehicle Details',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                color: Colors.black87,
-              ),
-            ),
-            ElevatedButton.icon(
-              onPressed: _navigateToEditPage,
-              icon: const Icon(Icons.edit, size: 18),
-              label: const Text('Edit'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _accentColor,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                textStyle: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
-        ),
+  Widget _buildVehicleImageCard() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: _cardColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildVehicleImageSection() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  'Vehicle Image',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Center(
-              child: Container(
-                width: double.infinity,
-                height: 200,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!, width: 1.5),
-                  image: _vehicleImageUrl != null
-                      ? DecorationImage(
-                          image: NetworkImage(_vehicleImageUrl!),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
-                child: _vehicleImageUrl == null
-                    ? Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.directions_car,
-                            size: 60,
-                            color: Colors.grey[600],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'No vehicle image',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+            Container(
+              width: double.infinity,
+              height: 220,
+              decoration: BoxDecoration(
+                color: _surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200, width: 1),
+                image: _vehicleImageUrl != null
+                    ? DecorationImage(
+                        image: NetworkImage(_vehicleImageUrl!),
+                        fit: BoxFit.cover,
                       )
                     : null,
               ),
+              child: _vehicleImageUrl == null
+                  ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: _primaryLight.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.directions_car_outlined,
+                            size: 48,
+                            color: _primaryLight,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No vehicle image',
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    )
+                  : null,
+            ),
+            const SizedBox(height: 20),
+            Text(
+              '${widget.vehicleProfile.make} ${widget.vehicleProfile.model}',
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                color: Colors.black87,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              widget.vehicleProfile.plateNumber,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: _primaryColor,
+              ),
             ),
           ],
         ),
@@ -184,12 +167,22 @@ class _CustomerVehicleProfileState extends State<CustomerVehicleProfile> {
     );
   }
 
-  Widget _buildVehicleDetailsSection() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+  Widget _buildVehicleDetailsCard() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: _cardColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -201,74 +194,128 @@ class _CustomerVehicleProfileState extends State<CustomerVehicleProfile> {
                 color: Colors.black87,
               ),
             ),
-            const SizedBox(height: 20),
-            _buildDetailRow('Plate Number', widget.vehicleProfile.plateNumber),
-            const Divider(height: 24),
-            Row(
-              children: [
-                Expanded(child: _buildDetailRow('Make', widget.vehicleProfile.make)),
-                const SizedBox(width: 16),
-                Expanded(child: _buildDetailRow('Model', widget.vehicleProfile.model)),
-              ],
-            ),
-            const Divider(height: 24),
-            Row(
-              children: [
-                Expanded(child: _buildDetailRow('Year', widget.vehicleProfile.year)),
-                const SizedBox(width: 16),
-                Expanded(child: _buildDetailRow('Color', widget.vehicleProfile.color)),
-              ],
-            ),
-            const Divider(height: 24),
-            _buildDetailRow('Vehicle Type', widget.vehicleProfile.vehicleType),
-            const Divider(height: 24),
-            Row(
-              children: [
-                Expanded(child: _buildDetailRow('Fuel Type', widget.vehicleProfile.fuelType)),
-                const SizedBox(width: 16),
-                Expanded(child: _buildDetailRow('Transmission', widget.vehicleProfile.transmission)),
-              ],
-            ),
-            const Divider(height: 24),
-            Row(
-              children: [
-                Expanded(child: _buildDetailRow('Engine Capacity', widget.vehicleProfile.engineCapacity)),
-                const SizedBox(width: 16),
-                Expanded(child: _buildDetailRow('Mileage', widget.vehicleProfile.mileage)),
-              ],
-            ),
+            const SizedBox(height: 24),
+            _buildDetailGrid(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailGrid() {
+    final details = [
+      {'label': 'Year', 'value': widget.vehicleProfile.year},
+      {'label': 'Color', 'value': widget.vehicleProfile.color},
+      {'label': 'Vehicle Type', 'value': widget.vehicleProfile.vehicleType},
+      {'label': 'Fuel Type', 'value': widget.vehicleProfile.fuelType},
+      {'label': 'Transmission', 'value': widget.vehicleProfile.transmission},
+      {'label': 'Engine Capacity', 'value': widget.vehicleProfile.engineCapacity},
+      {'label': 'Mileage', 'value': widget.vehicleProfile.mileage},
+      {'label': 'Default Vehicle', 'value': widget.vehicleProfile.isDefault ? 'Yes' : 'No'},
+    ];
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey[600],
-            fontWeight: FontWeight.w500,
+        for (int i = 0; i < details.length; i += 2)
+          Padding(
+            padding: EdgeInsets.only(bottom: i < details.length - 2 ? 20.0 : 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildDetailItem(
+                    details[i]['label']!,
+                    details[i]['value']!,
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: i + 1 < details.length
+                      ? _buildDetailItem(
+                          details[i + 1]['label']!,
+                          details[i + 1]['value']!,
+                        )
+                      : const SizedBox(),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16,
-            color: Colors.black87,
-            fontWeight: FontWeight.w400,
-          ),
-        ),
       ],
     );
   }
 
-  // Action methods
+  Widget _buildDetailItem(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.black87,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEditButton() {
+    return Container(
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [_primaryColor, _primaryLight],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: _primaryColor.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: _navigateToEditPage,
+          child: const Center(
+            child: Text(
+              'Edit Vehicle',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   void _navigateToEditPage() {
     Navigator.push(
@@ -277,7 +324,6 @@ class _CustomerVehicleProfileState extends State<CustomerVehicleProfile> {
         builder: (context) => CustomerEditVehicle(vehicleProfile: widget.vehicleProfile),
       ),
     ).then((_) {
-      // Refresh when coming back from edit
       if (mounted) {
         setState(() {
           // The widget will rebuild with updated data from ProfileController
