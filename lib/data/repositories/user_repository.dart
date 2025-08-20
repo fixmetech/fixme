@@ -59,6 +59,29 @@ class UserRepository extends GetxController {
     return 'User';
   }
 
+  /// Reset users Password
+  Future<bool> updatePassword(String currentPassword,String newPassword) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return false;
+
+      // Re-authenticate user
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+      print('Re-authenticating user...');
+      await user.reauthenticateWithCredential(credential);
+
+      print('User re-authenticated successfully\nupdating password');
+      await user.updatePassword(newPassword);
+      return true;
+    } catch (e) {
+      print('Error resetting user password: $e');
+      return false;
+    }
+  }
+
   /// Get user's email
   Future<String> getEmail() async {
     final userData = await getCurrentUserData();

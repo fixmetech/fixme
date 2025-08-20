@@ -102,6 +102,35 @@ class ProfileController extends GetxController {
     }
   }
 
+  /// Update password 
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      isLoading.value = true;
+      final success = await userRepository.updatePassword(currentPassword, newPassword );
+      if (success) {
+        FixMeHelperFunctions.showSuccessSnackBar(
+          'Success',
+          'Password updated successfully',
+        );
+      } else {
+        FixMeHelperFunctions.showErrorSnackBar(
+          'Error',
+          'Failed to update password',
+        );
+      }
+    } catch (e) {
+      FixMeHelperFunctions.showErrorSnackBar(
+        'Error',
+        'Failed to update password',
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   /// Refresh user data
   Future<void> refreshUserData() async {
     await loadUserData();
