@@ -1,13 +1,15 @@
 import 'package:fixme/features/authentication/controller/signup_controller.dart';
+import 'package:fixme/features/profile/controller/profile_controller.dart';
+import 'package:fixme/screens/Profile/customer_home_profiles.dart';
 import 'package:fixme/screens/Profile/customer_profile_account.dart';
 import 'package:fixme/screens/Profile/customer_profile_history.dart';
-import 'package:fixme/screens/Profile/customer_profile_home.dart';
 import 'package:fixme/screens/Profile/customer_profile_security.dart';
 import 'package:fixme/screens/Profile/customer_profile_support.dart';
-import 'package:fixme/screens/Profile/customer_vehicle_profile.dart';
+import 'package:fixme/screens/Profile/customer_vehicle_profiles.dart';
+import 'package:fixme/screens/Profile/edit_profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
+import 'package:fixme/utils/constants/size.dart';
 
 class CustomerProfilePage extends StatelessWidget {
   const CustomerProfilePage({super.key});
@@ -18,97 +20,161 @@ class CustomerProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Initialize and get profile controller
+    final profileController = Get.put(ProfileController());
+    
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text(
-          'Customer Profile',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: Colors.blue[800],
-        iconTheme: const IconThemeData(color: Colors.white),
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildProfileHeader(),
-            _buildContactCard(),
-            _buildMenu(),
-            const SizedBox(height: 20),
-            _buildLogoutButton(context),
-            const SizedBox(height: 30),
-          ],
-        ),
-      ),
-    );
-  }
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 280.0,
+            floating: false,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: Colors.blue[800],
+            flexibleSpace: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                // Calculate collapse progress (0.0 = fully expanded, 1.0 = fully collapsed)
+                final double appBarHeight = constraints.biggest.height;
+                final double statusBarHeight = MediaQuery.of(
+                  context,
+                ).padding.top;
+                final double minHeight = kToolbarHeight + statusBarHeight;
+                final double maxHeight = 280.0 + statusBarHeight;
+                final double collapseProgress =
+                    ((maxHeight - appBarHeight) / (maxHeight - minHeight))
+                        .clamp(0.0, 1.0);
 
-  Widget _buildProfileHeader() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.blue[800]!, Colors.blue[600]!],
-        ),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 20),
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 4),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 10,
-                  offset: Offset(0, 4),
-                ),
+                return FlexibleSpaceBar(
+                  titlePadding: EdgeInsets.only(
+                    left: 16,
+                    bottom: 16,
+                    right: collapseProgress > 0.5 ? 16 : 0,
+                  ),
+                  centerTitle: collapseProgress < 0.5,
+                  title: AnimatedContainer(
+                    duration: const Duration(milliseconds: 100),
+                    child: collapseProgress > 0.5
+                        ? Row(
+                            mainAxisSize:
+                                MainAxisSize.max, 
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'My Profile',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Obx(() => CircleAvatar(
+                                  radius: 16,
+                                  backgroundColor: Colors.grey[300],
+                                  backgroundImage: profileController.profileImageUrl.value.isNotEmpty
+                                      ? NetworkImage(profileController.profileImageUrl.value)
+                                      : const AssetImage('assets/images/car.png') as ImageProvider,
+                                )),
+                              ),
+                            ],
+                          )
+                        : const Text(
+                            'My Profile',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
+                  background: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.blue[800]!, Colors.blue[600]!],
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 60),
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 200),
+                          opacity: 1.0 - collapseProgress,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 4),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 10,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Obx(() => CircleAvatar(
+                              radius: 50,
+                              backgroundColor: Colors.grey[300],
+                              backgroundImage: profileController.profileImageUrl.value.isNotEmpty
+                                  ? NetworkImage(profileController.profileImageUrl.value)
+                                  : const AssetImage('assets/images/car.png') as ImageProvider,
+                            )),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 200),
+                          opacity: 1.0 - collapseProgress,
+                          child: Obx(() => Text(
+                            profileController.fullName.value.isNotEmpty 
+                                ? profileController.fullName.value 
+                                : 'Loading...',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
+                _buildContactCard(),
+                _buildMenu(),
+                const SizedBox(height: FixMeSizes.defaultSpace),
+                _buildLogoutButton(context),
+                const SizedBox(height: 100),
               ],
             ),
-            child: CircleAvatar(
-              radius: 50,
-              backgroundColor: Colors.grey[300],
-              backgroundImage: const AssetImage('assets/images/car.png'),
-
-            ),
           ),
-          const SizedBox(height: 16),
-          const Text(
-            'Ishan Chamika',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.green[400],
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Text(
-              'Premium Customer',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          const SizedBox(height: 30),
         ],
       ),
     );
   }
-
   Widget _buildContactCard() {
+    final profileController = Get.find<ProfileController>();
+    
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -127,28 +193,42 @@ class CustomerProfilePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Contact Information',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Contact Information',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                // icon of edit profile
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.blue),
+                  onPressed: () => Get.to(() => const EditProfilePage()),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
-            _buildContactItem(
+            Obx(() => _buildContactItem(
               Icons.email_outlined,
               'Email',
-              'ishanchami@gmail.com',
+              profileController.email.value.isNotEmpty 
+                  ? profileController.email.value 
+                  : 'Loading...',
               Colors.blue[600]!,
-            ),
+            )),
             const SizedBox(height: 12),
-            _buildContactItem(
+            Obx(() => _buildContactItem(
               Icons.phone_outlined,
               'Phone',
-              '+94 77 838 8456',
+              profileController.phone.value.isNotEmpty 
+                  ? profileController.phone.value 
+                  : 'Loading...',
               Colors.green[600]!,
-            ),
+            )),
           ],
         ),
       ),
@@ -217,14 +297,14 @@ class CustomerProfilePage extends StatelessWidget {
             Icons.home_outlined,
             'Home Details',
             Colors.blue[600]!,
-            CustomerHomeProfile(),
+            CustomerHomeProfiles(),
           ),
           _buildDivider(),
           _buildMenuItem(
             Icons.directions_car_outlined,
             'Vehicle Details',
             Colors.orange[600]!,
-            CustomerVehicleProfile(),
+            CustomerVehicleProfiles(),
           ),
           _buildDivider(),
           _buildMenuItem(

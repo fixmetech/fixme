@@ -1,120 +1,79 @@
 import 'dart:io';
-import 'package:fixme/screens/Profile/customer_vehicle_profile.dart';
+import 'package:fixme/features/profile/controller/profile_controller.dart';
+import 'package:fixme/models/home_profile.dart';
+import 'package:fixme/utils/helper/helper_functions.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 
+// Import your home page - replace with your actual home page import
+// import 'home_page.dart';
 
-// Import your vehicle page - replace with your actual vehicle page import
-// import 'vehicle_page.dart';
-
-class CustomerProfileVehicleEdit extends StatefulWidget {
-  const CustomerProfileVehicleEdit({super.key});
+class CustomerAddHome extends StatefulWidget {
+  const CustomerAddHome({super.key});
 
   @override
-  State<CustomerProfileVehicleEdit> createState() => _CustomerProfileVehicleEditState();
+  State<CustomerAddHome> createState() => _CustomerAddHomeState();
 }
 
-class _CustomerProfileVehicleEditState extends State<CustomerProfileVehicleEdit> {
+class _CustomerAddHomeState extends State<CustomerAddHome> {
   final _formKey = GlobalKey<FormState>();
   final _scrollController = ScrollController();
+  final profileController = Get.find<ProfileController>();
 
   // Controllers
-  final _vehicletypeController = TextEditingController();
-  final _vehiclemakeController = TextEditingController();
-  final _manufacturedateController = TextEditingController();
-  final _licencenumberController = TextEditingController();
-  final _modelController = TextEditingController();
-  final _colorController = TextEditingController();
+  final _homenameController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _postalCodeController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _areaController = TextEditingController();
+  final _landmarkController = TextEditingController();
 
-  File? _vehicleImage;
-  bool _isLoading = false;
-  DateTime? _selectedDate;
+  String _selectedHomeType = 'House';
+  bool _isDefault = false;
+  File? _homeImage;
 
-  final ImagePicker _picker = ImagePicker();
-
-  // Vehicle type options
-  final List<String> _vehicleTypes = [
-    'Car',
-    'Motorcycle',
-    'Truck',
-    'Van',
-    'SUV',
-    'Bus',
-    'Bicycle',
+  final List<String> _homeTypes = [
+    'House',
+    'Apartment',
+    'Condominium',
+    'Villa',
+    'Office',
+    'Shop',
     'Other'
   ];
 
   @override
   void dispose() {
-    _vehicletypeController.dispose();
-    _vehiclemakeController.dispose();
-    _manufacturedateController.dispose();
-    _licencenumberController.dispose();
-    _modelController.dispose();
-    _colorController.dispose();
+    _homenameController.dispose();
+    _addressController.dispose();
+    _cityController.dispose();
+    _postalCodeController.dispose();
+    _phoneController.dispose();
+    _areaController.dispose();
+    _landmarkController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
   Future<void> _pickImage() async {
     try {
-      final XFile? pickedFile = await _picker.pickImage(
+      final pickedImage = await ImagePicker().pickImage(
         source: ImageSource.gallery,
-        maxWidth: 1800,
-        maxHeight: 1800,
+        maxWidth: 1024,
+        maxHeight: 1024,
         imageQuality: 85,
       );
 
-      if (pickedFile != null) {
+      if (pickedImage != null) {
         setState(() {
-          _vehicleImage = File(pickedFile.path);
+          _homeImage = File(pickedImage.path);
         });
       }
     } catch (e) {
-      _showSnackBar('Error picking image: $e', isError: true);
+      FixMeHelperFunctions.showWarningSnackBar('Error', 'Error picking image: $e');
     }
-  }
-
-  Future<void> _selectDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Colors.blue.shade600,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Colors.black,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-        _manufacturedateController.text = DateFormat('yyyy-MM-dd').format(picked);
-      });
-    }
-  }
-
-  void _showSnackBar(String message, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Colors.red : Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-    );
   }
 
   Future<void> _saveForm() async {
@@ -122,68 +81,62 @@ class _CustomerProfileVehicleEditState extends State<CustomerProfileVehicleEdit>
       return;
     }
 
-    if (_vehicleImage == null) {
-      _showSnackBar('Please select a vehicle image', isError: true);
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
     try {
-      // Simulate API call delay
-      await Future.delayed(const Duration(seconds: 2));
+      final newHome = HomeProfile(
+        name: _homenameController.text.trim(),
+        address: _addressController.text.trim(),
+        city: _cityController.text.trim(),
+        postalCode: _postalCodeController.text.trim(),
+        homeType: _selectedHomeType,
+        imageUrl: '', // For now, we'll handle image uploads later
+        isDefault: _isDefault,
+        area: _areaController.text.trim(),
+        phone: _phoneController.text.trim(),
+        landmark: _landmarkController.text.trim().isEmpty 
+            ? null 
+            : _landmarkController.text.trim(),
+      );
+      print('Saving new home profile: $newHome');
 
-      // Extract form data
-      final vehicleData = {
-        'vehicleType': _vehicletypeController.text.trim(),
-        'vehicleMake': _vehiclemakeController.text.trim(),
-        'model': _modelController.text.trim(),
-        'color': _colorController.text.trim(),
-        'manufactureDate': _manufacturedateController.text.trim(),
-        'licenseNumber': _licencenumberController.text.trim(),
-        'imagePath': _vehicleImage!.path,
-      };
-
-      // Debug print - replace with actual API call
-      print('Saved Vehicle Data: $vehicleData');
-
-      _showSnackBar('Vehicle profile saved successfully!');
-
-      // Navigate back to vehicle page after successful save
-      _navigateToVehiclePage();
+      await profileController.addHomeProfile(newHome);
+      
+      // If successful, go back and refresh the list
+      if (!profileController.isLoading.value) {
+        FixMeHelperFunctions.showSuccessSnackBar('Saved','Home profile saved successfully!' );
+        print('11');
+        _navigateToHome();
+        print('12');
+        profileController.loadUserHomes();
+      }
 
     } catch (e) {
-      _showSnackBar('Error saving profile: $e', isError: true);
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      FixMeHelperFunctions.showWarningSnackBar('Error', 'Error saving profile: $e');
     }
   }
 
-  void _navigateToVehiclePage() {
-    Navigator.push(context,MaterialPageRoute(builder: (context) => CustomerVehicleProfile()),
-    );
+  void _navigateToHome() {
+    Get.back();
   }
 
   void _onClosePressed() {
     if (_hasUnsavedChanges()) {
       _showDiscardDialog();
     } else {
-      _navigateToVehiclePage();
+      _navigateToHome();
     }
   }
 
   bool _hasUnsavedChanges() {
-    return _vehicletypeController.text.isNotEmpty ||
-        _vehiclemakeController.text.isNotEmpty ||
-        _modelController.text.isNotEmpty ||
-        _colorController.text.isNotEmpty ||
-        _manufacturedateController.text.isNotEmpty ||
-        _licencenumberController.text.isNotEmpty ||
-        _vehicleImage != null;
+    return _homenameController.text.isNotEmpty ||
+        _addressController.text.isNotEmpty ||
+        _cityController.text.isNotEmpty ||
+        _postalCodeController.text.isNotEmpty ||
+        _phoneController.text.isNotEmpty ||
+        _areaController.text.isNotEmpty ||
+        _landmarkController.text.isNotEmpty ||
+        _homeImage != null ||
+        _selectedHomeType != _homeTypes.first ||
+        _isDefault != false;
   }
 
   void _showDiscardDialog() {
@@ -202,7 +155,7 @@ class _CustomerProfileVehicleEditState extends State<CustomerProfileVehicleEdit>
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                _navigateToVehiclePage();
+                _navigateToHome();
               },
               style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: const Text('Discard'),
@@ -217,23 +170,27 @@ class _CustomerProfileVehicleEditState extends State<CustomerProfileVehicleEdit>
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.blue.shade600, Colors.blueAccent.shade400],
+          colors: [Colors.blue.shade600, Colors.blue.shade400],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(10.0),
+        padding: const EdgeInsets.all(20.0),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(5),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-              ),
+              padding: const EdgeInsets.all(4),
               child: const Icon(
-                Icons.directions_car_outlined,
+                Icons.home_outlined,
                 color: Colors.white,
                 size: 24,
               ),
@@ -241,17 +198,14 @@ class _CustomerProfileVehicleEditState extends State<CustomerProfileVehicleEdit>
             const SizedBox(width: 16),
             const Expanded(
               child: Text(
-                'Edit Vehicle Profile',
+                'Add New Home Profile',
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 22,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
               ),
             ),
-
-            const SizedBox(width: 16),
-
             IconButton(
               onPressed: _onClosePressed,
               icon: const Icon(Icons.close, color: Colors.white),
@@ -268,24 +222,19 @@ class _CustomerProfileVehicleEditState extends State<CustomerProfileVehicleEdit>
     required String label,
     required String hint,
     IconData? prefixIcon,
+    int maxLines = 1,
     TextInputType? keyboardType,
-    List<TextInputFormatter>? inputFormatters,
-    VoidCallback? onTap,
-    bool readOnly = false,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       child: TextFormField(
         controller: controller,
+        maxLines: maxLines,
         keyboardType: keyboardType,
-        inputFormatters: inputFormatters,
-        onTap: onTap,
-        readOnly: readOnly,
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
           prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: Colors.blue.shade600) : null,
-          suffixIcon: onTap != null ? Icon(Icons.calendar_today, color: Colors.blue.shade600) : null,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(color: Colors.grey.shade300),
@@ -310,56 +259,115 @@ class _CustomerProfileVehicleEditState extends State<CustomerProfileVehicleEdit>
           if (value == null || value.trim().isEmpty) {
             return 'Please enter $label';
           }
-          if (label == 'License Number' && value.length < 6) {
-            return 'License number must be at least 6 characters';
-          }
           return null;
         },
       ),
     );
   }
 
-  Widget _buildDropdownField() {
+  Widget _buildHomeTypeSelector() {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
-      child: DropdownButtonFormField<String>(
-        value: _vehicletypeController.text.isEmpty ? null : _vehicletypeController.text,
-        decoration: InputDecoration(
-          hintText: 'Select vehicle type',
-          prefixIcon: Icon(Icons.directions_car, color: Colors.blue.shade600),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade300),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Home Type',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade800,
+            ),
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade300),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            value: _selectedHomeType,
+            decoration: InputDecoration(
+              prefixIcon: Icon(Icons.home, color: Colors.blue.shade600),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.blue.shade600, width: 2),
+              ),
+              filled: true,
+              fillColor: Colors.grey.shade50,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            ),
+            items: _homeTypes.map((String type) {
+              return DropdownMenuItem<String>(
+                value: type,
+                child: Text(type),
+              );
+            }).toList(),
+            onChanged: (String? newValue) {
+              setState(() {
+                _selectedHomeType = newValue!;
+              });
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please select a home type';
+              }
+              return null;
+            },
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.blue.shade600, width: 2),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDefaultSwitch() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.grey.shade50,
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.star, color: Colors.blue.shade600),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Default Home',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade800,
+                  ),
+                ),
+                Text(
+                  'Set as your primary home address',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
           ),
-          filled: true,
-          fillColor: Colors.grey.shade50,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        ),
-        items: _vehicleTypes.map((String type) {
-          return DropdownMenuItem<String>(
-            value: type,
-            child: Text(type),
-          );
-        }).toList(),
-        onChanged: (String? newValue) {
-          setState(() {
-            _vehicletypeController.text = newValue ?? '';
-          });
-        },
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return 'Please select a vehicle type';
-          }
-          return null;
-        },
+          Switch(
+            value: _isDefault,
+            onChanged: (bool value) {
+              setState(() {
+                _isDefault = value;
+              });
+            },
+            activeColor: Colors.blue.shade600,
+          ),
+        ],
       ),
     );
   }
@@ -371,7 +379,7 @@ class _CustomerProfileVehicleEditState extends State<CustomerProfileVehicleEdit>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Vehicle Image',
+            'Home Image',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -386,19 +394,19 @@ class _CustomerProfileVehicleEditState extends State<CustomerProfileVehicleEdit>
               width: double.infinity,
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: _vehicleImage != null ? Colors.blue.shade600 : Colors.grey.shade300,
+                  color: _homeImage != null ? Colors.blue.shade600 : Colors.grey.shade300,
                   width: 2,
                 ),
                 borderRadius: BorderRadius.circular(16),
                 color: Colors.grey.shade50,
               ),
-              child: _vehicleImage != null
+              child: _homeImage != null
                   ? ClipRRect(
                 borderRadius: BorderRadius.circular(14),
                 child: Stack(
                   children: [
                     Image.file(
-                      _vehicleImage!,
+                      _homeImage!,
                       fit: BoxFit.cover,
                       width: double.infinity,
                       height: double.infinity,
@@ -431,7 +439,7 @@ class _CustomerProfileVehicleEditState extends State<CustomerProfileVehicleEdit>
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Tap to select vehicle image',
+                    'Tap to select home image',
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey.shade600,
@@ -462,7 +470,7 @@ class _CustomerProfileVehicleEditState extends State<CustomerProfileVehicleEdit>
         children: [
           Expanded(
             child: OutlinedButton(
-              onPressed: _isLoading ? null : _onClosePressed,
+              onPressed: profileController.isLoading.value ? null : _onClosePressed,
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -478,7 +486,7 @@ class _CustomerProfileVehicleEditState extends State<CustomerProfileVehicleEdit>
           Expanded(
             flex: 2,
             child: ElevatedButton(
-              onPressed: _isLoading ? null : _saveForm,
+              onPressed: profileController.isLoading.value ? null : _saveForm,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue.shade600,
                 foregroundColor: Colors.white,
@@ -486,7 +494,7 @@ class _CustomerProfileVehicleEditState extends State<CustomerProfileVehicleEdit>
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 elevation: 2,
               ),
-              child: _isLoading
+              child: profileController.isLoading.value
                   ? const SizedBox(
                 height: 20,
                 width: 20,
@@ -524,45 +532,53 @@ class _CustomerProfileVehicleEditState extends State<CustomerProfileVehicleEdit>
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Column(
                       children: [
-                        _buildDropdownField(),
                         _buildTextField(
-                          controller: _vehiclemakeController,
-                          label: 'Vehicle Make',
-                          hint: 'e.g., Toyota, Honda, BMW',
-                          prefixIcon: Icons.precision_manufacturing,
+                          controller: _homenameController,
+                          label: 'Home Name',
+                          hint: 'Enter your home name',
+                          prefixIcon: Icons.home,
                         ),
                         _buildTextField(
-                          controller: _modelController,
-                          label: 'Model',
-                          hint: 'e.g., Camry, Civic, X5',
-                          prefixIcon: Icons.model_training,
+                          controller: _addressController,
+                          label: 'Address',
+                          hint: 'Enter your complete address',
+                          prefixIcon: Icons.location_on,
+                          maxLines: 2,
                         ),
                         _buildTextField(
-                          controller: _colorController,
-                          label: 'Color',
-                          hint: 'e.g., Black, White, Blue',
-                          prefixIcon: Icons.palette,
+                          controller: _cityController,
+                          label: 'City',
+                          hint: 'Enter your city',
+                          prefixIcon: Icons.location_city,
                         ),
                         _buildTextField(
-                          controller: _manufacturedateController,
-                          label: 'Manufacture Date',
-                          hint: 'Select manufacture date',
-                          prefixIcon: Icons.calendar_month,
-                          readOnly: true,
-                          onTap: _selectDate,
+                          controller: _postalCodeController,
+                          label: 'Postal Code',
+                          hint: 'Enter your postal code',
+                          prefixIcon: Icons.local_post_office,
                         ),
                         _buildTextField(
-                          controller: _licencenumberController,
-                          label: 'License Number',
-                          hint: 'Enter vehicle license number',
-                          prefixIcon: Icons.confirmation_number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
-                            LengthLimitingTextInputFormatter(15),
-                          ],
+                          controller: _areaController,
+                          label: 'Area',
+                          hint: 'Enter area/neighborhood',
+                          prefixIcon: Icons.map,
                         ),
+                        _buildTextField(
+                          controller: _phoneController,
+                          label: 'Phone Number',
+                          hint: 'Enter phone number for this location',
+                          prefixIcon: Icons.phone,
+                        ),
+                        _buildTextField(
+                          controller: _landmarkController,
+                          label: 'Landmark (Optional)',
+                          hint: 'Enter nearby landmark',
+                          prefixIcon: Icons.place,
+                        ),
+                        _buildHomeTypeSelector(),
+                        _buildDefaultSwitch(),
                         _buildImagePicker(),
-                        _buildActionButtons(),
+                        Obx(() => _buildActionButtons()),
                         const SizedBox(height: 20),
                       ],
                     ),

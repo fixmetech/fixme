@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-class THttpHelper {
-  THttpHelper._(); 
-  static const String _baseUrl = 'http://localhost:3000/'; // Replace with your API base URL
+class FixMeHttpHelper {
+  FixMeHttpHelper._(); 
+  static const String _baseUrl = 'http://10.0.2.2:3000/'; // Replace with your API base URL
   static const int _timeoutDuration = 30; // Timeout in seconds
   
   // Default headers
@@ -55,11 +55,22 @@ static Map<String, dynamic> _handleResponse(http.Response response) {
   /// Helper method to make a GET request
   static Future<Map<String, dynamic>> get(String endpoint) async {
     try {
+      // Clean the endpoint to avoid double slashes
+      String cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+      String url = _baseUrl.endsWith('/') ? '$_baseUrl$cleanEndpoint' : '$_baseUrl/$cleanEndpoint';
+      
+      print('Making GET request to: $url');
+      
       final response = await http
-          .get(Uri.parse('$_baseUrl/$endpoint'), headers: _defaultHeaders)
+          .get(Uri.parse(url), headers: _defaultHeaders)
           .timeout(Duration(seconds: _timeoutDuration));
+          
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+      
       return _handleResponse(response);
     } catch (e) {
+      print('GET request error: $e');
       throw Exception('GET request failed: ${e.toString()}');
     }
   }
@@ -89,7 +100,7 @@ static Map<String, dynamic> _handleResponse(http.Response response) {
     try {
       final response = await http
           .post(
-            Uri.parse('$_baseUrl/$endpoint'),
+            Uri.parse('$_baseUrl$endpoint'),
             headers: _defaultHeaders,
             body: json.encode(data),
           )
@@ -158,7 +169,7 @@ static Map<String, dynamic> _handleResponse(http.Response response) {
     try {
       final response = await http
           .put(
-            Uri.parse('$_baseUrl/$endpoint'),
+            Uri.parse('$_baseUrl$endpoint'),
             headers: _defaultHeaders,
             body: json.encode(data),
           )
@@ -196,7 +207,7 @@ static Map<String, dynamic> _handleResponse(http.Response response) {
   static Future<Map<String, dynamic>> delete(String endpoint) async {
     try {
       final response = await http
-          .delete(Uri.parse('$_baseUrl/$endpoint'), headers: _defaultHeaders)
+          .delete(Uri.parse('$_baseUrl$endpoint'), headers: _defaultHeaders)
           .timeout(Duration(seconds: _timeoutDuration));
       return _handleResponse(response);
     } catch (e) {

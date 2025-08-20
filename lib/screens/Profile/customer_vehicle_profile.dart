@@ -1,102 +1,164 @@
-import 'package:fixme/screens/Profile/customer_profile_vehicle_edit.dart';
+import 'package:fixme/features/profile/controller/profile_controller.dart';
+import 'package:fixme/models/vehicle_profile.dart';
+import 'package:fixme/screens/Profile/customer_edit_vehicle.dart';
 import 'package:flutter/material.dart';
-
+import 'package:get/get.dart';
 
 class CustomerVehicleProfile extends StatefulWidget {
-  const CustomerVehicleProfile({super.key});
+  final VehicleProfile vehicleProfile;
+  
+  const CustomerVehicleProfile({super.key, required this.vehicleProfile});
 
   @override
   State<CustomerVehicleProfile> createState() => _CustomerVehicleProfileState();
 }
 
 class _CustomerVehicleProfileState extends State<CustomerVehicleProfile> {
-  static const Color _primaryColor = Color(0xFF1976D2);
-  static const Color _accentColor = Color(0xFF42A5F5);
+  static const Color _primaryColor = Color(0xFF2563EB);
+  static const Color _primaryLight = Color(0xFF60A5FA);
+  static const Color _surface = Color(0xFFFAFBFC);
+  static const Color _cardColor = Colors.white;
+  
+  final profileController = Get.find<ProfileController>();
 
-  // Sample data - in a real app, this would come from a data source
-  final Map<String, String> vehicleDetails = {
-    'Vehicle Type': 'Car',
-    'Vehicle Make': 'Toyota',
-    'Manufacture Date': 'January 12, 2025',
-    'Licence Plate Number': 'ABC1234',
-  };
-
-  String? _vehicleImageUrl; // Placeholder for vehicle image URL (null for no image)
+  String? get _vehicleImageUrl => widget.vehicleProfile.imageUrl;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: _buildAppBar(),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 32),
-            _buildVehicleImageSection(),
-            const SizedBox(height: 32),
-            _buildVehicleDetailsSection(),
-          ],
-        ),
+      backgroundColor: _surface,
+      body: CustomScrollView(
+        slivers: [
+          _buildSliverAppBar(),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                children: [
+                  _buildVehicleImageCard(),
+                  const SizedBox(height: 20),
+                  _buildVehicleDetailsCard(),
+                  const SizedBox(height: 20),
+                  _buildEditButton(),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      title: const Text(
-        'Customer Profile',
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w700,
-          fontSize: 20,
-        ),
-      ),
-      centerTitle: true,
+  Widget _buildSliverAppBar() {
+    return SliverAppBar(
+      expandedHeight: 90.0,
+      floating: false,
+      pinned: true,
       backgroundColor: _primaryColor,
-      iconTheme: const IconThemeData(color: Colors.white),
+      foregroundColor: Colors.white,
       elevation: 0,
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [_primaryColor, _accentColor],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      flexibleSpace: FlexibleSpaceBar(
+        title: const Text(
+          'Vehicle Profile',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
+        ),
+        centerTitle: true,
+        background: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [_primaryColor, _primaryLight],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+  Widget _buildVehicleImageCard() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: _cardColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
           children: [
-            const Text(
-              'Vehicle Details',
-              style: TextStyle(
-                fontSize: 22,
+            Container(
+              width: double.infinity,
+              height: 220,
+              decoration: BoxDecoration(
+                color: _surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200, width: 1),
+                image: _vehicleImageUrl != null
+                    ? DecorationImage(
+                        image: NetworkImage(_vehicleImageUrl!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+              ),
+              child: _vehicleImageUrl == null
+                  ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: _primaryLight.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.directions_car_outlined,
+                            size: 48,
+                            color: _primaryLight,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No vehicle image',
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    )
+                  : null,
+            ),
+            const SizedBox(height: 20),
+            Text(
+              '${widget.vehicleProfile.make} ${widget.vehicleProfile.model}',
+              style: const TextStyle(
+                fontSize: 24,
                 fontWeight: FontWeight.w700,
                 color: Colors.black87,
               ),
+              textAlign: TextAlign.center,
             ),
-            ElevatedButton.icon(
-              onPressed: _navigateToEditPage,
-              icon: const Icon(Icons.edit, size: 18),
-              label: const Text('Edit'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _accentColor,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                textStyle: const TextStyle(fontWeight: FontWeight.w600),
+            const SizedBox(height: 4),
+            Text(
+              widget.vehicleProfile.plateNumber,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: _primaryColor,
               ),
             ),
           ],
@@ -105,97 +167,22 @@ class _CustomerVehicleProfileState extends State<CustomerVehicleProfile> {
     );
   }
 
-  Widget _buildVehicleImageSection() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Vehicle Image',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-                if (_vehicleImageUrl != null)
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit, color: _primaryColor, size: 20),
-                        onPressed: _handleImageEdit,
-                        tooltip: 'Edit Image',
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red, size: 20),
-                        onPressed: _showDeleteImageDialog,
-                        tooltip: 'Delete Image',
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Center(
-              child: GestureDetector(
-                onTap: _vehicleImageUrl == null ? _handleImageEdit : null,
-                child: Container(
-                  width: double.infinity,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey[300]!, width: 1.5),
-                    image: _vehicleImageUrl != null
-                        ? DecorationImage(
-                      image: NetworkImage(_vehicleImageUrl!),
-                      fit: BoxFit.cover,
-                    )
-                        : null,
-                  ),
-                  child: _vehicleImageUrl == null
-                      ? Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.directions_car,
-                        size: 60,
-                        color: Colors.grey[600],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Tap to add vehicle image',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  )
-                      : null,
-                ),
-              ),
-            ),
-          ],
-        ),
+  Widget _buildVehicleDetailsCard() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: _cardColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildVehicleDetailsSection() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -207,103 +194,141 @@ class _CustomerVehicleProfileState extends State<CustomerVehicleProfile> {
                 color: Colors.black87,
               ),
             ),
-            const SizedBox(height: 20),
-            ...vehicleDetails.entries.map((entry) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 20.0),
-                child: _buildDetailRow(entry.key, entry.value),
-              );
-            }).toList(),
+            const SizedBox(height: 24),
+            _buildDetailGrid(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailGrid() {
+    final details = [
+      {'label': 'Year', 'value': widget.vehicleProfile.year},
+      {'label': 'Color', 'value': widget.vehicleProfile.color},
+      {'label': 'Vehicle Type', 'value': widget.vehicleProfile.vehicleType},
+      {'label': 'Fuel Type', 'value': widget.vehicleProfile.fuelType},
+      {'label': 'Transmission', 'value': widget.vehicleProfile.transmission},
+      {'label': 'Engine Capacity', 'value': widget.vehicleProfile.engineCapacity},
+      {'label': 'Mileage', 'value': widget.vehicleProfile.mileage},
+      {'label': 'Default Vehicle', 'value': widget.vehicleProfile.isDefault ? 'Yes' : 'No'},
+    ];
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
+        for (int i = 0; i < details.length; i += 2)
+          Padding(
+            padding: EdgeInsets.only(bottom: i < details.length - 2 ? 20.0 : 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildDetailItem(
+                    details[i]['label']!,
+                    details[i]['value']!,
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: i + 1 < details.length
+                      ? _buildDetailItem(
+                          details[i + 1]['label']!,
+                          details[i + 1]['value']!,
+                        )
+                      : const SizedBox(),
+                ),
+              ],
             ),
-            const SizedBox(width: 20),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.black87,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        )
+          ),
       ],
     );
   }
 
-  // Action methods
+  Widget _buildDetailItem(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.black87,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEditButton() {
+    return Container(
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [_primaryColor, _primaryLight],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: _primaryColor.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: _navigateToEditPage,
+          child: const Center(
+            child: Text(
+              'Edit Vehicle',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   void _navigateToEditPage() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const CustomerProfileVehicleEdit()),
-    );
-  }
-
-  void _handleImageEdit() {
-    // Simulate image picking (in a real app, use image_picker package)
-    setState(() {
-      _vehicleImageUrl = 'https://via.placeholder.com/300'; // Placeholder image
+      MaterialPageRoute(
+        builder: (context) => CustomerEditVehicle(vehicleProfile: widget.vehicleProfile),
+      ),
+    ).then((_) {
+      if (mounted) {
+        setState(() {
+          // The widget will rebuild with updated data from ProfileController
+        });
+      }
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Vehicle image updated successfully')),
-    );
-  }
-
-  void _showDeleteImageDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          title: const Text('Delete Vehicle Image'),
-          content: const Text('Are you sure you want to delete this vehicle image?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: _primaryColor),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _vehicleImageUrl = null;
-                });
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Vehicle image deleted successfully')),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red[600],
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              child: const Text('Delete'),
-            ),
-          ],
-        );
-      },
-    );
   }
 }
