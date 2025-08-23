@@ -1,9 +1,14 @@
 import 'package:fixme/screens/services/find_help.dart';
-import 'package:fixme/screens/services/vehicle/vehicle_selection_screen.dart';
+import 'package:fixme/screens/services/vehicle/vehicle_selection_screen.dart'
+    hide VehicleProfile;
+import 'package:fixme/screens/services/vehicle/terms_and_conditions.dart';
 import 'package:fixme/utils/helper/helper_functions.dart';
 import 'package:fixme/widgets/issue_chips.dart';
+import 'package:fixme/features/profile/controller/profile_controller.dart';
+import 'package:fixme/models/vehicle_profile.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class AsapVehicleService extends StatefulWidget {
   const AsapVehicleService({super.key});
@@ -15,9 +20,20 @@ class AsapVehicleService extends StatefulWidget {
 class _AsapVehicleServiceState extends State<AsapVehicleService> {
   final TextEditingController _descriptionController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  
+  final ProfileController _profileController = Get.put(ProfileController());
+
   List<String> selectedIssues = [];
   bool agreeToTerms = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVehicles();
+  }
+
+  Future<void> _loadVehicles() async {
+    await _profileController.loadUserVehicles();
+  }
 
   @override
   void dispose() {
@@ -25,132 +41,9 @@ class _AsapVehicleServiceState extends State<AsapVehicleService> {
     super.dispose();
   }
 
-
   void _showTermsAndConditionsDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            'FixMe Terms and Conditions',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            height: MediaQuery.of(context).size.height * 0.7,
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'By accessing or using the FixMe mobile application (the "App"), you agree to be bound by these Terms and Conditions. Please read them carefully.',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Section 1
-                  Text(
-                    '1. Introduction to FixMe Services',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildBullet('FixMe is a Flutter-based mobile application designed to connect users with nearby service providers in real-time.'),
-                  _buildBullet('The App offers two main categories of services: Vehicle Services and Home Services.'),
-                  _buildBullet('The "Find Now" option allows you to instantly locate and connect with available service providers in your vicinity for repair and maintenance services, similar to platforms like Uber and PickMe.'),
-                  const SizedBox(height: 16),
-
-                  // Section 2
-                  Text(
-                    '2. Technician Verification',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildBullet('FixMe implements a verification process for all technicians registering on the platform.'),
-                  _buildBullet('Technicians must upload a photo of their NIC, a real-time selfie, and verify their phone number through OTP.'),
-                  _buildBullet('Technicians must prove skills via certificates or evidence of past work (images/videos).'),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Technician Badges:',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  _buildBadge('🟢 "Verified Professional"', 'ID and professional certificate verified by FixMe'),
-                  _buildBadge('🔵 "Verified by Experience"', 'ID verified with evidence of past work and references'),
-                  _buildBadge('🟡 "On Probation"', 'Limited approval pending first customer reviews'),
-                  const SizedBox(height: 16),
-
-                  // Section 3
-                  Text(
-                    '3. Payment Terms and Process',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Compulsory Visiting Fee:',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  _buildBullet('0 – 5 km: LKR 200'),
-                  _buildBullet('5 – 10 km: LKR 500'),
-                  _buildBullet('10 km and above: LKR 1000'),
-                  const SizedBox(height: 8),
-                  _buildBullet('Visiting fee is payable upon technician arrival, regardless of job acceptance.'),
-                  _buildBullet('You must explicitly approve estimated costs through the App before work begins.'),
-                  _buildBullet('If you reject the estimated cost, only the visiting fee will be charged.'),
-                  _buildBullet('Final payment can be processed through PayHere or paid in cash to the technician.'),
-                  const SizedBox(height: 16),
-
-                  // Section 4
-                  Text(
-                    '4. Customer Feedback and Complaint Resolution',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildBullet('Your feedback and ratings are crucial for the FixMe platform, particularly for technicians "On Probation."'),
-                  _buildBullet('Complaints are reviewed by FixMe moderators, who may issue refunds or take corrective action.'),
-                  const SizedBox(height: 16),
-
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
-    );
+    TermsAndConditionsDialog.show(context);
   }
-
-
-  Widget _buildBullet(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4.0, left: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text("• ", style: TextStyle(fontSize: 16)),
-          Expanded(child: Text(text)),
-        ],
-      ),
-    );
-  }
-
 
   void _onIssueSelected(String issue, bool isSelected) {
     setState(() {
@@ -164,7 +57,7 @@ class _AsapVehicleServiceState extends State<AsapVehicleService> {
 
   String? _validateDescription(String? value) {
     final description = value?.trim() ?? '';
-    
+
     // If "Unknown" is selected, description is mandatory
     if (selectedIssues.contains("Unknown")) {
       if (description.isEmpty) {
@@ -174,33 +67,36 @@ class _AsapVehicleServiceState extends State<AsapVehicleService> {
         return 'Description must be at least 20 characters long';
       }
     }
-    
+
     // If description is provided, it must be at least 20 characters
     if (description.isNotEmpty && description.length < 20) {
       return 'Description must be at least 20 characters long';
     }
-    
+
     return null;
   }
 
   bool _canProceed() {
     // Must select at least one issue
     if (selectedIssues.isEmpty) return false;
-    
+
     // Must agree to terms
     if (!agreeToTerms) return false;
-    
+
+    // Must have a vehicle selected
+    if (_profileController.getDefaultVehicle() == null) return false;
+
     // Validate description
     final description = _descriptionController.text.trim();
     if (selectedIssues.contains("Unknown")) {
       return description.isNotEmpty && description.length >= 20;
     }
-    
+
     // If description is provided, it must meet minimum length
     if (description.isNotEmpty) {
       return description.length >= 20;
     }
-    
+
     return true;
   }
 
@@ -210,17 +106,34 @@ class _AsapVehicleServiceState extends State<AsapVehicleService> {
         context,
         MaterialPageRoute(builder: (_) => const FindHelp()),
       );
-    }else{
-      if(selectedIssues.isEmpty){
-        FixMeHelperFunctions.showInfoSnackBar('Incomplete request', "Please select at least one issue.");
+    } else {
+      if (selectedIssues.isEmpty) {
+        FixMeHelperFunctions.showInfoSnackBar(
+          'Incomplete request',
+          "Please select at least one issue.",
+        );
         return;
       }
-      if(_descriptionController.text.trim().isEmpty && selectedIssues.contains("Unknown")){
-        FixMeHelperFunctions.showInfoSnackBar('Incomplete request', "Please provide a description for the unknown issue.");
+      if (_profileController.getDefaultVehicle() == null) {
+        FixMeHelperFunctions.showInfoSnackBar(
+          'Vehicle Required',
+          "Please select a vehicle before proceeding.",
+        );
         return;
       }
-      if(!agreeToTerms){
-        FixMeHelperFunctions.showInfoSnackBar('Incomplete request', "Please agree to the terms.");
+      if (_descriptionController.text.trim().isEmpty &&
+          selectedIssues.contains("Unknown")) {
+        FixMeHelperFunctions.showInfoSnackBar(
+          'Incomplete request',
+          "Please provide a description for the unknown issue.",
+        );
+        return;
+      }
+      if (!agreeToTerms) {
+        FixMeHelperFunctions.showInfoSnackBar(
+          'Incomplete request',
+          "Please agree to the terms.",
+        );
         return;
       }
     }
@@ -261,86 +174,178 @@ class _AsapVehicleServiceState extends State<AsapVehicleService> {
               const SizedBox(height: 12),
 
               Center(
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => VehicleSelectionScreen(
-                          onVehicleSelected: (vehicle) {
-                            // Handle vehicle selection
-                            // The VehicleSelectionScreen will automatically navigate back
-                            // You can add additional logic here to update the selected vehicle
+                child: Obx(
+                  () => TextButton(
+                    onPressed: _profileController.isLoading.value
+                        ? null
+                        : () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => VehicleSelectionScreen(
+                                  onVehicleSelected: (vehicle) {
+                                    // Handle vehicle selection
+                                    // The VehicleSelectionScreen will automatically navigate back
+                                    // You can add additional logic here to update the selected vehicle
+                                  },
+                                ),
+                              ),
+                            );
                           },
+                    child: Row(
+                      children: [
+                        Text(
+                          _profileController.isLoading.value
+                              ? "Loading Vehicles..."
+                              : "Change Vehicle",
+                          style: TextStyle(
+                            color: _profileController.isLoading.value
+                                ? Colors.grey
+                                : Colors.blue,
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  child: Row(
-                    children: [
-                      const Text(
-                        "Change Vehicle",
-                        style: TextStyle(color: Colors.blue),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(Icons.arrow_forward_ios, size: 16, color: Colors.blue),
-                    ],
+                        const SizedBox(width: 4),
+                        if (_profileController.isLoading.value)
+                          const SizedBox(
+                            width: 12,
+                            height: 12,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        else
+                          const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16,
+                            color: Colors.blue,
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: 2),
               // Vehicle Card
-              Material(
-                elevation: 3,
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
+              Obx(() {
+                final VehicleProfile? currentVehicle = _profileController
+                    .getDefaultVehicle();
+
+                if (currentVehicle == null) {
+                  // Show loading or no vehicle message
+                  return Material(
+                    elevation: 3,
                     borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 28,
-                        foregroundColor: Colors.amber, // use real image
-                        backgroundColor: Colors.transparent,
-                        backgroundImage: AssetImage("assets/images/city.jpg"),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      const SizedBox(width: 16),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "KX-6065",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
+                      child: const Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 28,
+                            backgroundColor: Colors.grey,
+                            child: Icon(
+                              Icons.directions_car,
+                              color: Colors.white,
                             ),
-                            SizedBox(height: 4),
-                            Row(
+                          ),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(
-                                  Icons.directions_car,
-                                  size: 16,
-                                  color: Colors.grey,
+                                Text(
+                                  "No Vehicle Selected",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
                                 ),
-                                SizedBox(width: 4),
-                                Text("Model: Toyota Corolla"),
+                                SizedBox(height: 4),
+                                Text("Please add a vehicle to continue"),
                               ],
                             ),
-                            SizedBox(height: 2),
-                            Text("Year: 2018"),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      IconButton(icon: const Icon(Icons.edit), onPressed: () {}),
-                    ],
+                    ),
+                  );
+                }
+
+                return Material(
+                  elevation: 3,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 28,
+                          foregroundColor: Colors.amber,
+                          backgroundColor: Colors.transparent,
+                          backgroundImage: currentVehicle.imageUrl != null
+                              ? NetworkImage(currentVehicle.imageUrl!)
+                              : const AssetImage("assets/images/city.jpg")
+                                    as ImageProvider,
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                currentVehicle.plateNumber,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.directions_car,
+                                    size: 16,
+                                    color: Colors.grey,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      "Model: ${currentVehicle.make} ${currentVehicle.model}",
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text("Year: ${currentVehicle.year}"),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.edit),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => VehicleSelectionScreen(
+                                  onVehicleSelected: (vehicle) {
+                                    // The vehicle selection screen should handle setting the default
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ),
+                );
+              }),
               const SizedBox(height: 24),
               const Text(
                 "What's the issue?",
@@ -353,40 +358,47 @@ class _AsapVehicleServiceState extends State<AsapVehicleService> {
                 runSpacing: 10,
                 children: [
                   SelectableIssueChip(
-                    label: "Engine Problem", 
+                    label: "Engine Problem",
                     icon: Icons.build,
-                    onSelected: (selected) => _onIssueSelected("Engine Problem", selected),
+                    onSelected: (selected) =>
+                        _onIssueSelected("Engine Problem", selected),
                   ),
                   SelectableIssueChip(
                     label: "Battery Issue",
                     icon: Icons.battery_alert,
-                    onSelected: (selected) => _onIssueSelected("Battery Issue", selected),
+                    onSelected: (selected) =>
+                        _onIssueSelected("Battery Issue", selected),
                   ),
                   SelectableIssueChip(
                     label: "Flat Tire",
                     icon: Icons.circle_outlined,
-                    onSelected: (selected) => _onIssueSelected("Flat Tire", selected),
+                    onSelected: (selected) =>
+                        _onIssueSelected("Flat Tire", selected),
                   ),
                   SelectableIssueChip(
                     label: "Break not working",
                     icon: Icons.warning_amber,
-                    onSelected: (selected) => _onIssueSelected("Break not working", selected),
+                    onSelected: (selected) =>
+                        _onIssueSelected("Break not working", selected),
                   ),
                   SelectableIssueChip(
                     label: "Strange Noice",
                     icon: Icons.surround_sound,
-                    onSelected: (selected) => _onIssueSelected("Strange Noice", selected),
+                    onSelected: (selected) =>
+                        _onIssueSelected("Strange Noice", selected),
                   ),
                   SelectableIssueChip(
-                    label: "Crashed", 
+                    label: "Crashed",
                     icon: Icons.car_crash,
-                    onSelected: (selected) => _onIssueSelected("Crashed", selected),
+                    onSelected: (selected) =>
+                        _onIssueSelected("Crashed", selected),
                   ),
                   SelectableIssueChip(
-                    label: "Unknown", 
-                    icon: Icons.help_outline, 
+                    label: "Unknown",
+                    icon: Icons.help_outline,
                     selectColor: 'red',
-                    onSelected: (selected) => _onIssueSelected("Unknown", selected),
+                    onSelected: (selected) =>
+                        _onIssueSelected("Unknown", selected),
                   ),
                 ],
               ),
@@ -399,11 +411,14 @@ class _AsapVehicleServiceState extends State<AsapVehicleService> {
                 style: const TextStyle(fontSize: 14, color: Colors.black87),
                 validator: _validateDescription,
                 decoration: InputDecoration(
-                  hintText: selectedIssues.contains("Unknown") 
+                  hintText: selectedIssues.contains("Unknown")
                       ? "Describe the issue (required for unknown issues)"
                       : "Describe the issue (optional)",
                   hintStyle: TextStyle(color: Colors.grey[600]),
-                  prefixIcon: const Icon(Icons.car_crash_rounded, color: Colors.blueGrey),
+                  prefixIcon: const Icon(
+                    Icons.car_crash_rounded,
+                    color: Colors.blueGrey,
+                  ),
                   filled: true,
                   fillColor: Colors.white.withOpacity(0.9),
                   contentPadding: const EdgeInsets.symmetric(
@@ -427,17 +442,11 @@ class _AsapVehicleServiceState extends State<AsapVehicleService> {
                   ),
                   errorBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(
-                      color: Colors.red,
-                      width: 1.5,
-                    ),
+                    borderSide: const BorderSide(color: Colors.red, width: 1.5),
                   ),
                   focusedErrorBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(
-                      color: Colors.red,
-                      width: 1.5,
-                    ),
+                    borderSide: const BorderSide(color: Colors.red, width: 1.5),
                   ),
                 ),
                 onChanged: (value) {
@@ -452,7 +461,10 @@ class _AsapVehicleServiceState extends State<AsapVehicleService> {
                   children: [
                     const Text(
                       "Upload any Supporting Images",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(width: 2),
                     IconButton(
@@ -503,13 +515,14 @@ class _AsapVehicleServiceState extends State<AsapVehicleService> {
                 ],
               ),
 
-
               const SizedBox(height: 10),
 
               Center(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _canProceed() ? Colors.blue[300] : Colors.grey[400],
+                    backgroundColor: _canProceed()
+                        ? Colors.blue[300]
+                        : Colors.grey[400],
                     padding: const EdgeInsets.symmetric(
                       horizontal: 60,
                       vertical: 14,
@@ -526,7 +539,7 @@ class _AsapVehicleServiceState extends State<AsapVehicleService> {
                       color: Colors.white,
                     ),
                   ),
-                ),
+                ), // Wrap ElevatedButton with Obx
               ),
             ],
           ),
@@ -552,41 +565,3 @@ class IssueChip extends StatelessWidget {
     );
   }
 }
-
-Widget _buildBullet(String text) {
-  return Padding(
-    padding: const EdgeInsets.only(left: 16, bottom: 4),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('• ', style: TextStyle(fontSize: 16)),
-        Expanded(child: Text(text)),
-      ],
-    ),
-  );
-}
-
-Widget _buildBadge(String badge, String description) {
-  return Padding(
-    padding: const EdgeInsets.only(left: 24, bottom: 12),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          badge,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          description,
-          style: const TextStyle(
-            color: Colors.black87,
-          ),
-        ),
-      ],
-    ),
-  );
-}
-

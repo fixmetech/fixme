@@ -1,4 +1,7 @@
+import 'package:fixme/data/repositories/technicians_repository.dart';
+import 'package:fixme/utils/constants/size.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:lottie/lottie.dart' as lottie;
 import 'package:fixme/screens/services/controllers/map_controllers.dart';
@@ -16,12 +19,17 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
   late AnimationController _animationController;
   LatLng? _currentPosition;
   LatLng? _selectedLocation;
-  String _currentAddress = "Getting your location...";
   Set<Marker> _markers = {};
+
+  final technicianRepository = Get.put(TechniciansRepository());
+  final mapControllerInstance = Get.put(MapController());
 
   // Search states
   SearchState _searchState = SearchState.initial;
   Map<String, dynamic>? _foundTechnician;
+  Map<String, dynamic>? _nearestTechnician;
+  bool _showCenterMarker = true;
+  Set<Polyline> _polylines = {};
 
   // Draggable sheet controller
   final DraggableScrollableController _dragController =
@@ -46,7 +54,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
 
   Future<void> _getCurrentLocation() async {
     debugPrint('Getting current location...');
-    final position = await MapControllers.getCurrentLocation();
+    final position = await mapControllerInstance.getCurrentLocation();
     if (position != null) {
       debugPrint(
         'Location obtained: ${position.latitude}, ${position.longitude}',
@@ -60,20 +68,19 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
       _addTechnicianMarkers();
     } else {
       debugPrint('Failed to get current location');
-      setState(() {
-        _currentAddress = "Location not available";
-      });
+      mapControllerInstance.currentAddress.value = "Location not available";
     }
   }
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
-    MapControllers.setMapController(controller);
+    mapControllerInstance.setMapController(controller);
   }
 
   void _startSearching() async {
     setState(() {
       _searchState = SearchState.searching;
+      _showCenterMarker = false; // Hide center marker when searching starts
     });
 
     _dragController.animateTo(
@@ -82,26 +89,33 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
       curve: Curves.easeInOut,
     );
 
+    // Remove all markers
+    _markers.clear();
+
+    // Add user location marker to the map
+    await _addUserLocationMarker();
+
     // Add technician markers when starting search
     await _addTechnicianMarkers();
 
-    // Simulate searching process
-    await Future.delayed(const Duration(seconds: 10));
+    // Find nearest technician and draw route
+    await _selectNearestTechnicianAndDrawRoute();
 
     setState(() {
       _searchState = SearchState.found;
-      _foundTechnician = {
-        'name': 'Abishek Korala',
-        'rating': 4.8,
-        'experience': '3 years',
-        'specialization': 'Car Repair & Maintenance',
-        'distance': '2.8 km away',
-        'phone': '+94743383502',
-        'image': 'https://via.placeholder.com/80',
-        'estimatedArrival': '15-20 minutes',
-        'price': '\$45-65',
-        'completedJobs': 245,
-      };
+      _foundTechnician =
+          {
+            'name': 'Abishek Korala',
+            'rating': 4.8,
+            'experience': '3 years',
+            'specialization': 'Car Repair & Maintenance',
+            'distance': '2.8 km away',
+            'phone': '+94743383502',
+            'image': 'https://via.placeholder.com/80',
+            'estimatedArrival': '15-20 minutes',
+            'price': '\$45-65',
+            'completedJobs': 245,
+          };
     });
 
     // Auto-expand the bottom sheet when technician is found
@@ -114,93 +128,212 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
 
   Future<void> _addTechnicianMarkers() async {
     if (_currentPosition == null) {
-      debugPrint('Cannot add markers: current position is null');
+      debugPrint('Current position is null, cannot add markers');
       return;
     }
 
-    debugPrint(
-      'Adding technician markers around: ${_currentPosition!.latitude}, ${_currentPosition!.longitude}',
-    );
-
-    final baseLat = _currentPosition!.latitude;
-    final baseLng = _currentPosition!.longitude;
-
-    // Use simpler fallback icon for now
-    BitmapDescriptor technicianIcon;
     try {
-      technicianIcon = await BitmapDescriptor.fromAssetImage(
-        const ImageConfiguration(size: Size(14, 14)),
-        'assets/images/manpointer1.png',
+      // Don't clear all markers if we have user location marker
+      _markers.removeWhere(
+        (marker) => marker.markerId.value.startsWith('technician_'),
       );
-      debugPrint('Successfully loaded custom technician icon');
+
+      // Fetch nearby technicians
+      List<Marker> technicianMarkers = await mapControllerInstance
+          .addTechnicianMarkers("vehicles");
+      setState(() {
+        _markers.addAll(technicianMarkers);
+      });
     } catch (e) {
-      debugPrint('Failed to load custom icon, using fallback: $e');
-      technicianIcon = BitmapDescriptor.defaultMarkerWithHue(
-        BitmapDescriptor.hueOrange,
+      debugPrint('Error adding technician markers: $e');
+      // Handle error gracefully - maybe show a snackbar or keep existing markers
+    }
+  }
+
+  Future<void> _addUserLocationMarker() async {
+    if (_selectedLocation == null) return;
+
+    try {
+      // Create user location marker
+      BitmapDescriptor userIcon;
+      userIcon = BitmapDescriptor.defaultMarkerWithHue(
+        BitmapDescriptor.hueBlue,
       );
+
+      final userMarker = Marker(
+        markerId: const MarkerId('user_location'),
+        position: _selectedLocation!,
+        icon: userIcon,
+        infoWindow: const InfoWindow(
+          title: 'Selected Location',
+          snippet: 'You are here',
+        ),
+      );
+
+      setState(() {
+        _markers.add(userMarker);
+      });
+    } catch (e) {
+      debugPrint('Error adding user location marker: $e');
+    }
+  }
+
+  Future<void> _selectNearestTechnicianAndDrawRoute() async {
+    if (_selectedLocation == null ||
+        mapControllerInstance.nearByTechnicians.isEmpty) {
+      debugPrint(
+        'Cannot select nearest technician: no current position or technicians',
+      );
+      return;
     }
 
-    // Technician data with closer locations (within ~200-500 meters)
-    List<Map<String, dynamic>> technicians = [
-      {
-        'location': LatLng(baseLat + 0.0008, baseLng + 0.0005), // ~100m away
-      },
-      {
-        'location': LatLng(baseLat - 0.0006, baseLng + 0.0009), // ~150m away
-      },
-      {
-        'location': LatLng(baseLat + 0.0012, baseLng - 0.0008), // ~200m away
-      },
-      {
-        'location': LatLng(baseLat - 0.0015, baseLng - 0.0010), // ~300m away
-      },
-      {
-        'location': LatLng(baseLat - 0.0005, baseLng + 0.0018), // ~400m away
-      },
-    ];
+    try {
+      // Find the nearest technician
+      Map<String, dynamic>? nearest;
+      double minDistance = double.infinity;
 
-    final newMarkers = technicians.asMap().entries.map((entry) {
-      int index = entry.key;
-      Map<String, dynamic> tech = entry.value;
-      return Marker(
-        markerId: MarkerId('technician_$index'),
-        position: tech['location'],
-        icon: technicianIcon,
-        consumeTapEvents: false, 
-        onTap: () {}, 
+      for (var technician in mapControllerInstance.nearByTechnicians) {
+        if (technician['location'] != null) {
+          final techLocation = technician['location'] as LatLng;
+          final distance = mapControllerInstance.calculateDistance(
+            _selectedLocation!,
+            techLocation,
+          );
+
+          if (distance < minDistance) {
+            minDistance = distance;
+            nearest = technician;
+          }
+        }
+      }
+
+      if (nearest != null) {
+        _nearestTechnician = nearest;
+
+        // Add a special marker for the selected technician
+        await _addSelectedTechnicianMarker(
+          nearest['location'] as LatLng,
+          nearest,
+        );
+
+        // Draw route to nearest technician
+        await _drawRouteToTechnician(nearest['location'] as LatLng);
+
+        // Focus camera to show both user and technician
+        await _focusCameraOnRoute(
+          _selectedLocation!,
+          nearest['location'] as LatLng,
+        );
+      }
+    } catch (e) {
+      debugPrint('Error selecting nearest technician: $e');
+    }
+  }
+
+  Future<void> _addSelectedTechnicianMarker(
+    LatLng technicianLocation,
+    Map<String, dynamic> technicianData,
+  ) async {
+    try {
+      // Create a special marker for the selected technician
+      BitmapDescriptor selectedIcon;
+      selectedIcon = BitmapDescriptor.defaultMarkerWithHue(
+        BitmapDescriptor.hueGreen,
       );
-    }).toList();
 
-    debugPrint('Adding ${newMarkers.length} technician markers to the map');
+      final selectedMarker = Marker(
+        markerId: const MarkerId('selected_technician'),
+        position: technicianLocation,
+        icon: selectedIcon,
+        infoWindow: InfoWindow(
+          title: technicianData['name'] ?? 'Selected Technician',
+          snippet:
+              'Nearest technician - ${mapControllerInstance.formatDistance(mapControllerInstance.calculateDistance(_currentPosition!, technicianLocation))}',
+        ),
+      );
 
-    setState(() {
-      _markers.addAll(newMarkers);
-    });
+      setState(() {
+        // Remove any existing selected technician marker
+        _markers.removeWhere(
+          (marker) => marker.markerId.value == 'selected_technician',
+        );
+        _markers.add(selectedMarker);
+      });
+    } catch (e) {
+      debugPrint('Error adding selected technician marker: $e');
+    }
+  }
 
-    debugPrint('Total markers on map: ${_markers.length}');
+  Future<void> _drawRouteToTechnician(LatLng technicianLocation) async {
+    if (_selectedLocation == null) return;
+
+    try {
+      // Get route points from Google Directions API
+      final routePoints = await mapControllerInstance.getDirections(
+        _selectedLocation!,
+        technicianLocation,
+      );
+
+      final polyline = Polyline(
+        polylineId: const PolylineId('route_to_technician'),
+        points: routePoints,
+        color: Colors.blue[900]!,
+        width: 5,
+      );
+
+      setState(() {
+        _polylines.clear();
+        _polylines.add(polyline);
+      });
+    } catch (e) {
+      debugPrint('Error drawing route: $e');
+    }
+  }
+
+  Future<void> _focusCameraOnRoute(LatLng start, LatLng end) async {
+    try {
+      // Calculate bounds to include both points
+      final double minLat = start.latitude < end.latitude
+          ? start.latitude
+          : end.latitude;
+      final double maxLat = start.latitude > end.latitude
+          ? start.latitude
+          : end.latitude;
+      final double minLng = start.longitude < end.longitude
+          ? start.longitude
+          : end.longitude;
+      final double maxLng = start.longitude > end.longitude
+          ? start.longitude
+          : end.longitude;
+
+      final bounds = LatLngBounds(
+        southwest: LatLng(minLat - 0.001, minLng - 0.001),
+        northeast: LatLng(maxLat + 0.001, maxLng + 0.001),
+      );
+
+      await mapController.animateCamera(
+        CameraUpdate.newLatLngBounds(bounds, 100.0),
+      );
+    } catch (e) {
+      debugPrint('Error focusing camera on route: $e');
+    }
   }
 
   Future<void> _getAddressFromLatLng(LatLng position) async {
     debugPrint(
       'Getting address for position: ${position.latitude}, ${position.longitude}',
     );
-    // Show loading state
-    setState(() {
-      _currentAddress = "Loading address...";
-    });
 
     try {
-      final address = await MapControllers.getAddressFromLatLng(position);
+      final address = await mapControllerInstance.getAddressFromLatLng(
+        position,
+      );
       debugPrint('Address received: $address');
-      setState(() {
-        _currentAddress = address;
-      });
     } catch (e) {
       debugPrint('Error getting address: $e');
       // Fallback to coordinates
-      setState(() {
-        _currentAddress = MapControllers.getSimpleAddress(position);
-      });
+      mapControllerInstance.currentAddress.value = mapControllerInstance
+          .getSimpleAddress(position);
     }
   }
 
@@ -208,9 +341,16 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
     setState(() {
       _searchState = SearchState.initial;
       _foundTechnician = null;
-      // Clear technician markers when resetting
+      _nearestTechnician = null;
+      _showCenterMarker = true; // Show center marker again
+      _polylines.clear(); // Clear route lines
+
+      // Clear technician, user, and selected markers when resetting
       _markers.removeWhere(
-        (marker) => marker.markerId.value.startsWith('technician_'),
+        (marker) =>
+            marker.markerId.value.startsWith('technician_') ||
+            marker.markerId.value == 'user_location' ||
+            marker.markerId.value == 'selected_technician',
       );
     });
     _dragController.animateTo(
@@ -244,50 +384,55 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
             )
           : Stack(
               children: [
-                GoogleMap(
-                  onMapCreated: _onMapCreated,
-                  initialCameraPosition: CameraPosition(
-                    target: _currentPosition!,
-                    zoom: 18,
+                Obx(
+                  () => GoogleMap(
+                    onMapCreated: _onMapCreated,
+                    initialCameraPosition: CameraPosition(
+                      target: _currentPosition!,
+                      zoom: 15.5,
+                    ),
+                    markers: {..._markers, ...mapControllerInstance.markers},
+                    polylines: _polylines,
+                    myLocationEnabled: true,
+                    myLocationButtonEnabled: false,
+                    compassEnabled: false,
+                    onCameraMove: (position) {
+                      setState(() {
+                        _selectedLocation = position.target;
+                      });
+                    },
+                    onCameraIdle: () {
+                      if (_selectedLocation != null &&
+                          _searchState == SearchState.initial) {
+                        _getAddressFromLatLng(_selectedLocation!);
+                      }
+                    },
                   ),
-                  markers: _markers,
-                  myLocationEnabled: true,
-                  myLocationButtonEnabled: false,
-                  compassEnabled: false,
-                  onCameraMove: (position) {
-                    setState(() {
-                      _selectedLocation = position.target;
-                    });
-                  },
-                  onCameraIdle: () {
-                    if (_selectedLocation != null) {
-                      _getAddressFromLatLng(_selectedLocation!);
-                    }
-                  },
                 ),
 
                 // Location button
                 Positioned(
-                  bottom: 220,
+                  bottom: FixMeSizes.bottomNavHeight + 190,
                   right: 16,
                   child: FloatingActionButton(
                     mini: true,
                     backgroundColor: Colors.white,
                     onPressed: () async {
-                      await MapControllers.moveToCurrentLocation();
+                      await mapControllerInstance.moveToCurrentLocation();
                     },
                     child: const Icon(Icons.my_location, color: Colors.blue),
                   ),
                 ),
 
-                // Center marker
-                const Center(
-                  child: Icon(
-                    Icons.person_pin_circle,
-                    size: 45,
-                    color: Colors.red,
+                // Center marker - only show in initial state
+                if (_showCenterMarker)
+                  const Center(
+                    child: Icon(
+                      Icons.person_pin_circle,
+                      size: 45,
+                      color: Colors.red,
+                    ),
                   ),
-                ),
 
                 // Back button
                 Positioned(
@@ -368,15 +513,15 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
       case SearchState.searching:
         return _buildSearchingContent();
       case SearchState.found:
-        return _foundTechnician != null 
-          ? FoundTechnician(
-              technician: _foundTechnician!,
-              onFindAnother: _resetSearch,
-              onCall: () {
-                // Handle call functionality
-              },
-            )
-          : const SizedBox();
+        return _foundTechnician != null
+            ? FoundTechnician(
+                technician: _foundTechnician!,
+                onFindAnother: _resetSearch,
+                onCall: () {
+                  // Handle call functionality
+                },
+              )
+            : const SizedBox();
     }
   }
 
@@ -395,32 +540,47 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            _currentAddress.isEmpty
-                ? "Loading address..."
-                : "📍 $_currentAddress",
-            style: const TextStyle(fontSize: 14, color: Colors.grey),
-            textAlign: TextAlign.center,
+          Obx(
+            () => Text(
+              mapControllerInstance.currentAddress.value.isEmpty
+                  ? "Loading address..."
+                  : "📍 ${mapControllerInstance.currentAddress.value}",
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
           ),
           const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _startSearching,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue[600],
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          Obx(
+            () => SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: mapControllerInstance.isLoading.value
+                    ? null
+                    : _startSearching,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue[600],
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-              ),
-              child: const Text(
-                "Find Technician",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Colors.white,
-                ),
+                child: mapControllerInstance.isLoading.value
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        "Find Technician",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
             ),
           ),
@@ -463,7 +623,6 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
       ),
     );
   }
-
 
   // Helper methods for size management
   double _getInitialSize() {
