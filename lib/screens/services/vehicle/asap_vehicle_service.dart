@@ -1,6 +1,6 @@
+import 'package:fixme/screens/Profile/customer_edit_vehicle.dart';
 import 'package:fixme/screens/services/find_help.dart';
-import 'package:fixme/screens/services/vehicle/vehicle_selection_screen.dart'
-    hide VehicleProfile;
+import 'package:fixme/screens/services/vehicle/vehicle_selection_screen.dart';
 import 'package:fixme/screens/services/vehicle/terms_and_conditions.dart';
 import 'package:fixme/utils/helper/helper_functions.dart';
 import 'package:fixme/widgets/issue_chips.dart';
@@ -43,6 +43,84 @@ class _AsapVehicleServiceState extends State<AsapVehicleService> {
 
   void _showTermsAndConditionsDialog() {
     TermsAndConditionsDialog.show(context);
+  }
+
+  void _editVehicle(VehicleProfile vehicle) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CustomerEditVehicle(vehicleProfile: vehicle),
+      ),
+    ).then((_) {
+      _profileController.loadUserVehicles();
+    });
+  }
+
+  void _showEditVehicleConfirmation(VehicleProfile vehicle) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              const Text(
+                'Edit Vehicle',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Do you want to edit this vehicle?',
+                style: TextStyle(fontSize: 16),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+              },
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+                // Navigate to edit screen
+                _editVehicle(vehicle);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue[600],
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+              ),
+              child: const Text(
+                'Edit Vehicle',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _onIssueSelected(String issue, bool isSelected) {
@@ -183,10 +261,11 @@ class _AsapVehicleServiceState extends State<AsapVehicleService> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => VehicleSelectionScreen(
+                                  currentSelectedVehicle: _profileController
+                                      .getSelectedVehicle(),
                                   onVehicleSelected: (vehicle) {
-                                    // Handle vehicle selection
-                                    // The VehicleSelectionScreen will automatically navigate back
-                                    // You can add additional logic here to update the selected vehicle
+                                    // Vehicle selection is handled in the screen itself
+                                    // The ProfileController will be updated automatically
                                   },
                                 ),
                               ),
@@ -225,8 +304,9 @@ class _AsapVehicleServiceState extends State<AsapVehicleService> {
               const SizedBox(height: 2),
               // Vehicle Card
               Obx(() {
-                final VehicleProfile? currentVehicle = _profileController
-                    .getDefaultVehicle();
+                VehicleProfile? currentVehicle = _profileController
+                    .getSelectedVehicle();
+                _profileController.setCurrentVehicle(currentVehicle);
 
                 if (currentVehicle == null) {
                   // Show loading or no vehicle message
@@ -329,16 +409,7 @@ class _AsapVehicleServiceState extends State<AsapVehicleService> {
                         IconButton(
                           icon: const Icon(Icons.edit),
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => VehicleSelectionScreen(
-                                  onVehicleSelected: (vehicle) {
-                                    // The vehicle selection screen should handle setting the default
-                                  },
-                                ),
-                              ),
-                            );
+                            _showEditVehicleConfirmation(currentVehicle);
                           },
                         ),
                       ],
