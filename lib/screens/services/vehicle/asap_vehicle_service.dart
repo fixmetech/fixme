@@ -6,6 +6,8 @@ import 'package:fixme/utils/helper/helper_functions.dart';
 import 'package:fixme/widgets/issue_chips.dart';
 import 'package:fixme/features/profile/controller/profile_controller.dart';
 import 'package:fixme/models/vehicle_profile.dart';
+import 'package:fixme/models/job_request.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -180,9 +182,32 @@ class _AsapVehicleServiceState extends State<AsapVehicleService> {
 
   void _handleFindTap() {
     if (_formKey.currentState!.validate() && _canProceed()) {
+      // Create job request object
+      final selectedVehicle = _profileController.getSelectedVehicle();
+      if (selectedVehicle == null) {
+        FixMeHelperFunctions.showInfoSnackBar(
+          'Vehicle Required',
+          "Please select a vehicle before proceeding.",
+        );
+        return;
+      }
+
+      final jobRequest = JobRequest(
+        status: 'pending',
+        customerId: FirebaseAuth.instance.currentUser?.uid ?? 'unknown_user',
+        propertyInfo: PropertyInfo.fromVehicle(selectedVehicle),
+        selectedIssues: selectedIssues,
+        description: _descriptionController.text.trim().isNotEmpty 
+            ? _descriptionController.text.trim() 
+            : null,
+        createdAt: DateTime.now(),
+      );
+
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => const FindHelp()),
+        MaterialPageRoute(
+          builder: (_) => FindHelp(jobRequest: jobRequest),
+        ),
       );
     } else {
       if (selectedIssues.isEmpty) {

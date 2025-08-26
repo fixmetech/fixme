@@ -1,5 +1,6 @@
 import 'package:fixme/data/repositories/technicians_repository.dart';
 import 'package:fixme/utils/constants/size.dart';
+import 'package:fixme/models/job_request.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -8,7 +9,9 @@ import 'package:fixme/screens/services/controllers/map_controllers.dart';
 import 'package:fixme/screens/services/found_technician.dart';
 
 class FindHelp extends StatefulWidget {
-  const FindHelp({super.key});
+  final JobRequest? jobRequest;
+
+  const FindHelp({super.key, this.jobRequest});
 
   @override
   State<FindHelp> createState() => _FindHelpState();
@@ -20,6 +23,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
   LatLng? _currentPosition;
   LatLng? _selectedLocation;
   Set<Marker> _markers = {};
+  JobRequest? _jobRequest;
 
   final technicianRepository = Get.put(TechniciansRepository());
   final mapControllerInstance = Get.put(MapController());
@@ -38,6 +42,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    _jobRequest = widget.jobRequest;
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -51,6 +56,9 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
     _dragController.dispose();
     super.dispose();
   }
+
+  // Getter for job request (useful for debugging or accessing from other widgets)
+  JobRequest? get currentJobRequest => _jobRequest;
 
   Future<void> _getCurrentLocation() async {
     debugPrint('Getting current location...');
@@ -98,24 +106,34 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
     // Add technician markers when starting search
     await _addTechnicianMarkers();
 
+    // Update job request with customer location
+    if (_jobRequest != null && _selectedLocation != null) {
+      _jobRequest = _jobRequest!.copyWith(
+        customerLocation: _selectedLocation,
+        updatedAt: DateTime.now(),
+      );
+
+      // Send job request to backend
+      await _sendJobRequest();
+    }
+
     // Find nearest technician and draw route
     await _selectNearestTechnicianAndDrawRoute();
 
     setState(() {
       _searchState = SearchState.found;
-      _foundTechnician =
-          {
-            'name': 'Abishek Korala',
-            'rating': 4.8,
-            'experience': '3 years',
-            'specialization': 'Car Repair & Maintenance',
-            'distance': '2.8 km away',
-            'phone': '+94743383502',
-            'image': 'https://via.placeholder.com/80',
-            'estimatedArrival': '15-20 minutes',
-            'price': '\$45-65',
-            'completedJobs': 245,
-          };
+      _foundTechnician = {
+        'name': 'Abishek Korala',
+        'rating': 4.8,
+        'experience': '3 years',
+        'specialization': 'Car Repair & Maintenance',
+        'distance': '2.8 km away',
+        'phone': '+94743383502',
+        'image': 'https://via.placeholder.com/80',
+        'estimatedArrival': '15-20 minutes',
+        'price': '\$45-65',
+        'completedJobs': 245,
+      };
     });
 
     // Auto-expand the bottom sheet when technician is found
@@ -124,6 +142,37 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 500),
       curve: Curves.easeInOut,
     );
+  }
+
+  Future<void> _sendJobRequest() async {
+    if (_jobRequest == null) return;
+
+    try {
+      print('Sending job request to backend...');
+      print('Job Request Data: ${_jobRequest!.toMap()}');
+
+      // Send job request to backend
+      final response = await technicianRepository.createJobRequest(
+        _jobRequest!.toMap(),
+      );
+
+      if (response['success'] == true) {
+        _jobRequest = _jobRequest!.copyWith(
+          jobId: response['data']['jobId'] ?? response['jobId'],
+        );
+        print(
+          'Job request created successfully with ID: ${_jobRequest!.jobId}',
+        );
+      } else {
+        print('Failed to create job request: ${response['message']}');
+        // TODO: Show error message to user
+        // FixMeHelperFunctions.showErrorSnackBar('Error', response['message'] ?? 'Failed to create job request');
+      }
+    } catch (e) {
+      print('Error sending job request: $e');
+      // TODO: Show error message to user and handle retry logic
+      // FixMeHelperFunctions.showErrorSnackBar('Connection Error', 'Unable to send job request. Please try again.');
+    }
   }
 
   Future<void> _addTechnicianMarkers() async {

@@ -43,4 +43,54 @@ class TechniciansRepository extends GetxController {
       return null;
     }
   }
+
+  /// Create a new job request
+  Future<Map<String, dynamic>> createJobRequest(Map<String, dynamic> jobData) async {
+    try {
+      final response = await FixMeHttpHelper.post('api/jobs/create', jobData);
+      
+      if (response['success'] == true) {
+        print('Job request created successfully');
+        return response;
+      } else {
+        print('Failed to create job request: ${response['message']}');
+        return {
+          'success': false,
+          'message': response['message'] ?? 'Failed to create job request',
+        };
+      }
+    } catch (e) {
+      print('Error creating job request: $e');
+      return {
+        'success': false,
+        'message': 'Network error: Unable to create job request',
+        'error': e.toString(),
+      };
+    }
+  }
+
+  /// Update an existing job request
+  Future<Map<String, dynamic>> updateJobRequest(String jobId, Map<String, dynamic> updateData) async {
+    try {
+      final response = await FixMeHttpHelper.put('api/jobs/$jobId', updateData);
+      
+      if (response['success'] == true) {
+        print('Job request updated successfully');
+        return response;
+      } else {
+        print('Failed to update job request: ${response['message']}');
+        return {
+          'success': false,
+          'message': response['message'] ?? 'Failed to update job request',
+        };
+      }
+    } catch (e) {
+      print('Error updating job request: $e');
+      return {
+        'success': false,
+        'message': 'Network error: Unable to update job request',
+        'error': e.toString(),
+      };
+    }
+  }
 }
