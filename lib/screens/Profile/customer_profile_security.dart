@@ -1,6 +1,9 @@
+import 'package:fixme/features/profile/controller/profile_controller.dart';
 import 'package:fixme/screens/Profile/common_profile.dart';
+import 'package:fixme/utils/constants/colors.dart';
+import 'package:fixme/utils/helper/helper_functions.dart';
 import 'package:flutter/material.dart';
-
+import 'package:get/get.dart';
 
 /// Professional security settings screen with enhanced validation and UX
 class CustomerProfileSecurity extends StatefulWidget {
@@ -17,16 +20,12 @@ class _CustomerProfileSecurityState extends State<CustomerProfileSecurity> {
   final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
-  // Constants
-  static const Color _primaryColor = Color(0xFF1565C0); // Blue[800]
-  static const Color _dangerColor = Color(0xFFD32F2F); // Red[700]
-  static const Color _successColor = Color(0xFF2E7D32); // Green[800]
+  final profileController = Get.find<ProfileController>();
 
   // State management
   bool _isCurrentPasswordVisible = false;
   bool _isNewPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
-  bool _isLoading = false;
   bool _hasPasswordRequirements = false;
 
   // Password strength indicators
@@ -56,22 +55,6 @@ class _CustomerProfileSecurityState extends State<CustomerProfileSecurity> {
       title: 'Customer Profile',
       selectedIndex: 2, // Current bottom tab (security)
       body: _buildBody(context),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      title: const Text(
-        'Security Settings',
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      backgroundColor: _primaryColor,
-      elevation: 0,
-      centerTitle: true,
-      iconTheme: const IconThemeData(color: Colors.white),
     );
   }
 
@@ -110,12 +93,12 @@ class _CustomerProfileSecurityState extends State<CustomerProfileSecurity> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: _primaryColor.withOpacity(0.1),
+                color: FixMeColors.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 Icons.security,
-                color: _primaryColor,
+                color: FixMeColors.primary,
                 size: 28,
               ),
             ),
@@ -164,7 +147,7 @@ class _CustomerProfileSecurityState extends State<CustomerProfileSecurity> {
               children: [
                 Icon(
                   Icons.lock_outline,
-                  color: _primaryColor,
+                  color: FixMeColors.primary,
                   size: 24,
                 ),
                 const SizedBox(width: 12),
@@ -193,7 +176,7 @@ class _CustomerProfileSecurityState extends State<CustomerProfileSecurity> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.info_outline, color: _primaryColor, size: 20),
+                      Icon(Icons.info_outline, color: FixMeColors.primary, size: 20),
                       const SizedBox(width: 8),
                       const Text(
                         'Password Requirements',
@@ -305,11 +288,11 @@ class _CustomerProfileSecurityState extends State<CustomerProfileSecurity> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: _primaryColor, width: 2),
+          borderSide: BorderSide(color: FixMeColors.primary, width: 2),
         ),
         suffixIcon: IconButton(
           icon: Icon(
-            isVisible ? Icons.visibility_off : Icons.visibility,
+            isVisible ? Icons.visibility : Icons.visibility_off,
             color: Colors.grey[600],
           ),
           onPressed: onVisibilityToggle,
@@ -325,7 +308,7 @@ class _CustomerProfileSecurityState extends State<CustomerProfileSecurity> {
         children: [
           Icon(
             isMet ? Icons.check_circle : Icons.radio_button_unchecked,
-            color: isMet ? _successColor : Colors.grey[400],
+            color: isMet ? FixMeColors.success : Colors.grey[400],
             size: 16,
           ),
           const SizedBox(width: 8),
@@ -334,7 +317,7 @@ class _CustomerProfileSecurityState extends State<CustomerProfileSecurity> {
               requirement,
               style: TextStyle(
                 fontSize: 14,
-                color: isMet ? _successColor : Colors.grey[600],
+                color: isMet ? FixMeColors.success : Colors.grey[600],
               ),
             ),
           ),
@@ -358,7 +341,7 @@ class _CustomerProfileSecurityState extends State<CustomerProfileSecurity> {
               children: [
                 Icon(
                   Icons.devices,
-                  color: _primaryColor,
+                  color: FixMeColors.primary,
                   size: 24,
                 ),
                 const SizedBox(width: 12),
@@ -439,10 +422,10 @@ class _CustomerProfileSecurityState extends State<CustomerProfileSecurity> {
       children: [
         SizedBox(
           width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: _isLoading ? null : _handlePasswordChange,
+          child: Obx(() => ElevatedButton.icon(
+            onPressed: profileController.isLoading.value ? null : _handlePasswordChange,
             style: ElevatedButton.styleFrom(
-              backgroundColor: _primaryColor,
+              backgroundColor: FixMeColors.borderFocus,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
@@ -450,7 +433,7 @@ class _CustomerProfileSecurityState extends State<CustomerProfileSecurity> {
               ),
               elevation: 2,
             ),
-            icon: _isLoading
+            icon: profileController.isLoading.value
                 ? const SizedBox(
               width: 20,
               height: 20,
@@ -461,13 +444,14 @@ class _CustomerProfileSecurityState extends State<CustomerProfileSecurity> {
             )
                 : const Icon(Icons.lock_reset),
             label: Text(
-              _isLoading ? 'Changing Password...' : 'Change Password',
-              style: const TextStyle(
+              profileController.isLoading.value ? 'Changing Password...' : 'Change Password',
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
+                color: profileController.isLoading.value ? const Color.fromARGB(255, 255, 255, 255) : Colors.white,
               ),
             ),
-          ),
+          )),
         ),
       ],
     );
@@ -518,38 +502,34 @@ class _CustomerProfileSecurityState extends State<CustomerProfileSecurity> {
 
   // Event Handlers
   Future<void> _handlePasswordChange() async {
+    // First validate the form
     if (!_formKey.currentState!.validate()) {
       return;
     }
-
-    setState(() {
-      _isLoading = true;
-    });
-
+    // Double check password requirements
+    if (!_hasPasswordRequirements) {
+      FixMeHelperFunctions.showWarningSnackBar('Error','Please ensure your new password meets all requirements');
+      return;
+    }
     try {
-      // TODO: Implement password change logic
-      await Future.delayed(const Duration(seconds: 2)); // Simulated API call
+      // Update the password using the controller
+      await profileController.updatePassword(
+        currentPassword: _currentPasswordController.text,
+        newPassword: _newPasswordController.text,
+      );
 
-      if (mounted) {
-        _showSuccessSnackBar('Password changed successfully!');
-        _clearForm();
+      // If successful, go back and refresh the list
+      if (!profileController.isLoading.value) {
+         // _clearForm();
       }
     } catch (e) {
-      if (mounted) {
-        _showErrorSnackBar('Failed to change password. Please try again.');
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      FixMeHelperFunctions.showWarningSnackBar('Error','Updating password: $e');
     }
   }
 
   void _handleForgotPassword() {
     // TODO: Implement forgot password functionality
-    _showInfoSnackBar('Forgot password feature will be available soon');
+    FixMeHelperFunctions.showInfoSnackBar('','Forgot password feature will be available soon');
   }
 
   void _handleLogoutOtherDevices() {
@@ -594,7 +574,7 @@ class _CustomerProfileSecurityState extends State<CustomerProfileSecurity> {
 
   void _logoutOtherDevices() {
     // TODO: Implement logout other devices logic
-    _showSuccessSnackBar('Successfully logged out of other devices');
+    FixMeHelperFunctions.showSuccessSnackBar('Success', 'Successfully logged out of other devices');
   }
 
   void _clearForm() {
@@ -606,63 +586,5 @@ class _CustomerProfileSecurityState extends State<CustomerProfileSecurity> {
       _isNewPasswordVisible = false;
       _isConfirmPasswordVisible = false;
     });
-  }
-
-  // Helper Methods
-  void _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            const SizedBox(width: 8),
-            Text(message),
-          ],
-        ),
-        backgroundColor: _successColor,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-    );
-  }
-
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.error, color: Colors.white),
-            const SizedBox(width: 8),
-            Text(message),
-          ],
-        ),
-        backgroundColor: _dangerColor,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-    );
-  }
-
-  void _showInfoSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.info, color: Colors.white),
-            const SizedBox(width: 8),
-            Text(message),
-          ],
-        ),
-        backgroundColor: _primaryColor,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-    );
   }
 }

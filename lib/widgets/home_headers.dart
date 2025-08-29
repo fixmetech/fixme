@@ -59,7 +59,7 @@ class HomeHeaders extends StatelessWidget {
               CircleAvatar(
                 radius: 24,
                 backgroundImage: NetworkImage(
-                  'https://your-image-url.com/profile.jpg',
+                  'https://wallpapers.com/images/hd/default-user-profile-icon-c8ljd88k8vow846e.png',
                 ),
               ),
             ],

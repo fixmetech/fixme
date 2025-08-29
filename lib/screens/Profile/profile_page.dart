@@ -1,165 +1,182 @@
+import 'package:fixme/features/authentication/controller/signup_controller.dart';
+import 'package:fixme/features/profile/controller/profile_controller.dart';
+import 'package:fixme/screens/Profile/customer_home_profiles.dart';
 import 'package:fixme/screens/Profile/customer_profile_account.dart';
 import 'package:fixme/screens/Profile/customer_profile_history.dart';
-import 'package:fixme/screens/Profile/customer_profile_home.dart';
 import 'package:fixme/screens/Profile/customer_profile_security.dart';
 import 'package:fixme/screens/Profile/customer_profile_support.dart';
-import 'package:fixme/screens/Profile/customer_vehicle_profile.dart';
-import 'package:fixme/screens/login_screen.dart';
+import 'package:fixme/screens/Profile/customer_vehicle_profiles.dart';
+import 'package:fixme/screens/Profile/edit_profile_page.dart';
 import 'package:flutter/material.dart';
-
-
-void main() {
-  runApp(MaterialApp(
-    title: 'Customer Profile',
-    theme: ThemeData(
-      primarySwatch: Colors.blue,
-      fontFamily: 'Roboto',
-    ),
-    home: CustomerProfilePage(),
-    routes: {
-      '/home': (context) => CustomerHomeProfile(),
-      '/vehicle': (context) => CustomerVehicleProfile(),
-      '/history': (context) => CustomerProfileHistory(),
-      '/support': (context) => CustomerProfileSupport(),
-      '/account': (context) => CustomerProfileAccount(),
-      '/security': (context) => CustomerProfileSecurity(),
-    },
-  ));
-}
+import 'package:get/get.dart';
+import 'package:fixme/utils/constants/size.dart';
 
 class CustomerProfilePage extends StatelessWidget {
   const CustomerProfilePage({super.key});
 
-  void _handleMenuTap(BuildContext context, String routeName) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => _getPage(routeName)),
-    );
-  }
-
-  Widget _getPage(String routeName) {
-    switch (routeName) {
-      case '/home':
-        return CustomerHomeProfile();
-      case '/vehicle':
-        return CustomerVehicleProfile();
-      case '/history':
-        return CustomerProfileHistory();
-      case '/support':
-        return CustomerProfileSupport();
-      case '/account':
-        return CustomerProfileAccount();
-      case '/security':
-        return CustomerProfileSecurity();
-      default:
-        return CustomerProfilePage();
-    }
-  }
-
-  void _handleLogout(BuildContext context) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => LoginScreen()),
-    );
+  void _handleMenuTap(Widget screen) {
+    Get.to(screen);
   }
 
   @override
   Widget build(BuildContext context) {
+    // Initialize and get profile controller
+    final profileController = Get.put(ProfileController());
+    
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: Text(
-          'Customer Profile',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        backgroundColor: Colors.blue[800],
-        iconTheme: const IconThemeData(color: Colors.white),
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildProfileHeader(),
-            _buildContactCard(),
-            _buildMenu(context),
-            SizedBox(height: 20),
-            _buildLogoutButton(context),
-            SizedBox(height: 30),
-          ],
-        ),
-      ),
-    );
-  }
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 280.0,
+            floating: false,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: Colors.blue[800],
+            flexibleSpace: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                // Calculate collapse progress (0.0 = fully expanded, 1.0 = fully collapsed)
+                final double appBarHeight = constraints.biggest.height;
+                final double statusBarHeight = MediaQuery.of(
+                  context,
+                ).padding.top;
+                final double minHeight = kToolbarHeight + statusBarHeight;
+                final double maxHeight = 280.0 + statusBarHeight;
+                final double collapseProgress =
+                    ((maxHeight - appBarHeight) / (maxHeight - minHeight))
+                        .clamp(0.0, 1.0);
 
-  Widget _buildProfileHeader() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.blue[800]!, Colors.blue[600]!],
-        ),
-      ),
-      child: Column(
-        children: [
-          SizedBox(height: 20),
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 4),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 10,
-                  offset: Offset(0, 4),
-                ),
+                return FlexibleSpaceBar(
+                  titlePadding: EdgeInsets.only(
+                    left: 16,
+                    bottom: 16,
+                    right: collapseProgress > 0.5 ? 16 : 0,
+                  ),
+                  centerTitle: collapseProgress < 0.5,
+                  title: AnimatedContainer(
+                    duration: const Duration(milliseconds: 100),
+                    child: collapseProgress > 0.5
+                        ? Row(
+                            mainAxisSize:
+                                MainAxisSize.max, 
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'My Profile',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Obx(() => CircleAvatar(
+                                  radius: 16,
+                                  backgroundColor: Colors.grey[300],
+                                  backgroundImage: profileController.profileImageUrl.value.isNotEmpty
+                                      ? NetworkImage(profileController.profileImageUrl.value)
+                                      : const AssetImage('assets/images/car.png') as ImageProvider,
+                                )),
+                              ),
+                            ],
+                          )
+                        : const Text(
+                            'My Profile',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
+                  background: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.blue[800]!, Colors.blue[600]!],
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 60),
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 200),
+                          opacity: 1.0 - collapseProgress,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 4),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 10,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Obx(() => CircleAvatar(
+                              radius: 50,
+                              backgroundColor: Colors.grey[300],
+                              backgroundImage: profileController.profileImageUrl.value.isNotEmpty
+                                  ? NetworkImage(profileController.profileImageUrl.value)
+                                  : const AssetImage('assets/images/car.png') as ImageProvider,
+                            )),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 200),
+                          opacity: 1.0 - collapseProgress,
+                          child: Obx(() => Text(
+                            profileController.fullName.value.isNotEmpty 
+                                ? profileController.fullName.value 
+                                : 'Loading...',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
+                _buildContactCard(),
+                _buildMenu(),
+                const SizedBox(height: FixMeSizes.defaultSpace),
+                _buildLogoutButton(context),
+                const SizedBox(height: 100),
               ],
             ),
-            child: CircleAvatar(
-              radius: 50,
-              backgroundColor: Colors.grey[300],
-              backgroundImage: AssetImage('assets/boy.jpg'),
-            ),
           ),
-          SizedBox(height: 16),
-          Text(
-            'Ishan Chamika',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 4),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.green[400],
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              'Premium Customer',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          SizedBox(height: 30),
         ],
       ),
     );
   }
-
   Widget _buildContactCard() {
+    final profileController = Get.find<ProfileController>();
+    
     return Container(
-      margin: EdgeInsets.all(16),
+      margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -167,55 +184,74 @@ class CustomerProfilePage extends StatelessWidget {
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Contact Information',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Contact Information',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                // icon of edit profile
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.blue),
+                  onPressed: () => Get.to(() => const EditProfilePage()),
+                ),
+              ],
             ),
-            SizedBox(height: 16),
-            _buildContactItem(
+            const SizedBox(height: 16),
+            Obx(() => _buildContactItem(
               Icons.email_outlined,
               'Email',
-              'ishanchami@gmail.com',
+              profileController.email.value.isNotEmpty 
+                  ? profileController.email.value 
+                  : 'Loading...',
               Colors.blue[600]!,
-            ),
-            SizedBox(height: 12),
-            _buildContactItem(
+            )),
+            const SizedBox(height: 12),
+            Obx(() => _buildContactItem(
               Icons.phone_outlined,
               'Phone',
-              '+94 77 838 8456',
+              profileController.phone.value.isNotEmpty 
+                  ? profileController.phone.value 
+                  : 'Loading...',
               Colors.green[600]!,
-            ),
+            )),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildContactItem(IconData icon, String label, String value, Color color) {
+  Widget _buildContactItem(
+    IconData icon,
+    String label,
+    String value,
+    Color color,
+  ) {
     return Row(
       children: [
         Container(
-          padding: EdgeInsets.all(8),
+          padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: color.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: color, size: 20),
         ),
-        SizedBox(width: 12),
+        const SizedBox(width: 12),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -241,9 +277,9 @@ class CustomerProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildMenu(BuildContext context) {
+  Widget _buildMenu() {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -251,32 +287,67 @@ class CustomerProfilePage extends StatelessWidget {
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         children: [
-          _buildMenuItem(context, Icons.home_outlined, 'Home Details', Colors.blue[600]!, '/home'),
+          _buildMenuItem(
+            Icons.home_outlined,
+            'Home Details',
+            Colors.blue[600]!,
+            CustomerHomeProfiles(),
+          ),
           _buildDivider(),
-          _buildMenuItem(context, Icons.directions_car_outlined, 'Vehicle Details', Colors.orange[600]!, '/vehicle'),
+          _buildMenuItem(
+            Icons.directions_car_outlined,
+            'Vehicle Details',
+            Colors.orange[600]!,
+            CustomerVehicleProfiles(),
+          ),
           _buildDivider(),
-          _buildMenuItem(context, Icons.history_outlined, 'History', Colors.purple[600]!, '/history'),
+          _buildMenuItem(
+            Icons.history_outlined,
+            'History',
+            Colors.purple[600]!,
+            CustomerProfileHistory(),
+          ),
           _buildDivider(),
-          _buildMenuItem(context, Icons.support_agent_outlined, 'Support Center', Colors.green[600]!, '/support'),
+          _buildMenuItem(
+            Icons.support_agent_outlined,
+            'Support Center',
+            Colors.green[600]!,
+            CustomerProfileSupport(),
+          ),
           _buildDivider(),
-          _buildMenuItem(context, Icons.account_circle_outlined, 'Account Settings', Colors.indigo[600]!, '/account'),
+          _buildMenuItem(
+            Icons.account_circle_outlined,
+            'Account Settings',
+            Colors.indigo[600]!,
+            CustomerProfileAccount(),
+          ),
           _buildDivider(),
-          _buildMenuItem(context, Icons.security_outlined, 'Security & Privacy', Colors.red[600]!, '/security'),
+          _buildMenuItem(
+            Icons.security_outlined,
+            'Security & Privacy',
+            Colors.red[600]!,
+            CustomerProfileSecurity(),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildMenuItem(BuildContext context, IconData icon, String title, Color iconColor, String routeName) {
+  Widget _buildMenuItem(
+    IconData icon,
+    String title,
+    Color iconColor,
+    Widget screen,
+  ) {
     return ListTile(
       leading: Container(
-        padding: EdgeInsets.all(8),
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: iconColor.withOpacity(0.1),
           borderRadius: BorderRadius.circular(8),
@@ -291,13 +362,13 @@ class CustomerProfilePage extends StatelessWidget {
           color: Colors.grey[800],
         ),
       ),
-      trailing: Icon(
+      trailing: const Icon(
         Icons.arrow_forward_ios,
         size: 16,
-        color: Colors.grey[400],
+        color: Colors.grey,
       ),
-      onTap: () => _handleMenuTap(context, routeName),
-      contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      onTap: () => _handleMenuTap(screen),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
     );
   }
 
@@ -311,33 +382,31 @@ class CustomerProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildLogoutButton(BuildContext context) {
+  Widget _buildLogoutButton(context) {
+    final controller = Get.put(SignupController());
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: () => _handleLogout(context),
+        onPressed: () => controller.logout(context),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.red[50],
           foregroundColor: Colors.red[700],
-          padding: EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: BorderSide(color: Colors.red[200]!),
           ),
           elevation: 0,
         ),
-        child: Row(
+        child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.logout_outlined),
             SizedBox(width: 8),
             Text(
               'Log Out',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ],
         ),
