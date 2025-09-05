@@ -5,6 +5,8 @@ import 'package:get/utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 
+const String kTestJobRequestId = '0giWzXu3hWWmCFKvFIdb';
+
 enum TechnicianStatus { gettingReady, onTheWay, arrived }
 
 class FoundTechnician extends StatefulWidget {
@@ -480,7 +482,7 @@ class _FoundTechnicianState extends State<FoundTechnician>
               ),
               child: ElevatedButton(
                 onPressed: () {
-                  Get.offAll(() => JobDetailsScreen());
+                  Get.offAll(() => JobDetailsScreen(jobRequestId: kTestJobRequestId));
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue.shade600,
