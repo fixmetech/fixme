@@ -218,7 +218,7 @@ class _CostSection extends StatelessWidget {
         Text(
           'Accepted Estimated Price: ',
           style: const TextStyle(
-            fontSize: 18,
+            fontSize: 15,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
@@ -226,7 +226,7 @@ class _CostSection extends StatelessWidget {
         Text(
           'Rs. $cost',
           style: const TextStyle(
-            fontSize: 20,
+            fontSize: 15,
             fontWeight: FontWeight.bold,
             color: Colors.black,
           ),

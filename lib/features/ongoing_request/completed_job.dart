@@ -1,3 +1,4 @@
+import 'package:fixme/mainScreen.dart';
 import 'package:fixme/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -462,7 +463,7 @@ class _RatingModalState extends State<RatingModal> {
 
     // Close modal
     Navigator.pop(context);
-    Get.offAll(HomeScreen());
+    Get.offAll(MainScreen());
   }
 }
 
