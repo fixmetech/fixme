@@ -1,4 +1,4 @@
-import 'package:fixme/features/ongoing_request/share_pin.dart';
+import 'package:fixme/features/ongoing_request/screens/share_pin.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/utils.dart';
