@@ -1,4 +1,4 @@
-import 'package:fixme/features/ongoing_request/ongoing_state.dart';
+import 'package:fixme/features/ongoing_request/screens/ongoing_state.dart';
 import 'package:flutter/material.dart';
 
 // NEW: controller import
@@ -283,11 +283,16 @@ class _CostSection extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: onAccept ??
                         () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => OngoingScreen()),
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => OngoingScreen(
+                                jobId: '0giWzXu3hWWmCFKvFIdb',
+                                requestId: 16,
+                              ),
+                            ),
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Job cost accepted!')),
                       );
                     },
