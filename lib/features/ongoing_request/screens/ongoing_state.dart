@@ -1,16 +1,23 @@
-import 'package:fixme/features/ongoing_request/finish_job.dart';
+import 'package:fixme/features/ongoing_request/screens/finish_job.dart';
 import 'package:flutter/material.dart';
+
+// NEW: controller import
+import 'package:fixme/features/ongoing_request/controller/ongoing_state_controller.dart';
 
 class OngoingScreen extends StatefulWidget {
   final String pin;
   final int requestId;
   final int estimatedCost;
 
+  // NEW: the Firestore job document id to load/poll
+  final String jobId;
+
   const OngoingScreen({
     Key? key,
     this.pin = "434024",
     this.requestId = 16,
     this.estimatedCost = 5000,
+    this.jobId = '0giWzXu3hWWmCFKvFIdb', // default for quick testing
   }) : super(key: key);
 
   @override
@@ -18,12 +25,48 @@ class OngoingScreen extends StatefulWidget {
 }
 
 class _OngoingScreenState extends State<OngoingScreen> {
+  // NEW: controller + loaded values used by the existing view
+  final OngoingStateController _controller = OngoingStateController();
+  String? _livePin;
+  int? _liveEstimatedCost;
+  VoidCallback? _cancelPoll;
+
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 3), () {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => FinishJobScreen()));
+
+    // 1) load the job once to get live PIN & estimate
+    _controller.loadJob(widget.jobId).then((job) {
+      if (!mounted) return;
+      setState(() {
+        _livePin = job.pin.toString();
+        _liveEstimatedCost = (job.estimatedCost ?? widget.estimatedCost).toInt();
+      });
+    }).catchError((e) {
+      // Non-fatal: we keep showing defaults if load fails
+      debugPrint('loadJob error: $e');
     });
+
+    // 2) start polling until status becomes 'TechnicianFinish'
+    _cancelPoll = _controller.startPollingUntilFinish(
+      jobId: widget.jobId,
+      onReached: () {
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => FinishJobScreen()),
+        );
+      },
+      onError: (e) => debugPrint('poll error: $e'),
+      // maxDuration: const Duration(minutes: 5), // optional
+    );
+  }
+
+  @override
+  void dispose() {
+    _cancelPoll?.call();      // NEW: stop the poller
+    _controller.cancel();     // safeguard
+    super.dispose();
   }
 
   @override
@@ -52,29 +95,29 @@ class _OngoingScreenState extends State<OngoingScreen> {
           padding: const EdgeInsets.all(30.0),
           child: Column(
             children: [
-              // Step 1: Share PIN
+              // Step 1: Share PIN (UI unchanged) — uses live pin if available
               _buildStepItem(
                 stepNumber: 1,
                 isCompleted: true,
                 isActive: false,
                 title: 'Share PIN',
                 description: 'Share this PIN with the technician to verify their arrival.',
-                child: _PinBox(pin: widget.pin),
+                child: _PinBox(pin: _livePin ?? widget.pin),
               ),
               const SizedBox(height: 24),
 
-              // Step 2: Estimated Job Cost
+              // Step 2: Estimated Job Cost (UI unchanged) — uses live estimate if available
               _buildStepItem(
                 stepNumber: 2,
                 isCompleted: true,
                 isActive: false,
                 title: 'Estimated Job Cost',
                 description: 'You accepted the estimated job cost.',
-                child: _CostSection(cost: widget.estimatedCost),
+                child: _CostSection(cost: _liveEstimatedCost ?? widget.estimatedCost),
               ),
               const SizedBox(height: 24),
 
-              // Step 3: Ongoing
+              // Step 3: Ongoing (UI unchanged)
               _buildStepItem(
                 stepNumber: 3,
                 isCompleted: false,

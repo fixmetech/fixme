@@ -1,4 +1,4 @@
-import 'package:fixme/features/ongoing_request/finish_job.dart';
+import 'package:fixme/features/ongoing_request/screens/finish_job.dart';
 import 'package:fixme/features/ongoing_request/screens/share_pin.dart';
 import 'package:fixme/screens/serviceCenterProfile/service_center_profile.dart';
 import 'package:fixme/features/technician_profile/screens/technician_profile.dart';
