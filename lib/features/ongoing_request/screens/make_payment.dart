@@ -1,11 +1,17 @@
 import 'package:fixme/features/ongoing_request/completed_job.dart';
 import 'package:flutter/material.dart';
 
+// NEW: controller import
+import 'package:fixme/features/ongoing_request/controller/make_payment_controller.dart';
+
 class MakePaymentScreen extends StatefulWidget {
   final String pin;
   final int requestId;
   final int estimatedCost;
   final String finishOtp;
+
+  // NEW: you need the Firestore job id to fetch the final pin
+  final String jobId;
 
   const MakePaymentScreen({
     Key? key,
@@ -13,6 +19,7 @@ class MakePaymentScreen extends StatefulWidget {
     this.requestId = 16,
     this.estimatedCost = 5000,
     this.finishOtp = "205699",
+    this.jobId = '0giWzXu3hWWmCFKvFIdb', // default for quick testing
   }) : super(key: key);
 
   @override
@@ -21,6 +28,40 @@ class MakePaymentScreen extends StatefulWidget {
 
 class _MakePaymentScreenState extends State<MakePaymentScreen> {
   String? selectedPaymentMethod;
+
+  // NEW: controller + live OTP holder
+  final MakePaymentController _controller = MakePaymentController();
+  String? _liveFinishOtp;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFinishPin();
+  }
+
+  Future<void> _loadFinishPin() async {
+    try {
+      // Optional: include idToken if backend enforces auth
+      // final idToken = await FirebaseAuth.instance.currentUser?.getIdToken();
+
+      final res = await _controller.getFinishPin(
+        jobId: widget.jobId,
+        // idToken: idToken,
+      );
+      if (!mounted) return;
+
+      if (res.ok && res.finishPin != null) {
+        setState(() {
+          _liveFinishOtp = res.finishPin!.toString();
+        });
+      } else {
+        // Not fatal — keep fallback and optionally inform user
+        debugPrint('Finish pin fetch failed: ${res.message}');
+      }
+    } catch (e) {
+      debugPrint('Finish pin fetch error: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,14 +121,16 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Step 4: Finish Job (Completed)
+              // Step 4: Finish Job (Completed) — show live finish OTP if fetched
               _buildStepItem(
-                stepNumber: 4, // <-- Fix: should be 4!
+                stepNumber: 4,
                 title: 'Finish Job',
                 description: 'Finalize the Job by sharing an OTP with the technician.',
                 isCompleted: true,
                 isActive: false,
-                child: _FinishOtpSection(finishOtp: widget.finishOtp),
+                child: _FinishOtpSection(
+                  finishOtp: _liveFinishOtp ?? widget.finishOtp,
+                ),
               ),
               const SizedBox(height: 24),
 
@@ -109,7 +152,6 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
                             setState(() {
                               selectedPaymentMethod = 'Cash';
                             });
-                            // Delay for button effect then navigate
                             Future.delayed(const Duration(milliseconds: 100), () {
                               Navigator.pushReplacement(
                                 context,
@@ -120,12 +162,10 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
                             });
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: selectedPaymentMethod == 'Cash'
-                                ? Colors.green
-                                : Colors.white,
-                            foregroundColor: selectedPaymentMethod == 'Cash'
-                                ? Colors.white
-                                : Colors.black87,
+                            backgroundColor:
+                            selectedPaymentMethod == 'Cash' ? Colors.green : Colors.white,
+                            foregroundColor:
+                            selectedPaymentMethod == 'Cash' ? Colors.white : Colors.black87,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(6),
@@ -147,7 +187,7 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      // Card Button (just highlight selection, no navigation yet)
+                      // Card Button
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
@@ -156,12 +196,10 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
                             });
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: selectedPaymentMethod == 'Card'
-                                ? Colors.green
-                                : Colors.white,
-                            foregroundColor: selectedPaymentMethod == 'Card'
-                                ? Colors.white
-                                : Colors.black87,
+                            backgroundColor:
+                            selectedPaymentMethod == 'Card' ? Colors.green : Colors.white,
+                            foregroundColor:
+                            selectedPaymentMethod == 'Card' ? Colors.white : Colors.black87,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(6),
@@ -298,7 +336,7 @@ class _CostSection extends StatelessWidget {
   final int cost;
   const _CostSection({required this.cost});
   @override
-   Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
