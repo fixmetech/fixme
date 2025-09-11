@@ -1,4 +1,5 @@
 import 'package:fixme/features/ongoing_request/completed_job.dart';
+import 'package:fixme/services/stripe_service.dart';
 import 'package:flutter/material.dart';
 
 // NEW: controller import
@@ -191,6 +192,7 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
+                            StripeService.instance.makePayment();
                             setState(() {
                               selectedPaymentMethod = 'Card';
                             });
