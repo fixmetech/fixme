@@ -1,4 +1,4 @@
-import 'package:fixme/features/ongoing_request/completed_job.dart';
+import 'package:fixme/features/ongoing_request/screens/completed_job.dart';
 import 'package:fixme/features/ongoing_request/screens/make_payment.dart';
 import 'package:flutter/material.dart';
 

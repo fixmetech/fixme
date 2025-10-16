@@ -1,6 +1,7 @@
-import 'package:fixme/features/ongoing_request/completed_job.dart';
+import 'package:fixme/features/ongoing_request/screens/completed_job.dart';
 import 'package:fixme/services/stripe_service.dart';
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 // NEW: controller import
 import 'package:fixme/features/ongoing_request/controller/make_payment_controller.dart';
@@ -64,6 +65,106 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
     }
   }
 
+  void _showQrCodeDialog() {
+    // Use the same cost value shown in Step 2
+    final cost = widget.estimatedCost;
+
+    // Generate payment data for QR code
+    final qrData = {
+      'requestId': widget.requestId,
+      'amount': cost,
+      'jobId': widget.jobId,
+    }.toString();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Scan to Pay',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: QrImageView(
+                        data: qrData,
+                        version: QrVersions.auto,
+                        size: 200.0,
+                        backgroundColor: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CompletedJobScreen(),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        'Done',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  color: Colors.grey[600],
+                  iconSize: 24,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -108,7 +209,7 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
                 isActive: false,
                 title: 'Estimated Job Cost',
                 description: 'You accepted the estimated job cost.',
-                child: _CostSection(cost: widget.estimatedCost),
+                // child: _CostSection(cost: widget.estimatedCost),
               ),
               const SizedBox(height: 24),
 
@@ -215,6 +316,41 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
                           ),
                           child: const Text(
                             '💳 Card',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // QR Button
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              selectedPaymentMethod = 'QR';
+                            });
+                            _showQrCodeDialog();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                            selectedPaymentMethod == 'QR' ? Colors.green : Colors.white,
+                            foregroundColor:
+                            selectedPaymentMethod == 'QR' ? Colors.white : Colors.black87,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6),
+                              side: BorderSide(
+                                color: selectedPaymentMethod == 'QR'
+                                    ? Colors.green
+                                    : Colors.grey[300]!,
+                              ),
+                            ),
+                            elevation: selectedPaymentMethod == 'QR' ? 2 : 0,
+                          ),
+                          child: const Text(
+                            '📱 QR',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
