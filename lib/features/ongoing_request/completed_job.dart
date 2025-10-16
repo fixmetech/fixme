@@ -93,7 +93,7 @@ class CompletedJobScreen extends StatelessWidget {
               _buildStepItem(
                 stepNumber: 5,
                 title: 'Payment Method Selected',
-                description: 'You have selected to pay by cash.',
+                description: 'You have successfully made the payment.',
                 isCompleted: true,
                 isActive: false,
                 child: _PaymentSummary(
@@ -238,7 +238,7 @@ class _PaymentSummary extends StatelessWidget {
         const Icon(Icons.payment, color: Colors.green, size: 22),
         const SizedBox(width: 8),
         Text(
-          'Select to pay by $method',
+          'Payment Completed',
           style: const TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 16,
