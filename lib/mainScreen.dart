@@ -1,5 +1,4 @@
 import 'package:fixme/data/repositories/user_repository.dart';
-import 'package:fixme/features/profile/controller/profile_controller.dart';
 import 'package:fixme/screens/Profile/profile_page.dart';
 import 'package:fixme/screens/booking_screen.dart';
 import 'package:fixme/screens/home_screen.dart';

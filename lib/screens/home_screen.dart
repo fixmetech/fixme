@@ -17,30 +17,6 @@ class HomeScreen extends StatelessWidget {
             HomeHeaders(),
             ServiceGrid(),
             RecentlyBooked(),
-            // testing
-            SizedBox(height: 20), 
-            // link to camera screen
-            // Center(
-            //   child: ElevatedButton(
-            //     onPressed: () => Navigator.push(
-            //       context,
-            //       MaterialPageRoute(builder: (context) => TestCameraScreen()),
-            //     ),
-            //     child: Text('Open Camera Screen'),
-            //   ),
-            // ),
-            //  SizedBox(height: 20),
-            // // link to camera screen
-            // Center(
-            //   child: ElevatedButton(
-            //     onPressed: () => Navigator.push(
-            //       context,
-            //       MaterialPageRoute(builder: (context) => JobDetailsScreen()),
-            //     ),
-            //     child: Text('Share Pin'),
-            //   ),
-            // ),
-            // SizedBox(height: 20),
           ],
         ),
       ),

@@ -7,7 +7,8 @@ class JobRequest {
   final String status;
   final LatLng? customerLocation;
   final String customerId;
-  final String? techId;
+  final String? technicianId;
+  final String serviceCategory;
   final PropertyInfo propertyInfo;
   final List<String> selectedIssues;
   final String? description;
@@ -19,7 +20,8 @@ class JobRequest {
     required this.status,
     this.customerLocation,
     required this.customerId,
-    this.techId,
+    this.technicianId,
+    required this.serviceCategory,
     required this.propertyInfo,
     required this.selectedIssues,
     this.description,
@@ -39,7 +41,8 @@ class JobRequest {
             )
           : null,
       customerId: map['customerId'] ?? '',
-      techId: map['techId'],
+      technicianId: map['technicianId'],
+      serviceCategory: map['serviceCategory'] ?? '',
       propertyInfo: PropertyInfo.fromMap(map['propertyInfo'] ?? {}),
       selectedIssues: List<String>.from(map['selectedIssues'] ?? []),
       description: map['description'],
@@ -60,7 +63,8 @@ class JobRequest {
             }
           : null,
       'customerId': customerId,
-      'techId': techId,
+      'technicianId': technicianId,
+      'serviceCategory': serviceCategory,
       'propertyInfo': propertyInfo.toMap(),
       'selectedIssues': selectedIssues,
       'description': description,
@@ -75,7 +79,8 @@ class JobRequest {
     String? status,
     LatLng? customerLocation,
     String? customerId,
-    String? techId,
+    String? technicianId,
+    String? serviceCategory,
     PropertyInfo? propertyInfo,
     List<String>? selectedIssues,
     String? description,
@@ -87,7 +92,8 @@ class JobRequest {
       status: status ?? this.status,
       customerLocation: customerLocation ?? this.customerLocation,
       customerId: customerId ?? this.customerId,
-      techId: techId ?? this.techId,
+      technicianId: technicianId ?? this.technicianId,
+      serviceCategory: serviceCategory ?? this.serviceCategory,
       propertyInfo: propertyInfo ?? this.propertyInfo,
       selectedIssues: selectedIssues ?? this.selectedIssues,
       description: description ?? this.description,

@@ -122,18 +122,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
 
     setState(() {
       _searchState = SearchState.found;
-      _foundTechnician = {
-        'name': 'Abishek Korala',
-        'rating': 4.8,
-        'experience': '3 years',
-        'specialization': 'Car Repair & Maintenance',
-        'distance': '2.8 km away',
-        'phone': '+94743383502',
-        'image': 'https://via.placeholder.com/80',
-        'estimatedArrival': '15-20 minutes',
-        'price': '\$45-65',
-        'completedJobs': 245,
-      };
+      _nearestTechnician = mapControllerInstance.nearByTechnicians.first;
     });
 
     // Auto-expand the bottom sheet when technician is found
@@ -156,13 +145,59 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
         _jobRequest!.toMap(),
       );
 
+      print('Response from backend: $response');
+      print('Response type: ${response.runtimeType}');
+      print('Response keys: ${response.keys.toList()}');
+      
+      if (response['data'] != null) {
+        print('Data keys: ${response['data'].keys.toList()}');
+        if (response['data']['ConfirmedJobRequest'] != null) {
+          print('ConfirmedJobRequest keys: ${response['data']['ConfirmedJobRequest'].keys.toList()}');
+        }
+      }
+
       if (response['success'] == true) {
-        _jobRequest = _jobRequest!.copyWith(
-          jobId: response['data']['jobId'] ?? response['jobId'],
-        );
-        print(
-          'Job request created successfully with ID: ${_jobRequest!.jobId}',
-        );
+        // Handle different possible response structures
+        String? jobId;
+        Map<String, dynamic>? technicianData;
+        
+        // Try to extract job ID from various possible locations
+        if (response['data'] != null) {
+          final data = response['data'];
+          // Check for jobRequest structure
+          if (data['jobRequest'] != null) {
+            jobId = data['jobRequest']['jobId']?.toString();
+          }
+
+          // Map technician data correctly from backend response
+          if (data['technician'] != null) {
+            final backendTechnician = data['technician'];
+            technicianData = {
+              'name': backendTechnician['name'] ?? 'Unknown Technician',
+              'rating': backendTechnician['rating']?.toString() ?? '0.0',
+              'completedJobs': backendTechnician['completedJobs']?.toString() ?? '0',
+              'specialization': backendTechnician['specialization'] ?? 'General Technician',
+              'distance': data['distance']?.toString() ?? 'Unknown distance',
+              'phone': backendTechnician['phone'] ?? backendTechnician['phoneNumber'] ?? '',
+              // Include any other fields that might be useful
+              'id': backendTechnician['id'] ?? backendTechnician['technicianId'],
+              'location': backendTechnician['location'],
+              'availability': backendTechnician['availability'],
+            };
+          }
+        }
+      
+        _jobRequest = _jobRequest!.copyWith(jobId: jobId);
+        
+        setState(() {
+          _searchState = SearchState.found;
+          if (technicianData != null) {
+            _foundTechnician = technicianData;
+            print('Mapped technician data: $_foundTechnician');
+          }
+        });
+
+        print('Job request created successfully with ID: $jobId');
       } else {
         print('Failed to create job request: ${response['message']}');
         // TODO: Show error message to user
