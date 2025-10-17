@@ -19,6 +19,7 @@ class ProfileController extends GetxController {
 
   final userVehicleProfiles = <VehicleProfile>[].obs;
   final vehicleCount = 0.obs;
+  final selectedVehicle = Rxn<VehicleProfile>();
 
   final userRepository = Get.put(UserRepository());
 
@@ -198,6 +199,10 @@ class ProfileController extends GetxController {
             .map((data) => VehicleProfile.fromMap(data as Map<String, dynamic>))
             .toList();
         vehicleCount.value = vehicles['count'] ?? userVehicleProfiles.length;
+        
+        // Set selected vehicle to default vehicle or first vehicle
+        _setInitialSelectedVehicle();
+        
         print(
           'Successfully loaded ${userVehicleProfiles.length} vehicles from backend',
         );
@@ -565,4 +570,28 @@ class ProfileController extends GetxController {
       return userVehicleProfiles.isNotEmpty ? userVehicleProfiles.first : null;
     }
   }
+
+  /// Set initial selected vehicle to default or first vehicle
+  void _setInitialSelectedVehicle() {
+    if (userVehicleProfiles.isNotEmpty) {
+      selectedVehicle.value = getDefaultVehicle();
+    } else {
+      selectedVehicle.value = null;
+    }
+  }
+
+  /// Update selected vehicle
+  void setSelectedVehicle(VehicleProfile? vehicle) {
+    selectedVehicle.value = vehicle;
+  }
+
+  /// Get currently selected vehicle (fallback to default if none selected)
+  VehicleProfile? getSelectedVehicle() {
+    return selectedVehicle.value ?? getDefaultVehicle();
+  }
+
+  void setCurrentVehicle(VehicleProfile? vehicle) {
+    selectedVehicle.value = vehicle;
+  }
+
 }
