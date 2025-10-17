@@ -46,7 +46,7 @@ class JobRequestDetails {
 
 class ServiceRequestApi {
   Future<JobRequestDetails> fetchJob(String jobId, {String? idToken}) async {
-    final uri = Uri.parse('$kBackendBaseUrl/api/job-requests/$jobId');
+    final uri = Uri.parse('$kBackendBaseUrl/api/jobs/requests/$jobId');
     final resp = await http
         .get(uri, headers: {
       'Accept': 'application/json',

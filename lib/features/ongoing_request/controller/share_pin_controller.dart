@@ -1,8 +1,12 @@
 // lib/controller/share_pin_controller.dart
 import 'dart:async';
 import 'dart:convert';
+import 'package:fixme/utils/loader/full_screen_loader.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:fixme/utils/http/http_client.dart';
+import 'package:fixme/utils/helper/helper_functions.dart';
 
 /// Set this somewhere central (e.g., via .env or build-time string)
 const String kBackendBaseUrl = String.fromEnvironment(
@@ -47,7 +51,7 @@ class JobRequestDto {
 
     Map<String, dynamic>? mapOrNull(dynamic v) {
       if (v == null) return null;
-      if (v is Map) return Map<String, dynamic>.from(v as Map);
+      if (v is Map) return Map<String, dynamic>.from(v);
       return null;
     }
 
@@ -71,21 +75,25 @@ class SharePinController extends GetxController {
   final Rxn<JobRequestDto> job = Rxn<JobRequestDto>();
   final RxBool loading = false.obs;
   final RxnString error = RxnString();
+  final RxnString jobId = RxnString();
 
   Future<void> fetchJobRequestById(String? jobRequestId) async {
-    final id = jobRequestId ?? '0giWzXu3hWWmCFKvFIdb';
+    final id = jobRequestId;
     loading.value = true;
     error.value = null;
     try {
-      final uri = Uri.parse('$kBackendBaseUrl/api/job-requests/$id');
+      final uri = Uri.parse('$kBackendBaseUrl/api/jobs/requests/$id');
       // Small timeout to surface connectivity issues quickly
       final resp = await http
-          .get(uri, headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        // If your backend verifies Firebase ID tokens, include:
-        // 'Authorization': 'Bearer $idToken',
-      })
+          .get(
+            uri,
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              // If your backend verifies Firebase ID tokens, include:
+              // 'Authorization': 'Bearer $idToken',
+            },
+          )
           .timeout(const Duration(seconds: 10));
 
       final status = resp.statusCode;
@@ -104,6 +112,41 @@ class SharePinController extends GetxController {
       error.value = 'Network error: $e';
     } finally {
       loading.value = false;
+    }
+  }
+
+  /// Request backend to generate a random OTP/PIN for the given job and refresh job data.
+  /// Returns true on success, false otherwise.
+  Future<bool> requestOtpForJob(String jobId, BuildContext context) async {
+    if (jobId.isEmpty) return false;
+    try {
+      FullScreenLoader.showLoader(
+        context: context,
+        text: 'Generating PIN...',
+        lottieAsset: 'assets/animations/loader1.json',
+      );
+
+      // Call backend endpoint - adjust path if your backend differs.
+      final endpoint = 'api/jobs/$jobId/start-pin';
+      final response = await FixMeHttpHelper.post(endpoint, {});
+      print('PIN generation response: $response');
+      if (response['error'] != null) {
+        // Refresh job data so UI reflects the new PIN
+        await fetchJobRequestById(jobId);
+        return true;
+      } else {
+        final msg = response['message'] ?? 'Failed to generate PIN';
+        FixMeHelperFunctions.showErrorSnackBar('Error', msg);
+        return false;
+      }
+    } catch (e) {
+      FixMeHelperFunctions.showErrorSnackBar('Error', e.toString());
+      return false;
+    } finally {
+      // Ensure loading dialog is hidden
+      try {
+        FullScreenLoader.hideLoader(context);
+      } catch (_) {}
     }
   }
 }

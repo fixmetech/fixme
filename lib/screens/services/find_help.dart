@@ -32,6 +32,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
   SearchState _searchState = SearchState.initial;
   Map<String, dynamic>? _foundTechnician;
   Map<String, dynamic>? _nearestTechnician;
+  String? _jobId;
   bool _showCenterMarker = true;
   Set<Polyline> _polylines = {};
 
@@ -193,7 +194,9 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
           _searchState = SearchState.found;
           if (technicianData != null) {
             _foundTechnician = technicianData;
-            print('Mapped technician data: $_foundTechnician');
+          }
+          if (jobId != null) {
+            _jobId = jobId;
           }
         });
 
@@ -600,6 +603,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
         return _foundTechnician != null
             ? FoundTechnician(
                 technician: _foundTechnician!,
+                jobId: _jobId!,
                 onFindAnother: _resetSearch,
                 onCall: () {
                   // Handle call functionality

@@ -1,22 +1,23 @@
 import 'package:fixme/features/ongoing_request/screens/share_pin.dart';
+import 'package:fixme/features/ongoing_request/controller/share_pin_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 
-const String kTestJobRequestId = '0giWzXu3hWWmCFKvFIdb';
-
 enum TechnicianStatus { gettingReady, onTheWay, arrived }
 
 class FoundTechnician extends StatefulWidget {
   final Map<String, dynamic> technician;
+  final String jobId;
   final VoidCallback onFindAnother;
   final VoidCallback onCall;
 
   const FoundTechnician({
     super.key,
     required this.technician,
+    required this.jobId,
     required this.onFindAnother,
     required this.onCall,
   });
@@ -481,8 +482,15 @@ class _FoundTechnicianState extends State<FoundTechnician>
                 ],
               ),
               child: ElevatedButton(
-                onPressed: () {
-                  Get.offAll(() => JobDetailsScreen(jobRequestId: kTestJobRequestId));
+                onPressed: () async {
+                  final SharePinController controller = Get.put(SharePinController());
+
+                  // Use controller to request OTP; controller shows/hides loading internally
+                  final success = await controller.requestOtpForJob(widget.jobId, context);
+                  if (success) {
+                    // Navigate to job details screen where PIN will be displayed
+                    Get.to(() => JobDetailsScreen(jobRequestId: widget.jobId));
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue.shade600,
