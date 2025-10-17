@@ -5,17 +5,17 @@ import 'package:fixme/firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> main() async {
   final WidgetsBinding widgetsBinding =
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load();
   await GetStorage.init();
-
   // FlutterNativeSplashScreen.preserve(widgetsBinding: widgetsBinding);
-
   // Initialize Firebase with duplicate app error handling
   try {
     if (Firebase.apps.isEmpty) {
@@ -36,5 +36,6 @@ Future<void> main() async {
   }
   // Lock orientation to portrait only
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY'] ?? '';
   runApp(const MyApp());
 }

@@ -1,7 +1,11 @@
+import 'package:fixme/mainScreen.dart';
 import 'package:fixme/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/utils.dart';
+
+// NEW: controller import
+import 'package:fixme/features/ongoing_request/controller/completed_job_controller.dart';
 
 class CompletedJobScreen extends StatelessWidget {
   final String pin;
@@ -10,13 +14,17 @@ class CompletedJobScreen extends StatelessWidget {
   final String finishOtp;
   final String paymentMethod;
 
+  // NEW: backend needs jobId to save review
+  final String jobId;
+
   const CompletedJobScreen({
     Key? key,
     this.pin = "434024",
     this.requestId = 16,
     this.estimatedCost = 5000,
     this.finishOtp = "205699",
-    this.paymentMethod = "Cash", // Default: Cash, can be passed as Card
+    this.paymentMethod = "Cash",
+    this.jobId = '0giWzXu3hWWmCFKvFIdb', // default to ease testing
   }) : super(key: key);
 
   @override
@@ -55,7 +63,7 @@ class CompletedJobScreen extends StatelessWidget {
                 child: _PinBox(pin: pin),
               ),
               const SizedBox(height: 24),
-          
+
               // Step 2: Estimated Job Cost (Completed)
               _buildStepItem(
                 stepNumber: 2,
@@ -66,7 +74,7 @@ class CompletedJobScreen extends StatelessWidget {
                 child: _CostSection(cost: estimatedCost),
               ),
               const SizedBox(height: 24),
-          
+
               // Step 3: Ongoing (Completed)
               _buildStepItem(
                 stepNumber: 3,
@@ -76,7 +84,7 @@ class CompletedJobScreen extends StatelessWidget {
                 description: 'Technician finished working on your job.',
               ),
               const SizedBox(height: 24),
-          
+
               // Step 4: Finish Job (Completed)
               _buildStepItem(
                 stepNumber: 4,
@@ -87,20 +95,18 @@ class CompletedJobScreen extends StatelessWidget {
                 child: _FinishOtpSection(finishOtp: finishOtp),
               ),
               const SizedBox(height: 24),
-          
+
               // Step 5: Payment Completed (Completed)
               _buildStepItem(
                 stepNumber: 5,
                 title: 'Payment Method Selected',
-                description: 'You have selected to pay by cash.',
+                description: 'You have successfully made the payment.',
                 isCompleted: true,
                 isActive: false,
-                child: _PaymentSummary(
-                  method: paymentMethod
-                ),
+                child: _PaymentSummary(method: paymentMethod),
               ),
               const SizedBox(height: 24),
-          
+
               // Step 6: Review (Active)
               _buildStepItem(
                 stepNumber: 6,
@@ -144,7 +150,8 @@ class CompletedJobScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return const RatingModal();
+        // Pass jobId down (logic only; no visual change)
+        return RatingModal(jobId: jobId);
       },
     );
   }
@@ -237,7 +244,7 @@ class _PaymentSummary extends StatelessWidget {
         const Icon(Icons.payment, color: Colors.green, size: 22),
         const SizedBox(width: 8),
         Text(
-          'Select to pay by $method',
+          'Payment Completed',
           style: const TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 16,
@@ -251,7 +258,9 @@ class _PaymentSummary extends StatelessWidget {
 
 // Rating Modal Widget
 class RatingModal extends StatefulWidget {
-  const RatingModal({Key? key}) : super(key: key);
+  // NEW: need jobId to save review
+  final String jobId;
+  const RatingModal({Key? key, required this.jobId}) : super(key: key);
 
   @override
   State<RatingModal> createState() => _RatingModalState();
@@ -260,6 +269,7 @@ class RatingModal extends StatefulWidget {
 class _RatingModalState extends State<RatingModal> {
   int _selectedRating = 0;
   final TextEditingController _feedbackController = TextEditingController();
+  bool _submitting = false; // logic-only flag
 
   @override
   void dispose() {
@@ -292,7 +302,7 @@ class _RatingModalState extends State<RatingModal> {
                   ),
                 ),
                 IconButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: _submitting ? null : () => Navigator.pop(context),
                   icon: const Icon(Icons.close, color: Colors.grey),
                 ),
               ],
@@ -314,8 +324,11 @@ class _RatingModalState extends State<RatingModal> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(5, (index) {
+                final filled = index < _selectedRating;
                 return GestureDetector(
-                  onTap: () {
+                  onTap: _submitting
+                      ? null
+                      : () {
                     setState(() {
                       _selectedRating = index + 1;
                     });
@@ -323,7 +336,7 @@ class _RatingModalState extends State<RatingModal> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: Icon(
-                      index < _selectedRating ? Icons.star : Icons.star_border,
+                      filled ? Icons.star : Icons.star_border,
                       color: Colors.amber,
                       size: 40,
                     ),
@@ -368,9 +381,9 @@ class _RatingModalState extends State<RatingModal> {
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: Colors.grey[300]!),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Colors.blue, width: 2),
+                focusedBorder: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(8)),
+                  borderSide: BorderSide(color: Colors.blue, width: 2),
                 ),
                 contentPadding: const EdgeInsets.all(12),
               ),
@@ -382,7 +395,7 @@ class _RatingModalState extends State<RatingModal> {
               children: [
                 Expanded(
                   child: TextButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: _submitting ? null : () => Navigator.pop(context),
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
@@ -403,9 +416,11 @@ class _RatingModalState extends State<RatingModal> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: _selectedRating > 0 ? () => _submitRating() : null,
+                    onPressed:
+                    (_selectedRating > 0 && !_submitting) ? _submitRating : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _selectedRating > 0 ? Colors.green : Colors.grey[300],
+                      backgroundColor:
+                      _selectedRating > 0 ? Colors.green : Colors.grey[300],
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
@@ -413,9 +428,9 @@ class _RatingModalState extends State<RatingModal> {
                       ),
                       elevation: _selectedRating > 0 ? 2 : 0,
                     ),
-                    child: const Text(
-                      'Submit',
-                      style: TextStyle(
+                    child: Text(
+                      _submitting ? 'Submitting...' : 'Submit',
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -447,22 +462,53 @@ class _RatingModalState extends State<RatingModal> {
     }
   }
 
-  void _submitRating() {
-    // Handle rating submission here
-    print('Rating: $_selectedRating');
-    print('Feedback: ${_feedbackController.text}');
+  Future<void> _submitRating() async {
+    final controller = CompletedJobController();
+    final reviewText = _feedbackController.text.trim();
 
-    // Show success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Thank you for your feedback!'),
-        backgroundColor: Colors.green,
-      ),
-    );
+    setState(() => _submitting = true);
 
-    // Close modal
-    Navigator.pop(context);
-    Get.offAll(HomeScreen());
+    try {
+      // Optional: include idToken if your backend verifies Firebase auth
+      // final idToken = await FirebaseAuth.instance.currentUser?.getIdToken();
+
+      final res = await controller.submitReview(
+        jobId: widget.jobId,
+        rating: _selectedRating,
+        review: reviewText,
+        // idToken: idToken,
+      );
+
+      if (!mounted) return;
+
+      if (res.ok) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Thank you for your feedback!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context); // close modal
+        Get.offAll(MainScreen()); // same as your original flow
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(res.message ?? 'Failed to submit review'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 }
 
