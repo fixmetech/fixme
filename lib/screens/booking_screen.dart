@@ -57,10 +57,12 @@ class _BookingsScreenState extends State<BookingsScreen>
           // Clean Tab Bar
           Container(
             color: Colors.blue[50],
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+          
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
+               dividerColor: Colors.transparent,
               labelColor: Colors.blue[700],
               unselectedLabelColor: Colors.grey[500],
               indicator: UnderlineTabIndicator(
