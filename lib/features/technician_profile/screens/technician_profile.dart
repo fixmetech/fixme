@@ -1,17 +1,22 @@
 import 'package:fixme/screens/report_technician.dart';
+import 'package:fixme/screens/file_complaint_screen.dart';
 import 'package:flutter/material.dart';
 import 'technician_message_popup.dart';
 import 'technician_request_screen.dart';
 import 'package:fixme/features/technician_profile/controller/technician_profile_controller.dart';
 
 class TechnicianProfile extends StatelessWidget {
-  const TechnicianProfile({super.key});
+  final String? technicianId;
+  
+  const TechnicianProfile({super.key, this.technicianId});
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
-    final controller = TechnicianProfileController(); // put this at top of build()
+    final controller = TechnicianProfileController(
+      technicianId: technicianId,
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xffF8F8FA),
@@ -89,7 +94,7 @@ class TechnicianProfile extends StatelessWidget {
                                 backgroundColor: Colors.lightBlueAccent,
                                 backgroundImage: (data.profilePictureUrl != null && data.profilePictureUrl!.isNotEmpty)
                                     ? NetworkImage(data.profilePictureUrl!)
-                                    : Image.asset('assets/images/select-user-technician.png').image as ImageProvider,
+                                    : const AssetImage('assets/images/select-user-technician.png'),
                               ),
                             ),
                             const SizedBox(width: 20),
@@ -192,7 +197,7 @@ class TechnicianProfile extends StatelessWidget {
                                   ),
                                 ),
                                 onPressed: () async {
-                                  final result = await showDialog(
+                                  await showDialog(
                                     context: context,
                                     builder: (context) => TechnicianMessagePopup(
                                       technicianName: data.name ?? 'Technician',
@@ -356,7 +361,7 @@ class TechnicianProfile extends StatelessWidget {
                     ),
                     onPressed: () {
                       // Handle report action
-                      _showReportDialog(context);
+                      _showReportDialog(context, data);
                     },
                     icon: const Icon(Icons.flag, size: 18),
                     label: const Text(
@@ -410,7 +415,7 @@ class TechnicianProfile extends StatelessWidget {
     );
   }
 
-  static void _showReportDialog(BuildContext context) {
+  static void _showReportDialog(BuildContext context, TechnicianProfileData technicianData) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -439,7 +444,17 @@ class TechnicianProfile extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => FileComplaintScreen(),
+                    builder: (context) => FileComplaintScreen(
+                      selectedTechnician: {
+                        'id': technicianData.id ?? 104,
+                        'name': technicianData.name ?? 'kasun',
+                        'email': technicianData.email ??'kasun@gmail.com',
+                        'phone': technicianData.phone ?? '0712345678',
+                        'profession': technicianData.serviceCategory?? 'carservice',
+                        'badge': technicianData.badgeType ?? 'standard',
+                        'rating': technicianData.rating ?? 0.0,
+                      },
+                    ),
                   ),
                 );
               },
