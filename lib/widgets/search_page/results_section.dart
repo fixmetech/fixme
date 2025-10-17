@@ -163,7 +163,9 @@ class ResultsSection extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const TechnicianProfile(),
+                      builder: (context) => const TechnicianProfile(
+                        technicianId: 'kcdESLLauEJ1UY3bvpkw', // Default test technician ID
+                      ),
                     ),
                   );
                 },
@@ -379,7 +381,9 @@ Widget _buildFilteredResults(BuildContext context) {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const TechnicianProfile(),
+            builder: (context) => const TechnicianProfile(
+              technicianId: 'kcdESLLauEJ1UY3bvpkw', // Default test technician ID
+            ),
           ),
         );
       },

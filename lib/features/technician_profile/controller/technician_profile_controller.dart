@@ -106,7 +106,7 @@ class TechnicianProfileController extends ChangeNotifier {
     String? technicianId,
     String? baseUrl,
     String? idToken, // optional: if you later protect your route with Firebase auth
-  })  : _technicianId = technicianId ?? 'kcdESLLauEJ1UY3bvpkw',
+  })  : _technicianId = technicianId ?? _getDefaultTechnicianId(),
         _baseUrl = baseUrl ?? 'http://10.0.2.2:3000/api/technicians',
         _idToken = idToken;
 
@@ -114,11 +114,16 @@ class TechnicianProfileController extends ChangeNotifier {
   final String _baseUrl;
   final String? _idToken;
 
+  // Default technician ID for testing - you can change this as needed
+  static String _getDefaultTechnicianId() {
+    return 'kcdESLLauEJ1UY3bvpkw'; // Your default test technician ID
+  }
+
   Map<String, String> get _headers {
     final h = <String, String>{'Content-Type': 'application/json'};
     // If you later switch to a protected profile route with verifyFirebaseToken,
     // send the Firebase ID token (Bearer) — see auth.middleware:contentReference[oaicite:4]{index=4}.
-    if (_idToken != null && _idToken!.isNotEmpty) {
+    if (_idToken != null && _idToken.isNotEmpty) {
       h['Authorization'] = 'Bearer $_idToken';
     }
     return h;

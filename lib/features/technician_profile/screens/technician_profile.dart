@@ -1,17 +1,22 @@
+import 'package:fixme/screens/report_technician.dart';
+import 'package:fixme/screens/file_complaint_screen.dart';
 import 'package:flutter/material.dart';
-import '../../../screens/file_complaint_screen.dart';
 import 'technician_message_popup.dart';
 import 'technician_request_screen.dart';
 import 'package:fixme/features/technician_profile/controller/technician_profile_controller.dart';
 
 class TechnicianProfile extends StatelessWidget {
-  const TechnicianProfile({super.key});
+  final String? technicianId;
+  
+  const TechnicianProfile({super.key, this.technicianId});
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
-    final controller = TechnicianProfileController(); // put this at top of build()
+    final controller = TechnicianProfileController(
+      technicianId: technicianId,
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xffF8F8FA),
@@ -58,103 +63,11 @@ class TechnicianProfile extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 15),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildStatColumn("26", "Completed Orders"),
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.lightGreenAccent.withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              backgroundColor: Colors.green[600],
-                              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25),
-                              ),
-                              elevation: 0,
-                            ),
-                            onPressed: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => TechnicianRequestScreen(
-        technicianName: "Kasun Mendis", // Pass the actual technician name
-        technicianImage: 'assets/images/select-user-technician.png', // Pass the actual image
-        visitingFee: 75.0, // Pass the actual visiting fee
-      ),
-    ),
-  );
-},
-                            icon: const Icon(Icons.handyman, size: 16),
-                            label: const Text("Request", style: TextStyle(fontWeight: FontWeight.bold)),
-                          ),
-                        ),
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.white.withOpacity(0.2),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                              side: const BorderSide(color: Colors.white, width: 2),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25),
-                              ),
-                            ),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => TechnicianMessagePopup(
-                                  technicianName: 'Kasun Mendis', // Pass actual name/data
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.message, size: 18),
-                            label: const Text("Message", style: TextStyle(fontWeight: FontWeight.bold)),
-                          ),
-                        ),
-                      ],
-                    )
-                  ],
-                ),
-              ),
-
-              // Bottom Content Section
-              Expanded(
-                child: Container(
-                  width: screenWidth,
-                  padding: const EdgeInsets.all(25),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(25),
-                      topRight: Radius.circular(25),
-
                     padding: EdgeInsets.only(
                       top: screenHeight * 0.08,
                       left: 10,
                       right: 10,
                       bottom: 20,
-
                     ),
                     child: Column(
                       children: [
@@ -181,7 +94,7 @@ class TechnicianProfile extends StatelessWidget {
                                 backgroundColor: Colors.lightBlueAccent,
                                 backgroundImage: (data.profilePictureUrl != null && data.profilePictureUrl!.isNotEmpty)
                                     ? NetworkImage(data.profilePictureUrl!)
-                                    : Image.asset('assets/images/select-user-technician.png').image as ImageProvider,
+                                    : const AssetImage('assets/images/select-user-technician.png'),
                               ),
                             ),
                             const SizedBox(width: 20),
@@ -284,7 +197,7 @@ class TechnicianProfile extends StatelessWidget {
                                   ),
                                 ),
                                 onPressed: () async {
-                                  final result = await showDialog(
+                                  await showDialog(
                                     context: context,
                                     builder: (context) => TechnicianMessagePopup(
                                       technicianName: data.name ?? 'Technician',
@@ -448,7 +361,7 @@ class TechnicianProfile extends StatelessWidget {
                     ),
                     onPressed: () {
                       // Handle report action
-                      _showReportDialog(context);
+                      _showReportDialog(context, data);
                     },
                     icon: const Icon(Icons.flag, size: 18),
                     label: const Text(
@@ -502,7 +415,7 @@ class TechnicianProfile extends StatelessWidget {
     );
   }
 
-  static void _showReportDialog(BuildContext context) {
+  static void _showReportDialog(BuildContext context, TechnicianProfileData technicianData) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -531,7 +444,17 @@ class TechnicianProfile extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => FileComplaintScreen(),
+                    builder: (context) => FileComplaintScreen(
+                      selectedTechnician: {
+                        'id': technicianData.id ?? 104,
+                        'name': technicianData.name ?? 'kasun',
+                        'email': technicianData.email ??'kasun@gmail.com',
+                        'phone': technicianData.phone ?? '0712345678',
+                        'profession': technicianData.serviceCategory?? 'carservice',
+                        'badge': technicianData.badgeType ?? 'standard',
+                        'rating': technicianData.rating ?? 0.0,
+                      },
+                    ),
                   ),
                 );
               },
