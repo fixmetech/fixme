@@ -14,7 +14,6 @@ class _CustomerProfileAccountState extends State<CustomerProfileAccount> {
   // Constants for consistent theming
   static const Color _primaryColor = Color(0xFF1565C0); // Blue[800]
   static const Color _dangerColor = Color(0xFFD32F2F); // Red[700]
-  static const Color _warningColor = Color(0xFFFF9800); // Orange[500]
 
   // State management
   bool _notificationsEnabled = true;

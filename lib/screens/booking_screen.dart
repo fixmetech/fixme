@@ -1,4 +1,3 @@
-import 'package:fixme/styles/app_headings.dart';
 import 'package:fixme/widgets/activity_list.dart';
 import 'package:flutter/material.dart';
 

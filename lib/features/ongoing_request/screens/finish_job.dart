@@ -1,18 +1,56 @@
-import 'package:fixme/features/ongoing_request/completed_job.dart';
-import 'package:fixme/features/ongoing_request/make_payment.dart';
+import 'package:fixme/features/ongoing_request/screens/completed_job.dart';
+import 'package:fixme/features/ongoing_request/screens/make_payment.dart';
 import 'package:flutter/material.dart';
+
+// NEW: import the controller
+import 'package:fixme/features/ongoing_request/controller/finish_job_controller.dart';
 
 class FinishJobScreen extends StatelessWidget {
   final String pin;
   final int requestId;
   final int estimatedCost;
 
+  // NEW: you need the jobId to save the finishPin in Firestore
+  final String jobId;
+
   const FinishJobScreen({
     Key? key,
     this.pin = "434024",
     this.requestId = 16,
     this.estimatedCost = 5000,
+    this.jobId = '0giWzXu3hWWmCFKvFIdb', // default for quick testing
   }) : super(key: key);
+
+  Future<void> _handleFinish(BuildContext context) async {
+    final controller = FinishJobController();
+
+    // Optional: pass an idToken if your backend requires Firebase auth
+    // final idToken = await FirebaseAuth.instance.currentUser?.getIdToken();
+
+    final res = await controller.issueFinishPin(
+      jobId: jobId,
+      // idToken: idToken,
+    );
+
+    if (res.ok) {
+      // Optionally show the generated PIN to the customer here via a snackbar
+      // (UI unchanged otherwise)
+      if (res.finishPin != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Your finish OTP: ${res.finishPin}')),
+        );
+      }
+      // Proceed exactly as your current flow:
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => MakePaymentScreen()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(res.message ?? 'Failed to generate finish PIN')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +109,7 @@ class FinishJobScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Step 4: Finish Job
+            // Step 4: Finish Job (UI unchanged; logic calls backend then navigates)
             _buildStepItem(
               stepNumber: 4,
               isCompleted: false,
@@ -81,10 +119,7 @@ class FinishJobScreen extends StatelessWidget {
               child: Container(
                 margin: const EdgeInsets.only(top: 12),
                 child: ElevatedButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => MakePaymentScreen()),
-                  ),
+                  onPressed: () => _handleFinish(context), // <-- changed logic only
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
@@ -218,7 +253,7 @@ class _CostSection extends StatelessWidget {
         Text(
           'Accepted Estimated Price: ',
           style: const TextStyle(
-            fontSize: 18,
+            fontSize: 15,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
@@ -226,7 +261,7 @@ class _CostSection extends StatelessWidget {
         Text(
           'Rs. $cost',
           style: const TextStyle(
-            fontSize: 20,
+            fontSize: 15,
             fontWeight: FontWeight.bold,
             color: Colors.black,
           ),

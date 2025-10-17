@@ -1,9 +1,11 @@
-import 'package:fixme/features/ongoing_request/share_pin.dart';
+import 'package:fixme/features/ongoing_request/screens/share_pin.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
+
+const String kTestJobRequestId = '0giWzXu3hWWmCFKvFIdb';
 
 enum TechnicianStatus { gettingReady, onTheWay, arrived }
 
@@ -480,7 +482,7 @@ class _FoundTechnicianState extends State<FoundTechnician>
               ),
               child: ElevatedButton(
                 onPressed: () {
-                  Get.offAll(() => JobDetailsScreen());
+                  Get.offAll(() => JobDetailsScreen(jobRequestId: kTestJobRequestId));
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue.shade600,
