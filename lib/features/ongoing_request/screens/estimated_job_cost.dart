@@ -1,20 +1,16 @@
 import 'package:fixme/features/ongoing_request/screens/ongoing_state.dart';
 import 'package:flutter/material.dart';
-
-// NEW: controller import
 import 'package:fixme/features/ongoing_request/controller/estimated_job_cost_controller.dart';
 
 class ServiceRequestScreen extends StatefulWidget {
-  /// Firestore document id for the job request
-  final String jobId;
-
-  /// UI-only display number (#16). If you pass a real display id, it shows in the title.
-  final int requestId;
+  /// The dynamic job id passed from the previous screen (Share PIN)
+  final String jobRequestId;
+  final int? requestId; // Optional UI display number
 
   const ServiceRequestScreen({
     Key? key,
-    this.jobId = '0giWzXu3hWWmCFKvFIdb', // default for quick testing
-    this.requestId = 16,
+    required this.jobRequestId, // dynamic from backend
+    this.requestId,
   }) : super(key: key);
 
   @override
@@ -23,24 +19,27 @@ class ServiceRequestScreen extends StatefulWidget {
 
 class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
   final ServiceRequestApi _api = ServiceRequestApi();
-
   late Future<JobRequestDetails> _future;
 
   @override
   void initState() {
     super.initState();
-    _future = _api.fetchJob(widget.jobId);
+    _future = _api.fetchJob(widget.jobRequestId); // ← dynamic id from SharePin
   }
 
   Future<void> _refresh() async {
     setState(() {
-      _future = _api.fetchJob(widget.jobId);
+      _future = _api.fetchJob(widget.jobRequestId);
     });
   }
 
   Future<void> _onDecision(String decision, int shownCost) async {
     try {
-      await _api.approveOrReject(jobId: widget.jobId, decision: decision);
+      await _api.approveOrReject(
+        jobId: widget.jobRequestId, // ← dynamic
+        decision: decision,
+      );
+
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -54,13 +53,14 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
       );
 
       if (decision == 'Approved') {
-        // Navigate forward in your flow
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => OngoingScreen()),
+          MaterialPageRoute(
+            builder: (_) => OngoingScreen(
+              jobId: widget.jobRequestId,
+            ),
+          ),
         );
-      } else {
-        // On reject, you might stay here or pop—current behavior shows a snackbar only.
       }
     } catch (e) {
       if (!mounted) return;
@@ -82,7 +82,7 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Ongoing Request: #${widget.requestId}',
+          'Ongoing Request${widget.requestId != null ? ': #${widget.requestId}' : ''}',
           style: const TextStyle(
             color: Colors.black,
             fontSize: 18,
@@ -113,9 +113,10 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
                 ],
               );
             }
+
             final job = snapshot.data!;
-            final pin = job.pin.toString(); // dynamic PIN
-            final estimated = (job.estimatedCost ?? 0).toInt(); // dynamic estimate (defaults to 0 if null)
+            final pin = job.pin.toString();
+            final estimated = (job.estimatedCost ?? 0).toInt();
 
             return SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -123,18 +124,16 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
                 padding: const EdgeInsets.all(30.0),
                 child: Column(
                   children: [
-                    // Step 1: Share PIN (unchanged UI)
                     _buildStepItem(
                       stepNumber: 1,
                       isCompleted: true,
                       isActive: false,
                       title: 'Share PIN',
-                      description: 'Share this PIN with the technician to verify their arrival.',
+                      description:
+                      'Share this PIN with the technician to verify their arrival.',
                       child: _PinBox(pin: pin),
                     ),
                     const SizedBox(height: 24),
-
-                    // Step 2: Estimated Job Cost (unchanged UI)
                     _buildStepItem(
                       stepNumber: 2,
                       isCompleted: false,
@@ -175,7 +174,6 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Step number or check
         Container(
           width: 32,
           height: 32,
@@ -232,6 +230,7 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
 class _PinBox extends StatelessWidget {
   final String pin;
   const _PinBox({required this.pin});
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -281,21 +280,7 @@ class _CostSection extends StatelessWidget {
           children: [
             Expanded(
               child: ElevatedButton(
-                onPressed: onAccept ??
-                        () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => OngoingScreen(
-                                jobId: '0giWzXu3hWWmCFKvFIdb',
-                                requestId: 16,
-                              ),
-                            ),
-                          );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Job cost accepted!')),
-                      );
-                    },
+                onPressed: onAccept,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -313,12 +298,7 @@ class _CostSection extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: ElevatedButton(
-                onPressed: onReject ??
-                        () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Job cost rejected!')),
-                      );
-                    },
+                onPressed: onReject,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   padding: const EdgeInsets.symmetric(vertical: 16),

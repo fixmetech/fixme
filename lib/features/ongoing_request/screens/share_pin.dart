@@ -111,12 +111,25 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                         ),
                         GestureDetector(
                           onTap: () {
+                            final jobId = job.id; // ← from your Obx job
+                            if (jobId.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Missing job id')),
+                              );
+                              return;
+                            }
+
+                            // If you want to keep MainScreen in the stack:
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => ServiceRequestScreen(),
+                                builder: (_) => ServiceRequestScreen(jobRequestId: jobId),
                               ),
                             );
+
+                            // OR with GetX:
+                            // Get.to(() => ServiceRequestScreen(jobRequestId: jobId));
+
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('PIN sharing completed'),
