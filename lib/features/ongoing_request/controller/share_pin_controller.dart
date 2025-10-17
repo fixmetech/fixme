@@ -130,7 +130,7 @@ class SharePinController extends GetxController {
       final endpoint = 'api/jobs/$jobId/start-pin';
       final response = await FixMeHttpHelper.post(endpoint, {});
       print('PIN generation response: $response');
-      if (response['error'] != null) {
+      if (response['error'] == null) {
         // Refresh job data so UI reflects the new PIN
         await fetchJobRequestById(jobId);
         return true;

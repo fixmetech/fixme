@@ -3,25 +3,26 @@ import 'package:fixme/services/stripe_service.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-// NEW: controller import
+// Controller
 import 'package:fixme/features/ongoing_request/controller/make_payment_controller.dart';
 
 class MakePaymentScreen extends StatefulWidget {
-  final String pin;
-  final int requestId;
-  final int estimatedCost;
-  final String finishOtp;
-
-  // NEW: you need the Firestore job id to fetch the final pin
+  /// REQUIRED: Firestore/DB job id used to load the final/finish OTP
   final String jobId;
+
+  /// Optional UI fallbacks (used until live data loads)
+  final String? pin;
+  final int? requestId;
+  final int? estimatedCost;
+  final String? finishOtp;
 
   const MakePaymentScreen({
     Key? key,
-    this.pin = "434024",
-    this.requestId = 16,
-    this.estimatedCost = 5000,
-    this.finishOtp = "205699",
-    this.jobId = '0giWzXu3hWWmCFKvFIdb', // default for quick testing
+    required this.jobId,      // ← dynamic id required
+    this.pin,
+    this.requestId,
+    this.estimatedCost,
+    this.finishOtp,
   }) : super(key: key);
 
   @override
@@ -31,7 +32,7 @@ class MakePaymentScreen extends StatefulWidget {
 class _MakePaymentScreenState extends State<MakePaymentScreen> {
   String? selectedPaymentMethod;
 
-  // NEW: controller + live OTP holder
+  // Controller + live OTP holder
   final MakePaymentController _controller = MakePaymentController();
   String? _liveFinishOtp;
 
@@ -66,8 +67,8 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
   }
 
   void _showQrCodeDialog() {
-    // Use the same cost value shown in Step 2
-    final cost = widget.estimatedCost;
+    // Use the same cost value (fallback to 0 if null)
+    final cost = widget.estimatedCost ?? 0;
 
     // Generate payment data for QR code
     final qrData = {
@@ -120,7 +121,14 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => CompletedJobScreen(),
+                            builder: (context) => CompletedJobScreen(
+                              jobId: widget.jobId,                               // ← REQUIRED
+                              requestId: widget.requestId ?? 0,                 // optional UI
+                              pin: widget.pin ?? '—',                           // optional UI
+                              estimatedCost: widget.estimatedCost ?? 0,         // optional UI
+                              finishOtp: _liveFinishOtp ?? widget.finishOtp ?? '—',
+                              paymentMethod: 'QR',
+                            ),
                           ),
                         );
                       },
@@ -167,6 +175,11 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final displayRequestId = widget.requestId ?? 0;
+    final displayPin = widget.pin ?? '—';
+    final displayEstimated = widget.estimatedCost ?? 0;
+    final displayFinishOtp = _liveFinishOtp ?? widget.finishOtp ?? '—';
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -177,7 +190,7 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Job Details: #${widget.requestId}',
+          'Job Details: #$displayRequestId',
           style: const TextStyle(
             color: Colors.black,
             fontSize: 18,
@@ -197,8 +210,9 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
                 isCompleted: true,
                 isActive: false,
                 title: 'Share PIN',
-                description: 'Share this PIN with the technician to verify their arrival.',
-                child: _PinBox(pin: widget.pin),
+                description:
+                'Share this PIN with the technician to verify their arrival.',
+                child: _PinBox(pin: displayPin),
               ),
               const SizedBox(height: 24),
 
@@ -209,7 +223,7 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
                 isActive: false,
                 title: 'Estimated Job Cost',
                 description: 'You accepted the estimated job cost.',
-                // child: _CostSection(cost: widget.estimatedCost),
+                child: _CostSection(cost: displayEstimated),
               ),
               const SizedBox(height: 24),
 
@@ -227,11 +241,12 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
               _buildStepItem(
                 stepNumber: 4,
                 title: 'Finish Job',
-                description: 'Finalize the Job by sharing an OTP with the technician.',
+                description:
+                'Finalize the Job by sharing an OTP with the technician.',
                 isCompleted: true,
                 isActive: false,
                 child: _FinishOtpSection(
-                  finishOtp: _liveFinishOtp ?? widget.finishOtp,
+                  finishOtp: displayFinishOtp,
                 ),
               ),
               const SizedBox(height: 24),
@@ -258,16 +273,27 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => CompletedJobScreen(),
+                                  builder: (context) => CompletedJobScreen(
+                                    jobId: widget.jobId,                             // ← REQUIRED
+                                    requestId: widget.requestId ?? 0,               // optional UI
+                                    pin: widget.pin ?? '—',                         // optional UI
+                                    estimatedCost: widget.estimatedCost ?? 0,       // optional UI
+                                    finishOtp: _liveFinishOtp ?? widget.finishOtp ?? '—',
+                                    paymentMethod: 'Cash',
+                                  ),
                                 ),
                               );
                             });
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
-                            selectedPaymentMethod == 'Cash' ? Colors.green : Colors.white,
+                            selectedPaymentMethod == 'Cash'
+                                ? Colors.green
+                                : Colors.white,
                             foregroundColor:
-                            selectedPaymentMethod == 'Cash' ? Colors.white : Colors.black87,
+                            selectedPaymentMethod == 'Cash'
+                                ? Colors.white
+                                : Colors.black87,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(6),
@@ -300,9 +326,13 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
-                            selectedPaymentMethod == 'Card' ? Colors.green : Colors.white,
+                            selectedPaymentMethod == 'Card'
+                                ? Colors.green
+                                : Colors.white,
                             foregroundColor:
-                            selectedPaymentMethod == 'Card' ? Colors.white : Colors.black87,
+                            selectedPaymentMethod == 'Card'
+                                ? Colors.white
+                                : Colors.black87,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(6),
@@ -335,9 +365,13 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
-                            selectedPaymentMethod == 'QR' ? Colors.green : Colors.white,
+                            selectedPaymentMethod == 'QR'
+                                ? Colors.green
+                                : Colors.white,
                             foregroundColor:
-                            selectedPaymentMethod == 'QR' ? Colors.white : Colors.black87,
+                            selectedPaymentMethod == 'QR'
+                                ? Colors.white
+                                : Colors.black87,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(6),
@@ -479,11 +513,11 @@ class _CostSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          children: [
+          children: const [
             Flexible(
               child: Text(
                 'Accepted Estimated Price:',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: Colors.black87,
@@ -491,8 +525,8 @@ class _CostSection extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const SizedBox(width: 6),
-            const Text(
+            SizedBox(width: 6),
+            Text(
               '✅',
               style: TextStyle(fontSize: 20),
             ),

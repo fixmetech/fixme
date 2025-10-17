@@ -1,34 +1,39 @@
 import 'package:fixme/mainScreen.dart';
-import 'package:fixme/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/utils.dart';
 
-// NEW: controller import
+// Controller
 import 'package:fixme/features/ongoing_request/controller/completed_job_controller.dart';
 
 class CompletedJobScreen extends StatelessWidget {
-  final String pin;
-  final int requestId;
-  final int estimatedCost;
-  final String finishOtp;
-  final String paymentMethod;
-
-  // NEW: backend needs jobId to save review
+  /// REQUIRED: backend needs this to save the review
   final String jobId;
+
+  /// Optional UI values passed from previous screen(s)
+  final String? pin;
+  final int? requestId;
+  final int? estimatedCost;
+  final String? finishOtp;
+  final String? paymentMethod;
 
   const CompletedJobScreen({
     Key? key,
-    this.pin = "434024",
-    this.requestId = 16,
-    this.estimatedCost = 5000,
-    this.finishOtp = "205699",
-    this.paymentMethod = "Cash",
-    this.jobId = '0giWzXu3hWWmCFKvFIdb', // default to ease testing
+    required this.jobId,
+    this.pin,
+    this.requestId,
+    this.estimatedCost,
+    this.finishOtp,
+    this.paymentMethod,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final displayRequestId = requestId ?? 0;
+    final displayPin = pin ?? '—';
+    final displayEstimated = estimatedCost ?? 0;
+    final displayFinishOtp = finishOtp ?? '—';
+    final displayPaymentMethod = paymentMethod ?? '—';
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -39,7 +44,7 @@ class CompletedJobScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Job Details: #$requestId',
+          'Job Details: #$displayRequestId',
           style: const TextStyle(
             color: Colors.black,
             fontSize: 18,
@@ -57,10 +62,11 @@ class CompletedJobScreen extends StatelessWidget {
               _buildStepItem(
                 stepNumber: 1,
                 title: 'Share PIN',
-                description: 'Share this PIN with the technician to verify their arrival.',
+                description:
+                'Share this PIN with the technician to verify their arrival.',
                 isCompleted: true,
                 isActive: false,
-                child: _PinBox(pin: pin),
+                child: _PinBox(pin: displayPin),
               ),
               const SizedBox(height: 24),
 
@@ -71,7 +77,7 @@ class CompletedJobScreen extends StatelessWidget {
                 description: 'You accepted the estimated job cost.',
                 isCompleted: true,
                 isActive: false,
-                child: _CostSection(cost: estimatedCost),
+                child: _CostSection(cost: displayEstimated),
               ),
               const SizedBox(height: 24),
 
@@ -89,10 +95,11 @@ class CompletedJobScreen extends StatelessWidget {
               _buildStepItem(
                 stepNumber: 4,
                 title: 'Finish Job',
-                description: 'Finalize the Job by sharing an OTP with the technician.',
+                description:
+                'Finalize the Job by sharing an OTP with the technician.',
                 isCompleted: true,
                 isActive: false,
-                child: _FinishOtpSection(finishOtp: finishOtp),
+                child: _FinishOtpSection(finishOtp: displayFinishOtp),
               ),
               const SizedBox(height: 24),
 
@@ -103,7 +110,7 @@ class CompletedJobScreen extends StatelessWidget {
                 description: 'You have successfully made the payment.',
                 isCompleted: true,
                 isActive: false,
-                child: _PaymentSummary(method: paymentMethod),
+                child: _PaymentSummary(method: displayPaymentMethod),
               ),
               const SizedBox(height: 24),
 
@@ -117,13 +124,12 @@ class CompletedJobScreen extends StatelessWidget {
                 child: Container(
                   margin: const EdgeInsets.only(top: 12),
                   child: ElevatedButton(
-                    onPressed: () {
-                      _showRatingModal(context);
-                    },
+                    onPressed: () => _showRatingModal(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(6),
                       ),
@@ -183,11 +189,7 @@ class CompletedJobScreen extends StatelessWidget {
           ),
           child: Center(
             child: isCompleted
-                ? const Icon(
-              Icons.check,
-              color: Colors.white,
-              size: 18,
-            )
+                ? const Icon(Icons.check, color: Colors.white, size: 18)
                 : Text(
               '$stepNumber',
               style: const TextStyle(
@@ -244,7 +246,7 @@ class _PaymentSummary extends StatelessWidget {
         const Icon(Icons.payment, color: Colors.green, size: 22),
         const SizedBox(width: 8),
         Text(
-          'Payment Completed',
+          'Payment Completed ($method)',
           style: const TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 16,
@@ -258,7 +260,7 @@ class _PaymentSummary extends StatelessWidget {
 
 // Rating Modal Widget
 class RatingModal extends StatefulWidget {
-  // NEW: need jobId to save review
+  // Need jobId to save review
   final String jobId;
   const RatingModal({Key? key, required this.jobId}) : super(key: key);
 
@@ -416,11 +418,13 @@ class _RatingModalState extends State<RatingModal> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed:
-                    (_selectedRating > 0 && !_submitting) ? _submitRating : null,
+                    onPressed: (_selectedRating > 0 && !_submitting)
+                        ? _submitRating
+                        : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                      _selectedRating > 0 ? Colors.green : Colors.grey[300],
+                      backgroundColor: _selectedRating > 0
+                          ? Colors.green
+                          : Colors.grey[300],
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
@@ -489,7 +493,7 @@ class _RatingModalState extends State<RatingModal> {
           ),
         );
         Navigator.pop(context); // close modal
-        Get.offAll(MainScreen()); // same as your original flow
+        Get.offAll(const MainScreen()); // same as your original flow
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -546,11 +550,11 @@ class _CostSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          children: [
+          children: const [
             Flexible(
               child: Text(
                 'Accepted Estimated Price:',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: Colors.black87,
@@ -558,11 +562,8 @@ class _CostSection extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const SizedBox(width: 6),
-            const Text(
-              '✅',
-              style: TextStyle(fontSize: 20),
-            ),
+            SizedBox(width: 6),
+            Text('✅', style: TextStyle(fontSize: 20)),
           ],
         ),
         const SizedBox(height: 8),
