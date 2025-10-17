@@ -201,7 +201,7 @@ class _AsapVehicleServiceState extends State<AsapVehicleService> {
       }
       final jobRequest = JobRequest(
         status: 'pending',
-        customerId: FirebaseAuth.instance.currentUser?.uid,
+        customerId: FirebaseAuth.instance.currentUser?.uid ?? '',
         propertyInfo: PropertyInfo.fromVehicle(selectedVehicle),
         selectedIssues: selectedIssues,
         description: _descriptionController.text.trim().isNotEmpty
