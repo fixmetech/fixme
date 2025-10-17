@@ -1,5 +1,5 @@
-import 'package:fixme/screens/report_technician.dart';
 import 'package:flutter/material.dart';
+import '../../../screens/file_complaint_screen.dart';
 import 'technician_message_popup.dart';
 import 'technician_request_screen.dart';
 
@@ -177,8 +177,8 @@ class TechnicianProfile extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(25),
                               ),
                             ),
-                            onPressed: () async {
-                              final result = await showDialog(
+                            onPressed: () {
+                              showDialog(
                                 context: context,
                                 builder: (context) => TechnicianMessagePopup(
                                   technicianName: 'Kasun Mendis', // Pass actual name/data
