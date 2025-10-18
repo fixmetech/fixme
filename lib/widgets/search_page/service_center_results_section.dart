@@ -287,7 +287,7 @@ class _ResultsSectionState extends State<ResultsSection> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const ServiceCenterProfile(),
+            builder: (context) => ServiceCenterProfile(serviceCenterId: "qlDkCV4HUFNGoFMX1WAjdfnqPg42"),
           ),
         );
       },
@@ -564,7 +564,7 @@ class _ResultsSectionState extends State<ResultsSection> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const ServiceCenterProfile(),
+            builder: (context) => ServiceCenterProfile(serviceCenterId: "qlDkCV4HUFNGoFMX1WAjdfnqPg42"),
           ),
         );
       },

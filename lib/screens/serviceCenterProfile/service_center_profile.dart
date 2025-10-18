@@ -1,12 +1,75 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class ServiceCenterProfile extends StatelessWidget {
-  const ServiceCenterProfile({super.key});
+class ServiceCenterProfile extends StatefulWidget {
+  final String serviceCenterId;
+  const ServiceCenterProfile({super.key, required this.serviceCenterId});
+
+  @override
+  State<ServiceCenterProfile> createState() => _ServiceCenterProfileState();
+}
+
+class _ServiceCenterProfileState extends State<ServiceCenterProfile> {
+  Map<String, dynamic>? serviceCenterData;
+  bool isLoading = true;
+  String? error;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchServiceCenterData();
+  }
+
+  Future<void> fetchServiceCenterData() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('serviceCenters')
+          .doc(widget.serviceCenterId)
+          .get();
+      if (doc.exists) {
+        setState(() {
+          serviceCenterData = doc.data();
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          error = "Service Center not found";
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        error = "Something went wrong";
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
+
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (error != null) {
+      return Scaffold(
+        body: Center(child: Text(error!)),
+      );
+    }
+
+    // You can now use 'serviceCenterData'
+    final images = serviceCenterData?['images'] as List<dynamic>? ?? [];
+    final mainImage = images.isNotEmpty && images[0]['url'] != null
+        ? images[0]['url']
+        : 'assets/images/service-center.jpg';
+    final name = serviceCenterData?['businessName'] ?? 'Service Center';
+    final description = serviceCenterData?['description'] ?? '';
+    final rating = 4.5; // You can calculate average rating from reviews if available
+    final completedOrders = "26"; // Replace with actual data if available
 
     return Scaffold(
       backgroundColor: const Color(0xffF8F8FA),
@@ -42,9 +105,11 @@ class ServiceCenterProfile extends StatelessWidget {
                       Container(
                         height: double.infinity,
                         width: double.infinity,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           image: DecorationImage(
-                            image: AssetImage('assets/images/service-center.jpg'),
+                            image: mainImage.startsWith("http")
+                                ? NetworkImage(mainImage)
+                                : AssetImage(mainImage) as ImageProvider,
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -77,9 +142,9 @@ class ServiceCenterProfile extends StatelessWidget {
                             const Spacer(),
                             const SizedBox(height: 34),
                             // Service Center Name
-                            const Text(
-                              "Royal Auto Service Center",
-                              style: TextStyle(
+                            Text(
+                              name,
+                              style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
@@ -98,7 +163,7 @@ class ServiceCenterProfile extends StatelessWidget {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                _buildStatColumn("26", "Completed Orders"),
+                                _buildStatColumn(completedOrders, "Completed Orders"),
                                 Container(
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(25),
@@ -165,9 +230,9 @@ class ServiceCenterProfile extends StatelessWidget {
                           ),
                           child: Row(
                             children: [
-                              const Text(
-                                "4.5",
-                                style: TextStyle(
+                              Text(
+                                "$rating",
+                                style: const TextStyle(
                                   fontSize: 36,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.orange,
@@ -226,6 +291,7 @@ class ServiceCenterProfile extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 20),
+                        // Here you can dynamically build reviews from fetched data!
                         _buildReview("John Doe", "Great service, arrived on time and fixed my issue quickly!", "2 days ago"),
                         _buildReview("Alice Smith", "Very professional and courteous. Highly recommend.", "1 week ago"),
                         _buildReview("Michael Lee", "Affordable and reliable technician. Will book again.", "2 weeks ago"),
