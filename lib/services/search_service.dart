@@ -19,6 +19,8 @@ class SearchService {
     'http://localhost:3000/api',
     'http://127.0.0.1:3000/api',
     'http://10.0.2.2:3000/api',
+    'http://192.168.1.100:3000/api', // Replace with your actual IP
+    'http://192.168.0.100:3000/api', // Common router IP ranges
   ];
 
   // Get the working base URL
@@ -341,6 +343,440 @@ class SearchService {
       return workingBaseUrl != null;
     } catch (e) {
       return false;
+    }
+  }
+
+  // ======== NEW ENDPOINTS FOR DETAILED SEARCH ========
+
+  // Unified search across all categories (All tab)
+  static Future<Map<String, dynamic>> searchAll({
+    required String query,
+    String? userId,
+    int page = 1,
+    int limit = 10,
+    String sort = 'rating',
+  }) async {
+    try {
+      final workingBaseUrl = await getWorkingBaseUrl();
+      if (workingBaseUrl == null) {
+        return {
+          'success': false,
+          'message': 'Unable to connect to server. Please check if the server is running.',
+        };
+      }
+
+      final queryParams = <String, String>{
+        'query': query,
+        'page': page.toString(),
+        'limit': limit.toString(),
+        'sort': sort,
+      };
+
+      if (userId != null && userId.isNotEmpty) {
+        queryParams['userId'] = userId;
+      }
+
+      final uri = Uri.parse('$workingBaseUrl/search/all').replace(
+        queryParameters: queryParams,
+      );
+
+      final response = await http.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(Duration(seconds: 30));
+
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': responseData['data'],
+          'total': responseData['total'],
+          'page': responseData['page'],
+          'totalPages': responseData['totalPages'],
+          'searchQuery': responseData['searchQuery'],
+          'category': responseData['category'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['error'] ?? 'Failed to search',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+      };
+    }
+  }
+
+  // Search towing services
+  static Future<Map<String, dynamic>> searchTowingServices({
+    String? query,
+    String? userId,
+    Map<String, dynamic>? filters,
+    int page = 1,
+    int limit = 10,
+    String sort = 'rating',
+  }) async {
+    try {
+      final workingBaseUrl = await getWorkingBaseUrl();
+      if (workingBaseUrl == null) {
+        return {
+          'success': false,
+          'message': 'Unable to connect to server. Please check if the server is running.',
+        };
+      }
+
+      final queryParams = <String, String>{
+        'page': page.toString(),
+        'limit': limit.toString(),
+        'sort': sort,
+      };
+
+      if (query != null && query.isNotEmpty) {
+        queryParams['query'] = query;
+      }
+      if (userId != null && userId.isNotEmpty) {
+        queryParams['userId'] = userId;
+      }
+
+      // Add filters to query params
+      if (filters != null) {
+        filters.forEach((key, value) {
+          if (value != null && value.toString().isNotEmpty) {
+            queryParams[key] = value.toString();
+          }
+        });
+      }
+
+      final uri = Uri.parse('$workingBaseUrl/search/towing').replace(
+        queryParameters: queryParams,
+      );
+
+      final response = await http.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(Duration(seconds: 30));
+
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': responseData['data'],
+          'total': responseData['total'],
+          'page': responseData['page'],
+          'totalPages': responseData['totalPages'],
+          'searchQuery': responseData['searchQuery'],
+          'category': responseData['category'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['error'] ?? 'Failed to search towing services',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+      };
+    }
+  }
+
+  // Get recent search history
+  static Future<Map<String, dynamic>> getRecentSearches({
+    required String userId,
+    String category = 'All',
+    int limit = 5,
+  }) async {
+    try {
+      final workingBaseUrl = await getWorkingBaseUrl();
+      if (workingBaseUrl == null) {
+        return {
+          'success': false,
+          'message': 'Unable to connect to server.',
+        };
+      }
+
+      final uri = Uri.parse('$workingBaseUrl/search/history/$userId').replace(
+        queryParameters: {
+          'category': category,
+          'limit': limit.toString(),
+        },
+      );
+
+      final response = await http.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(Duration(seconds: 30));
+
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': responseData['data'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['error'] ?? 'Failed to fetch recent searches',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+      };
+    }
+  }
+
+  // Delete search history item
+  static Future<Map<String, dynamic>> deleteSearchHistoryItem({
+    required String userId,
+    required String searchId,
+  }) async {
+    try {
+      final workingBaseUrl = await getWorkingBaseUrl();
+      if (workingBaseUrl == null) {
+        return {
+          'success': false,
+          'message': 'Unable to connect to server.',
+        };
+      }
+
+      final uri = Uri.parse('$workingBaseUrl/search/history/$userId/$searchId');
+
+      final response = await http.delete(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(Duration(seconds: 30));
+
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': responseData['message'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['error'] ?? 'Failed to delete search history item',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+      };
+    }
+  }
+
+  // Clear all search history
+  static Future<Map<String, dynamic>> clearSearchHistory({
+    required String userId,
+  }) async {
+    try {
+      final workingBaseUrl = await getWorkingBaseUrl();
+      if (workingBaseUrl == null) {
+        return {
+          'success': false,
+          'message': 'Unable to connect to server.',
+        };
+      }
+
+      final uri = Uri.parse('$workingBaseUrl/search/history/$userId');
+
+      final response = await http.delete(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(Duration(seconds: 30));
+
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': responseData['message'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['error'] ?? 'Failed to clear search history',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+      };
+    }
+  }
+
+  // Enhanced search methods with userId support
+  static Future<Map<String, dynamic>> searchTechniciansWithHistory({
+    String? query,
+    String? userId,
+    String? category,
+    Map<String, dynamic>? filters,
+    String? location,
+    int page = 1,
+    int limit = 10,
+    String sort = 'rating',
+  }) async {
+    try {
+      final workingBaseUrl = await getWorkingBaseUrl();
+      if (workingBaseUrl == null) {
+        return {
+          'success': false,
+          'message': 'Unable to connect to server. Please check if the server is running.',
+        };
+      }
+
+      final queryParams = <String, String>{
+        'page': page.toString(),
+        'limit': limit.toString(),
+        'sort': sort,
+      };
+
+      if (query != null && query.isNotEmpty) {
+        queryParams['query'] = query;
+      }
+      if (userId != null && userId.isNotEmpty) {
+        queryParams['userId'] = userId;
+      }
+      if (category != null && category.isNotEmpty) {
+        queryParams['category'] = category;
+      }
+      if (location != null && location.isNotEmpty) {
+        queryParams['location'] = location;
+      }
+
+      // Add filters to query params
+      if (filters != null) {
+        filters.forEach((key, value) {
+          if (value != null && value.toString().isNotEmpty) {
+            queryParams[key] = value.toString();
+          }
+        });
+      }
+
+      final uri = Uri.parse('$workingBaseUrl/search/technicians').replace(
+        queryParameters: queryParams,
+      );
+
+      final response = await http.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(Duration(seconds: 30));
+
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': responseData['data'],
+          'total': responseData['total'],
+          'page': responseData['page'],
+          'totalPages': responseData['totalPages'],
+          'filters': responseData['filters'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['error'] ?? 'Failed to search technicians',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> searchServiceCentersWithHistory({
+    String? query,
+    String? userId,
+    String? category,
+    Map<String, dynamic>? filters,
+    String? location,
+    int page = 1,
+    int limit = 10,
+    String sort = 'rating',
+  }) async {
+    try {
+      final workingBaseUrl = await getWorkingBaseUrl();
+      if (workingBaseUrl == null) {
+        return {
+          'success': false,
+          'message': 'Unable to connect to server. Please check if the server is running.',
+        };
+      }
+
+      final queryParams = <String, String>{
+        'page': page.toString(),
+        'limit': limit.toString(),
+        'sort': sort,
+      };
+
+      if (query != null && query.isNotEmpty) {
+        queryParams['query'] = query;
+      }
+      if (userId != null && userId.isNotEmpty) {
+        queryParams['userId'] = userId;
+      }
+      if (category != null && category.isNotEmpty) {
+        queryParams['category'] = category;
+      }
+      if (location != null && location.isNotEmpty) {
+        queryParams['location'] = location;
+      }
+
+      // Add filters to query params
+      if (filters != null) {
+        filters.forEach((key, value) {
+          if (value != null && value.toString().isNotEmpty) {
+            queryParams[key] = value.toString();
+          }
+        });
+      }
+
+      final uri = Uri.parse('$workingBaseUrl/search/service-centers').replace(
+        queryParameters: queryParams,
+      );
+
+      final response = await http.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(Duration(seconds: 30));
+
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': responseData['data'],
+          'total': responseData['total'],
+          'page': responseData['page'],
+          'totalPages': responseData['totalPages'],
+          'filters': responseData['filters'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['error'] ?? 'Failed to search service centers',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+      };
     }
   }
 }
