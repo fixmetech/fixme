@@ -1,423 +1,423 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fixme/screens/file_complaint_screen.dart';
 
-class ServiceCenterProfile extends StatefulWidget {
-  final String serviceCenterId;
-  const ServiceCenterProfile({super.key, required this.serviceCenterId});
-
-  @override
-  State<ServiceCenterProfile> createState() => _ServiceCenterProfileState();
-}
-
-class _ServiceCenterProfileState extends State<ServiceCenterProfile> {
-  Map<String, dynamic>? serviceCenterData;
-  bool isLoading = true;
-  String? error;
-
-  @override
-  void initState() {
-    super.initState();
-    fetchServiceCenterData();
-  }
-
-  Future<void> fetchServiceCenterData() async {
-    try {
-      final doc = await FirebaseFirestore.instance
-          .collection('serviceCenters')
-          .doc(widget.serviceCenterId)
-          .get();
-      if (doc.exists) {
-        setState(() {
-          serviceCenterData = doc.data();
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          error = "Service Center not found";
-          isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        error = "Something went wrong";
-        isLoading = false;
-      });
-    }
-  }
+class ServiceCenterProfile extends StatelessWidget {
+  final String? serviceCenterId;
+  const ServiceCenterProfile({super.key, this.serviceCenterId});
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    if (isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-    if (error != null) {
-      return Scaffold(
-        body: Center(child: Text(error!)),
-      );
-    }
-
-    // You can now use 'serviceCenterData'
-    final images = serviceCenterData?['images'] as List<dynamic>? ?? [];
-    final mainImage = images.isNotEmpty && images[0]['url'] != null
-        ? images[0]['url']
-        : 'assets/images/service-center.jpg';
-    final name = serviceCenterData?['businessName'] ?? 'Service Center';
-    final description = serviceCenterData?['description'] ?? '';
-    final rating = 4.5; // You can calculate average rating from reviews if available
-    final completedOrders = "26"; // Replace with actual data if available
-
     return Scaffold(
       backgroundColor: const Color(0xffF8F8FA),
-      body: Stack(
-        children: [
-          Column(
+      body: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+        future: FirebaseFirestore.instance
+            .collection('serviceCenters')
+            .doc(serviceCenterId)
+            .get(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+          if (!snapshot.hasData || !snapshot.data!.exists) {
+            return const Center(child: Text('Service Center not found'));
+          }
+          final data = snapshot.data!.data()!;
+          final images = data['images'] as List<dynamic>? ?? [];
+          final mainImage = images.isNotEmpty && images[0]['url'] != null
+              ? images[0]['url']
+              : 'assets/images/service-center.jpg';
+
+          return Stack(
             children: [
-              // Top Profile Section with Background Image
-              Container(
-                height: screenHeight * 0.42,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(25),
-                    bottomRight: Radius.circular(25),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.blue.withOpacity(0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
+              Column(
+                children: [
+                  // Top Profile Section with Background Image
+                  Container(
+                    height: screenHeight * 0.42,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(25),
+                        bottomRight: Radius.circular(25),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.withOpacity(0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(25),
-                    bottomRight: Radius.circular(25),
-                  ),
-                  child: Stack(
-                    children: [
-                      // Background Image
-                      Container(
-                        height: double.infinity,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: mainImage.startsWith("http")
-                                ? NetworkImage(mainImage)
-                                : AssetImage(mainImage) as ImageProvider,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(25),
+                        bottomRight: Radius.circular(25),
                       ),
-                      // Dark overlay for better text visibility
-                      Container(
-                        height: double.infinity,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.black.withOpacity(0.3),
-                              Colors.black.withOpacity(0.6),
-                            ],
+                      child: Stack(
+                        children: [
+                          // Background Image
+                          Container(
+                            height: double.infinity,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                image: mainImage.startsWith("http")
+                                    ? NetworkImage(mainImage)
+                                    : AssetImage(mainImage) as ImageProvider,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                      // Content on top of the image
-                      Padding(
-                        padding: EdgeInsets.only(
-                          top: screenHeight * 0.12,
-                          left: 30,
-                          right: 30,
-                          bottom: 20,
-                        ),
-                        child: Column(
-                          children: [
-                            const Spacer(),
-                            const SizedBox(height: 34),
-                            // Service Center Name
-                            Text(
-                              name,
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                letterSpacing: 0.5,
-                                shadows: [
-                                  Shadow(
-                                    blurRadius: 10.0,
-                                    color: Colors.black,
-                                    offset: Offset(2.0, 2.0),
-                                  ),
+                          // Dark overlay for better text visibility
+                          Container(
+                            height: double.infinity,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.black.withOpacity(0.3),
+                                  Colors.black.withOpacity(0.6),
                                 ],
                               ),
-                              textAlign: TextAlign.center,
                             ),
-                            const SizedBox(height: 10),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          ),
+                          // Content on top of the image
+                          Padding(
+                            padding: EdgeInsets.only(
+                              top: screenHeight * 0.12,
+                              left: 30,
+                              right: 30,
+                              bottom: 20,
+                            ),
+                            child: Column(
                               children: [
-                                _buildStatColumn(completedOrders, "Completed Orders"),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(25),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.green.withOpacity(0.4),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 3),
+                                const Spacer(),
+                                const SizedBox(height: 34),
+                                // Service Center Name
+                                Text(
+                                  data['businessName'] ?? "Service Center",
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    letterSpacing: 0.5,
+                                    shadows: [
+                                      Shadow(
+                                        blurRadius: 10.0,
+                                        color: Colors.black,
+                                        offset: Offset(2.0, 2.0),
                                       ),
                                     ],
                                   ),
-                                  child: ElevatedButton.icon(
-                                    style: ElevatedButton.styleFrom(
-                                      foregroundColor: Colors.white,
-                                      backgroundColor: Colors.green[600],
-                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                      shape: RoundedRectangleBorder(
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 10),
+                                Row(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    _buildStatColumn("26", "Completed Orders"),
+                                    Container(
+                                      decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(25),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color:
+                                            Colors.green.withOpacity(0.4),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 3),
+                                          ),
+                                        ],
                                       ),
-                                      elevation: 0,
+                                      child: ElevatedButton.icon(
+                                        style: ElevatedButton.styleFrom(
+                                          foregroundColor: Colors.white,
+                                          backgroundColor: Colors.green[600],
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 20, vertical: 12),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                            BorderRadius.circular(25),
+                                          ),
+                                          elevation: 0,
+                                        ),
+                                        onPressed: () {},
+                                        icon: const Icon(Icons.handyman,
+                                            size: 18),
+                                        label: const Text(
+                                            "Book an Appointment",
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold)),
+                                      ),
                                     ),
-                                    onPressed: () {},
-                                    icon: const Icon(Icons.handyman, size: 18),
-                                    label: const Text("Book an Appointment", style: TextStyle(fontWeight: FontWeight.bold)),
+                                  ],
+                                )
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Bottom Content Section
+                  Expanded(
+                    child: Container(
+                      width: screenWidth,
+                      padding: const EdgeInsets.all(25),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(25),
+                          topRight: Radius.circular(25),
+                        ),
+                      ),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 15),
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.orange.withOpacity(0.1),
+                                    Colors.amber.withOpacity(0.05)
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(15),
+                                border: Border.all(
+                                    color: Colors.orange.withOpacity(0.2)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Text(
+                                    "4.5",
+                                    style: TextStyle(
+                                      fontSize: 36,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.orange,
+                                    ),
+                                  ),
+                                  const Text(
+                                    "/5.0",
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 15),
+                                  Column(
+                                    children: [
+                                      Row(
+                                        children: List.generate(
+                                          5,
+                                              (index) => const Icon(Icons.star,
+                                              color: Colors.orange, size: 24),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 5),
+                                      const Text(
+                                        "Based on 26 reviews",
+                                        style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 30),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(Icons.reviews,
+                                      color: Colors.blue, size: 24),
+                                ),
+                                const SizedBox(width: 15),
+                                const Text(
+                                  "Customer Reviews",
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
                                   ),
                                 ),
                               ],
-                            )
+                            ),
+                            const SizedBox(height: 20),
+                            _buildReview(
+                                "John Doe",
+                                "Great service, arrived on time and fixed my issue quickly!",
+                                "2 days ago"),
+                            _buildReview(
+                                "Alice Smith",
+                                "Very professional and courteous. Highly recommend.",
+                                "1 week ago"),
+                            _buildReview(
+                                "Michael Lee",
+                                "Affordable and reliable technician. Will book again.",
+                                "2 weeks ago"),
                           ],
                         ),
                       ),
+                    ),
+                  ),
+                ],
+              ),
+
+              // Back Button - Positioned at top left in circular box
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 15,
+                left: 20,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
                     ],
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back,
+                        color: Colors.black87, size: 24),
+                    onPressed: () {
+                      Navigator.of(context).maybePop();
+                    },
+                    tooltip: 'Back',
+                    style: ButtonStyle(
+                      backgroundColor:
+                      MaterialStateProperty.all<Color>(Colors.transparent),
+                      padding: MaterialStateProperty.all<EdgeInsets>(
+                          const EdgeInsets.all(12)),
+                      shape: MaterialStateProperty.all<OutlinedBorder>(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
 
-              // Bottom Content Section
-              Expanded(
+              // Report Button - Positioned at top right in circular box
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 15,
+                right: 20,
                 child: Container(
-                  width: screenWidth,
-                  padding: const EdgeInsets.all(25),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(25),
-                      topRight: Radius.circular(25),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.flag, color: Colors.red, size: 24),
+                    onPressed: () {
+                      _showReportDialog(
+                        context,
+                        data,
+                        serviceCenterId!,
+                      );
+                    },
+                    tooltip: 'Report',
+                    style: ButtonStyle(
+                      backgroundColor:
+                      MaterialStateProperty.all<Color>(Colors.transparent),
+                      padding: MaterialStateProperty.all<EdgeInsets>(
+                          const EdgeInsets.all(12)),
+                      shape: MaterialStateProperty.all<OutlinedBorder>(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                      ),
                     ),
                   ),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 15),
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Colors.orange.withOpacity(0.1), Colors.amber.withOpacity(0.05)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(15),
-                            border: Border.all(color: Colors.orange.withOpacity(0.2)),
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                "$rating",
-                                style: const TextStyle(
-                                  fontSize: 36,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.orange,
-                                ),
-                              ),
-                              const Text(
-                                "/5.0",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                              const SizedBox(width: 15),
-                              Column(
-                                children: [
-                                  Row(
-                                    children: List.generate(
-                                      5,
-                                          (index) => const Icon(Icons.star, color: Colors.orange, size: 24),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 5),
-                                  const Text(
-                                    "Based on 26 reviews",
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                ),
+              ),
+
+              // Menu Button - Positioned at top right (next to report button)
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 15,
+                right: 80,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.more_vert,
+                        color: Colors.black87, size: 24),
+                    onPressed: () {
+                      _showMenuDialog(context);
+                    },
+                    tooltip: 'More Options',
+                    style: ButtonStyle(
+                      backgroundColor:
+                      MaterialStateProperty.all<Color>(Colors.transparent),
+                      padding: MaterialStateProperty.all<EdgeInsets>(
+                          const EdgeInsets.all(12)),
+                      shape: MaterialStateProperty.all<OutlinedBorder>(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
                         ),
-                        const SizedBox(height: 30),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Icon(Icons.reviews, color: Colors.blue, size: 24),
-                            ),
-                            const SizedBox(width: 15),
-                            const Text(
-                              "Customer Reviews",
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        // Here you can dynamically build reviews from fetched data!
-                        _buildReview("John Doe", "Great service, arrived on time and fixed my issue quickly!", "2 days ago"),
-                        _buildReview("Alice Smith", "Very professional and courteous. Highly recommend.", "1 week ago"),
-                        _buildReview("Michael Lee", "Affordable and reliable technician. Will book again.", "2 weeks ago"),
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ],
-          ),
-
-          // Back Button - Positioned at top left in circular box
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 15,
-            left: 20,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.9),
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.black87, size: 24),
-                onPressed: () {
-                  Navigator.of(context).maybePop();
-                },
-                tooltip: 'Back',
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all<Color>(Colors.transparent),
-                  padding: MaterialStateProperty.all<EdgeInsets>(const EdgeInsets.all(12)),
-                  shape: MaterialStateProperty.all<OutlinedBorder>(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Report Button - Positioned at top right in circular box
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 15,
-            right: 20,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.9),
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.flag, color: Colors.red, size: 24),
-                onPressed: () {
-                  _showReportDialog(context);
-                },
-                tooltip: 'Report',
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all<Color>(Colors.transparent),
-                  padding: MaterialStateProperty.all<EdgeInsets>(const EdgeInsets.all(12)),
-                  shape: MaterialStateProperty.all<OutlinedBorder>(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Menu Button - Positioned at top right (next to report button)
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 15,
-            right: 80,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.9),
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.more_vert, color: Colors.black87, size: 24),
-                onPressed: () {
-                  _showMenuDialog(context);
-                },
-                tooltip: 'More Options',
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all<Color>(Colors.transparent),
-                  padding: MaterialStateProperty.all<EdgeInsets>(const EdgeInsets.all(12)),
-                  shape: MaterialStateProperty.all<OutlinedBorder>(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 
-  static void _showReportDialog(BuildContext context) {
+  // Not static! Needs BuildContext, data, and serviceCenterId
+  void _showReportDialog(
+      BuildContext context, Map<String, dynamic> data, String serviceCenterId) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           title: Row(
             children: [
               Icon(Icons.flag, color: Colors.red[600]),
@@ -425,7 +425,8 @@ class _ServiceCenterProfileState extends State<ServiceCenterProfile> {
               const Text("Report Service Center"),
             ],
           ),
-          content: const Text("Are you sure you want to report this service center? Please provide a reason for reporting."),
+          content: const Text(
+              "Are you sure you want to report this service center? Please provide a reason for reporting."),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -438,7 +439,24 @@ class _ServiceCenterProfileState extends State<ServiceCenterProfile> {
               ),
               onPressed: () {
                 Navigator.of(context).pop();
-                // Handle report submission
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FileComplaintScreen(
+                      selectedTechnician: {
+                        'id': serviceCenterId,
+                        'name': data['businessName'] ?? '',
+                        'email': data['email'] ?? '',
+                        'phone': data['phone'] ?? '',
+                        'address': data['address'] ?? '',
+                        'city': data['city'] ?? '',
+                        'state': data['state'] ?? '',
+                        'zipCode': data['zipCode'] ?? '',
+                        'plan': data['selectedPlan'] ?? '',
+                      },
+                    ),
+                  ),
+                );
               },
               child: const Text("Report"),
             ),
