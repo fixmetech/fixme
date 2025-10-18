@@ -133,7 +133,7 @@ class _ResultsSectionState extends State<ResultsSection> {
             result = await SearchService.searchTechniciansWithHistory(
               query: widget.searchQuery.isEmpty ? null : widget.searchQuery,
               userId: 'user-123', // Replace with actual user ID
-              category: widget.selectedService.isEmpty ? null : widget.selectedService,
+              // Don't pass category for tab-based searches - search all technicians by text query
               filters: apiFilters,
             );
             break;
@@ -141,7 +141,7 @@ class _ResultsSectionState extends State<ResultsSection> {
             result = await SearchService.searchServiceCentersWithHistory(
               query: widget.searchQuery.isEmpty ? null : widget.searchQuery,
               userId: 'user-123', // Replace with actual user ID
-              category: widget.selectedService.isEmpty ? null : widget.selectedService,
+              // Don't pass category for tab-based searches - search all service centers by text query
               filters: apiFilters,
             );
             break;
@@ -187,28 +187,34 @@ class _ResultsSectionState extends State<ResultsSection> {
     });
 
     try {
-      // Load different sections
-      final sections = [
-        'featured',
-        'top',
-        'nearby', 
-        'offers'
-      ];
-
       Map<String, List<dynamic>> sectionData = {};
 
-      for (String section in sections) {
-        final result = await SearchService.getFeaturedResults(
-          type: 'technician',
-          section: section,
-        );
+      // Featured: Get 5 most recent technicians (sorted by creation date/recent activity)
+      final featuredResult = await SearchService.searchTechniciansWithHistory(
+        userId: 'user-123',
+        filters: {},
+        limit: 5,
+        sort: 'recent', // Most recent technicians
+      );
+      sectionData['featured'] = featuredResult['success'] ? (featuredResult['data'] ?? []) : [];
 
-        if (result['success']) {
-          sectionData[section] = result['data'] ?? [];
-        } else {
-          sectionData[section] = [];
-        }
-      }
+      // Top: Get 5 technicians with highest rating
+      final topResult = await SearchService.searchTechniciansWithHistory(
+        userId: 'user-123',
+        filters: {},
+        limit: 5,
+        sort: 'rating', // Highest rated technicians
+      );
+      sectionData['top'] = topResult['success'] ? (topResult['data'] ?? []) : [];
+
+      // Special Offers: For now, same as featured (5 recent technicians)
+      final offersResult = await SearchService.searchTechniciansWithHistory(
+        userId: 'user-123',
+        filters: {},
+        limit: 5,
+        sort: 'recent', // Same as featured for now
+      );
+      sectionData['offers'] = offersResult['success'] ? (offersResult['data'] ?? []) : [];
 
       setState(() {
         _sectionResults = sectionData;
@@ -242,7 +248,6 @@ class _ResultsSectionState extends State<ResultsSection> {
   bool get _hasActiveFilters {
     return widget.selectedFilters.isNotEmpty || 
            _isServiceCategory(widget.selectedService) || // Service category selection counts as active filter
-           widget.selectedService.isNotEmpty || 
            widget.searchQuery.isNotEmpty ||
            (widget.specializationFilter != null && widget.specializationFilter!.isNotEmpty);
   }
@@ -346,8 +351,6 @@ class _ResultsSectionState extends State<ResultsSection> {
           _buildHorizontalSection(context, 'Featured in FixMe', _sectionResults['featured'] ?? []),
           SizedBox(height: 20),
           _buildHorizontalSection(context, 'Top Technicians', _sectionResults['top'] ?? []),
-          SizedBox(height: 20),
-          _buildHorizontalSection(context, 'Nearby Services', _sectionResults['nearby'] ?? []),
           SizedBox(height: 20),
           _buildHorizontalSection(context, 'Special Offers', _sectionResults['offers'] ?? []),
         ],
