@@ -45,9 +45,35 @@ class _ResultsSectionState extends State<ResultsSection> {
         oldWidget.searchQuery != widget.searchQuery ||
         oldWidget.selectedFilters.length != widget.selectedFilters.length ||
         oldWidget.filterValues.length != widget.filterValues.length ||
-        oldWidget.specializationFilter != widget.specializationFilter) {
+        oldWidget.specializationFilter != widget.specializationFilter ||
+        _filterValuesChanged(oldWidget.filterValues, widget.filterValues) ||
+        _selectedFiltersChanged(oldWidget.selectedFilters, widget.selectedFilters)) {
       _loadData();
     }
+  }
+
+  // Helper method to check if filter values have changed
+  bool _filterValuesChanged(Map<String, String> oldValues, Map<String, String> newValues) {
+    if (oldValues.length != newValues.length) return true;
+    
+    for (String key in newValues.keys) {
+      if (oldValues[key] != newValues[key]) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Helper method to check if selected filters have changed
+  bool _selectedFiltersChanged(List<String> oldFilters, List<String> newFilters) {
+    if (oldFilters.length != newFilters.length) return true;
+    
+    for (int i = 0; i < newFilters.length; i++) {
+      if (oldFilters[i] != newFilters[i]) {
+        return true;
+      }
+    }
+    return false;
   }
 
   Future<void> _loadData() async {
@@ -71,25 +97,98 @@ class _ResultsSectionState extends State<ResultsSection> {
       widget.filterValues.forEach((key, value) {
         switch (key) {
           case 'Price':
-            apiFilters['priceRange'] = value;
+            // Extract numeric value from "Up to Rs.XXX" format
+            String numericValue = value.replaceAll(RegExp(r'[^\d.]'), '');
+            if (numericValue.isNotEmpty) {
+              apiFilters['priceRange'] = '0-$numericValue';
+            }
             break;
           case 'Rating':
-            apiFilters['rating'] = value;
+            // Extract numeric value from "Over X.X" format
+            String ratingValue = value.replaceAll('Over ', '');
+            if (ratingValue.isNotEmpty) {
+              apiFilters['rating'] = ratingValue;
+            }
             break;
           case 'Distance':
-            apiFilters['distance'] = value;
+            // Extract numeric value from "Within X km" format
+            String distanceValue = value.replaceAll(RegExp(r'[^\d.]'), '');
+            if (distanceValue.isNotEmpty) {
+              apiFilters['distance'] = distanceValue;
+            }
+            break;
+          case 'Experience':
+            // Extract numeric value from "X+ years" format
+            String experienceValue = value.replaceAll(RegExp(r'[^\d.]'), '');
+            if (experienceValue.isNotEmpty) {
+              apiFilters['experience'] = experienceValue;
+            }
             break;
           case 'Language':
-            apiFilters['language'] = value;
+            // Language name should be lowercase to match backend
+            apiFilters['language'] = value.toLowerCase();
             break;
           case 'Visiting Fee':
-            apiFilters['visitingFee'] = value;
+            // Map visiting fee options to backend format
+            switch (value) {
+              case 'Under Rs.50':
+                apiFilters['visitingFee'] = 'under-50';
+                break;
+              case 'Rs.50 - Rs.100':
+                apiFilters['visitingFee'] = '50-100';
+                break;
+              case 'Rs.100 - Rs.150':
+                apiFilters['visitingFee'] = '100-150';
+                break;
+              case 'Rs.150+':
+                apiFilters['visitingFee'] = '150+';
+                break;
+              default:
+                apiFilters['visitingFee'] = value;
+            }
+            break;
+          case 'Sort':
+            // Map frontend sort options to backend sort values
+            switch (value) {
+              case 'Rating':
+                apiFilters['sort'] = 'rating';
+                break;
+              case 'Price':
+                apiFilters['sort'] = 'price';
+                break;
+              case 'Distance':
+                apiFilters['sort'] = 'distance';
+                break;
+              case 'Experience':
+                apiFilters['sort'] = 'experience';
+                break;
+              case 'Recent':
+                apiFilters['sort'] = 'recent';
+                break;
+              case 'Availability':
+                apiFilters['sort'] = 'availability';
+                break;
+              default:
+                apiFilters['sort'] = 'rating';
+            }
             break;
         }
       });
 
+      // Handle toggle filters
       if (widget.selectedFilters.contains('Highly Rated')) {
         apiFilters['highlyRated'] = 'true';
+      }
+      
+      if (widget.selectedFilters.contains('Availability')) {
+        apiFilters['availability'] = 'true';
+      }
+
+      // Extract sort parameter (remove from filters as it's a separate parameter)
+      String sortValue = 'rating'; // default
+      if (apiFilters.containsKey('sort')) {
+        sortValue = apiFilters['sort'];
+        apiFilters.remove('sort'); // Remove from filters map
       }
 
       // Choose the appropriate search method based on category
@@ -101,6 +200,7 @@ class _ResultsSectionState extends State<ResultsSection> {
           query: widget.specializationFilter!, // Use specialization as the search query
           userId: 'user-123', // Replace with actual user ID
           filters: apiFilters,
+          sort: sortValue,
         );
       } 
       // Check if selectedService is a service category (not a search tab)
@@ -111,6 +211,7 @@ class _ResultsSectionState extends State<ResultsSection> {
             query: null, // Browse all towing services
             userId: 'user-123', // Replace with actual user ID
             filters: apiFilters,
+            sort: sortValue,
           );
         } else {
           // For other service categories, search technicians with specializations
@@ -118,6 +219,7 @@ class _ResultsSectionState extends State<ResultsSection> {
             query: _getSpecializationQuery(widget.selectedService), // Convert category to search terms
             userId: 'user-123', // Replace with actual user ID
             filters: apiFilters,
+            sort: sortValue,
           );
         }
       } else {
@@ -135,6 +237,7 @@ class _ResultsSectionState extends State<ResultsSection> {
               userId: 'user-123', // Replace with actual user ID
               // Don't pass category for tab-based searches - search all technicians by text query
               filters: apiFilters,
+              sort: sortValue,
             );
             break;
           case 'Service Centers':
