@@ -40,7 +40,7 @@ class ActivityCard extends StatelessWidget {
   String _getPropertyTitle() {
     if (jobRequest.propertyInfo.type == 'vehicle') {
       final details = jobRequest.propertyInfo.details;
-      return '${details['brand'] ?? ''} ${details['model'] ?? ''}'.trim();
+      return '${details['make'] ?? ''} ${details['model'] ?? ''}'.trim();
     } else {
       return jobRequest.propertyInfo.details['propertyType'] ?? 'Property';
     }
@@ -49,7 +49,7 @@ class ActivityCard extends StatelessWidget {
   String _getPropertySubtitle() {
     if (jobRequest.propertyInfo.type == 'vehicle') {
       final details = jobRequest.propertyInfo.details;
-      return '${details['year'] ?? ''} • ${details['registrationNumber'] ?? ''}'.trim();
+      return '${details['year'] ?? ''} • ${details['plateNumber'] ?? ''}'.trim();
     } else {
       return jobRequest.propertyInfo.details['address'] ?? '';
     }
@@ -158,13 +158,6 @@ class ActivityCard extends StatelessWidget {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      Icon(
-                        jobRequest.propertyInfo.type == 'vehicle' 
-                          ? Icons.directions_car 
-                          : Icons.home,
-                        size: 14,
-                        color: Colors.grey[500],
-                      ),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
@@ -243,7 +236,7 @@ class ActivityCard extends StatelessWidget {
                 
                 
                 // Location
-                if (jobRequest.customerLocation != null) ...[
+                if (jobRequest.customerLocation != null || jobRequest.customerAddress != null) ...[
                   const SizedBox(height: 12),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,8 +249,12 @@ class ActivityCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          'Lat: ${jobRequest.customerLocation!.latitude.toStringAsFixed(4)}, '
-                          'Lng: ${jobRequest.customerLocation!.longitude.toStringAsFixed(4)}',
+                          jobRequest.customerAddress != null && jobRequest.customerAddress!.isNotEmpty
+                              ? jobRequest.customerAddress!
+                              : jobRequest.customerLocation != null
+                                  ? 'Lat: ${jobRequest.customerLocation!.latitude.toStringAsFixed(4)}, '
+                                    'Lng: ${jobRequest.customerLocation!.longitude.toStringAsFixed(4)}'
+                                  : 'Location not available',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[600],
@@ -296,7 +293,7 @@ class ActivityCard extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Technician Assigned',
+                                'Technician',
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: Colors.grey[600],
@@ -304,7 +301,7 @@ class ActivityCard extends StatelessWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'ID: ${jobRequest.technicianId}',
+                                jobRequest.technicianName ?? 'N/A',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -419,7 +416,7 @@ class ActivityCard extends StatelessWidget {
     final category = serviceCategory.toLowerCase();
     switch (category) {
       case 'vehicles':
-        return Icons.car_repair;
+        return Icons.car_crash_outlined;
       case 'home':
         return Icons.home_repair_service;
       case 'paint':

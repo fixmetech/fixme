@@ -154,7 +154,15 @@ class _BookingsScreenState extends State<BookingsScreen>
           );
         }
 
-        final items = c.activities.where((activity) => _matchesType(activity, type)).toList();
+        final items = c.activities
+            .where((activity) => _matchesType(activity, type))
+            .toList();
+        // sort items by date descending
+        items.sort((a, b) {
+          final aTime = a.updatedAt ?? a.createdAt;
+          final bTime = b.updatedAt ?? b.createdAt;
+          return bTime.compareTo(aTime); // descending = recent first
+        });
 
         return RefreshIndicator(
           onRefresh: c.refresh,

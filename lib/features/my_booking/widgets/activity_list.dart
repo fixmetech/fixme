@@ -22,6 +22,7 @@ class ActivityList extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.only(bottom: 12.0),
           child: ActivityCard(
+            
             jobRequest: jobRequest,
             onView: () {
               // Handle view - navigate to job details
