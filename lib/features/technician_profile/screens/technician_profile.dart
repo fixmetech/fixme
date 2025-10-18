@@ -433,21 +433,31 @@ class TechnicianProfile extends StatelessWidget {
                               ],
                             ),
                             const SizedBox(height: 20),
-                            _buildReview(
-                              "Kasun Mendis",
-                              "Great service, arrived on time and fixed my issue quickly!",
-                              "2 days ago",
+                            FutureBuilder<List<TechnicianFeedback>>(
+                              future: controller.fetchFeedbacks(),
+                              builder: (context, reviewSnapshot) {
+                                if (reviewSnapshot.connectionState == ConnectionState.waiting) {
+                                  return const Center(child: CircularProgressIndicator());
+                                }
+                                if (reviewSnapshot.hasError) {
+                                  return Text('Failed to load reviews');
+                                }
+                                final reviews = reviewSnapshot.data ?? [];
+                                if (reviews.isEmpty) {
+                                  return const Text('No reviews yet.');
+                                }
+                                return Column(
+                                  children: reviews.map((fb) => _buildReview(
+                                    fb.customerName ?? "Pabodya Vithana",
+                                    fb.review,
+                                    _timeAgoSinceDate(fb.createdAt),
+                                    fb.rating,
+                                  )).toList(),
+                                );
+                              },
                             ),
-                            _buildReview(
-                              "Akith Jayalath",
-                              "Very professional and courteous. Highly recommend.",
-                              "1 week ago",
-                            ),
-                            _buildReview(
-                              "Madusha Pabasara",
-                              "Affordable and reliable technician. Will book again.",
-                              "2 weeks ago",
-                            ),
+
+
                           ],
                         ),
                       ),
@@ -620,7 +630,7 @@ class TechnicianProfile extends StatelessWidget {
     );
   }
 
-  static Widget _buildReview(String name, String feedback, String timeAgo) {
+  static Widget _buildReview(String name, String feedback, String timeAgo, int rating) {
     return Container(
       margin: const EdgeInsets.only(bottom: 5),
       padding: const EdgeInsets.all(20),
@@ -660,7 +670,11 @@ class TechnicianProfile extends StatelessWidget {
           Row(
             children: List.generate(
               5,
-              (index) => Icon(Icons.star, color: Colors.orange, size: 16),
+                  (index) => Icon(
+                index < rating ? Icons.star : Icons.star_border,
+                color: Colors.orange,
+                size: 16,
+              ),
             ),
           ),
           const SizedBox(height: 10),
@@ -676,4 +690,15 @@ class TechnicianProfile extends StatelessWidget {
       ),
     );
   }
+
+  static String _timeAgoSinceDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+    if (difference.inDays > 7) return '${(difference.inDays / 7).floor()} weeks ago';
+    if (difference.inDays > 0) return '${difference.inDays} days ago';
+    if (difference.inHours > 0) return '${difference.inHours} hours ago';
+    if (difference.inMinutes > 0) return '${difference.inMinutes} minutes ago';
+    return 'just now';
+  }
+
 }
