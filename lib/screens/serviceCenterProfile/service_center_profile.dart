@@ -381,25 +381,7 @@ class ServiceCenterProfile extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: IconButton(
-                    icon: const Icon(Icons.more_vert,
-                        color: Colors.black87, size: 24),
-                    onPressed: () {
-                      _showMenuDialog(context);
-                    },
-                    tooltip: 'More Options',
-                    style: ButtonStyle(
-                      backgroundColor:
-                      MaterialStateProperty.all<Color>(Colors.transparent),
-                      padding: MaterialStateProperty.all<EdgeInsets>(
-                          const EdgeInsets.all(12)),
-                      shape: MaterialStateProperty.all<OutlinedBorder>(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                      ),
-                    ),
-                  ),
+
                 ),
               ),
             ],
@@ -461,49 +443,6 @@ class ServiceCenterProfile extends StatelessWidget {
               child: const Text("Report"),
             ),
           ],
-        );
-      },
-    );
-  }
-
-  static void _showMenuDialog(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (BuildContext context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.share, color: Colors.blue),
-                title: const Text("Share"),
-                onTap: () {
-                  Navigator.pop(context);
-                  // Handle share action
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.bookmark, color: Colors.green),
-                title: const Text("Save to Favorites"),
-                onTap: () {
-                  Navigator.pop(context);
-                  // Handle favorite action
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.info, color: Colors.orange),
-                title: const Text("More Information"),
-                onTap: () {
-                  Navigator.pop(context);
-                  // Handle info action
-                },
-              ),
-            ],
-          ),
         );
       },
     );
