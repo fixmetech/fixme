@@ -3,8 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-/// Match your backend’s JSON (`GET /api/technicians/:id` returns { success, data: {...} })
-/// Route exists in your repo under /api/technicians and exposes `/:id`:contentReference[oaicite:2]{index=2}:contentReference[oaicite:3]{index=3}.
+/// Model representing technician profile data returned by backend.
 class TechnicianProfileData {
   final String? id;
   final String? name;
@@ -92,6 +91,7 @@ class TechnicianProfileData {
     if (v is String) return double.tryParse(v);
     return null;
   }
+
   static int? _toIntOrNull(dynamic v) {
     if (v == null) return null;
     if (v is int) return v;
@@ -101,6 +101,49 @@ class TechnicianProfileData {
   }
 }
 
+/// Model representing a single feedback item for a technician.
+class TechnicianFeedback {
+  final String id;
+  final String customerId;
+  final String technicianId;
+  final String jobId;
+  final String serviceCategory;
+  final int rating;
+  final String review;
+  final String status;
+  final DateTime createdAt;
+  final String? customerName;
+
+  TechnicianFeedback({
+    required this.id,
+    required this.customerId,
+    required this.technicianId,
+    required this.jobId,
+    required this.serviceCategory,
+    required this.rating,
+    required this.review,
+    required this.status,
+    required this.createdAt,
+    this.customerName,
+  });
+
+  factory TechnicianFeedback.fromJson(Map<String, dynamic> map) {
+    return TechnicianFeedback(
+      id: map['id'] ?? '',
+      customerId: map['customerId'] ?? '',
+      technicianId: map['technicianId'] ?? '',
+      jobId: map['jobId'] ?? '',
+      serviceCategory: map['serviceCategory'] ?? '',
+      rating: map['rating'] ?? 0,
+      review: map['review'] ?? '',
+      status: map['status'] ?? '',
+      createdAt: DateTime.tryParse(map['createdAt'] ?? '') ?? DateTime.now(),
+      customerName: map['customerName'],
+    );
+  }
+}
+
+/// Controller for technician profile and feedback fetching.
 class TechnicianProfileController extends ChangeNotifier {
   TechnicianProfileController({
     String? technicianId,
@@ -121,8 +164,6 @@ class TechnicianProfileController extends ChangeNotifier {
 
   Map<String, String> get _headers {
     final h = <String, String>{'Content-Type': 'application/json'};
-    // If you later switch to a protected profile route with verifyFirebaseToken,
-    // send the Firebase ID token (Bearer) — see auth.middleware:contentReference[oaicite:4]{index=4}.
     if (_idToken != null && _idToken.isNotEmpty) {
       h['Authorization'] = 'Bearer $_idToken';
     }
@@ -131,7 +172,6 @@ class TechnicianProfileController extends ChangeNotifier {
 
   /// One-off fetch via backend
   Future<TechnicianProfileData> fetchProfileOnce() async {
-    // Existing public route: GET /api/technicians/:id:contentReference[oaicite:5]{index=5}
     final uri = Uri.parse('$_baseUrl/$_technicianId');
     final res = await http.get(uri, headers: _headers);
 
@@ -140,7 +180,6 @@ class TechnicianProfileController extends ChangeNotifier {
     }
 
     final decoded = jsonDecode(res.body) as Map<String, dynamic>;
-    // Backend wraps the document as { success, data: {...} }
     final ok = decoded['success'] == true;
     if (!ok || decoded['data'] == null) {
       throw StateError('Malformed response from server');
@@ -152,16 +191,31 @@ class TechnicianProfileController extends ChangeNotifier {
   }
 
   /// Optional “live” polling stream (every 20s). Use StreamBuilder if desired.
-  Stream<TechnicianProfileData> watchProfile({Duration interval = const Duration(seconds: 20)}) async* {
+  Stream<TechnicianProfileData> watchProfile(
+      {Duration interval = const Duration(seconds: 20)}) async* {
     while (true) {
       try {
         final value = await fetchProfileOnce();
         yield value;
       } catch (e) {
-        // Bubbling an error stops the stream; instead, yield nothing and continue.
         debugPrint('watchProfile error: $e');
       }
       await Future.delayed(interval);
     }
+  }
+
+  /// Fetch feedbacks for the current technician from backend.
+  Future<List<TechnicianFeedback>> fetchFeedbacks() async {
+    final url = Uri.parse(
+        'http://10.0.2.2:3000/api/feedback/technician/$_technicianId');
+    print('Technician ID: $_technicianId');
+    final res = await http.get(url, headers: _headers);
+    if (res.statusCode != 200) throw Exception('Failed to fetch feedback');
+    final decoded = jsonDecode(res.body) as Map<String, dynamic>;
+    if (decoded['success'] != true) throw Exception('API Error');
+    final feedbackList = decoded['data'] as List;
+    return feedbackList
+        .map((e) => TechnicianFeedback.fromJson(e))
+        .toList();
   }
 }
