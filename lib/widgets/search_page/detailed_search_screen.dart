@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../screens/search_results_screen.dart';
 import '../../services/search_service.dart';
+import 'results_section.dart';
 
 class DetailedSearchScreen extends StatefulWidget {
   @override
@@ -340,13 +341,27 @@ class _DetailedSearchScreenState extends State<DetailedSearchScreen> with Single
   }
 
   Widget _buildAllTab() {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildRecentSection(),
-        ],
-      ),
+    return Column(
+      children: [
+        // Recent searches section at the top
+        Container(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildRecentSection(),
+            ],
+          ),
+        ),
+        // Featured sections below
+        Expanded(
+          child: ResultsSection(
+            selectedService: 'All',
+            searchQuery: '', // Empty search query to show featured sections
+            selectedFilters: [],
+            filterValues: {},
+          ),
+        ),
+      ],
     );
   }
 
