@@ -153,63 +153,63 @@ class _FileComplaintScreenState extends State<FileComplaintScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Connection status indicator
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: isCheckingConnection
-                          ? Colors.orange.withOpacity(0.1)
-                          : isConnected
-                              ? Colors.green.withOpacity(0.1)
-                              : Colors.red.withOpacity(0.1),
-                      border: Border.all(
-                        color: isCheckingConnection
-                            ? Colors.orange
-                            : isConnected
-                                ? Colors.green
-                                : Colors.red,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        if (isCheckingConnection)
-                          const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        else
-                          Icon(
-                            isConnected ? Icons.wifi : Icons.wifi_off,
-                            color: isConnected ? Colors.green : Colors.red,
-                            size: 16,
-                          ),
-                        const SizedBox(width: 8),
-                        Text(
-                          isCheckingConnection
-                              ? 'Checking server connection...'
-                              : isConnected
-                                  ? 'Server connected'
-                                  : 'Server connection failed',
-                          style: TextStyle(
-                            color: isCheckingConnection
-                                ? Colors.orange
-                                : isConnected
-                                    ? Colors.green
-                                    : Colors.red,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const Spacer(),
-                        if (!isConnected && !isCheckingConnection)
-                          TextButton(
-                            onPressed: _checkServerConnection,
-                            child: const Text('Retry'),
-                          ),
-                      ],
-                    ),
-                  ),
+                  // Container(
+                  //   padding: const EdgeInsets.all(12),
+                  //   margin: const EdgeInsets.only(bottom: 16),
+                  //   decoration: BoxDecoration(
+                  //     color: isCheckingConnection
+                  //         ? Colors.orange.withOpacity(0.1)
+                  //         : isConnected
+                  //             ? Colors.green.withOpacity(0.1)
+                  //             : Colors.red.withOpacity(0.1),
+                  //     border: Border.all(
+                  //       color: isCheckingConnection
+                  //           ? Colors.orange
+                  //           : isConnected
+                  //               ? Colors.green
+                  //               : Colors.red,
+                  //     ),
+                  //     borderRadius: BorderRadius.circular(8),
+                  //   ),
+                  //   child: Row(
+                  //     children: [
+                  //       if (isCheckingConnection)
+                  //         const SizedBox(
+                  //           width: 16,
+                  //           height: 16,
+                  //           child: CircularProgressIndicator(strokeWidth: 2),
+                  //         )
+                  //       else
+                  //         Icon(
+                  //           isConnected ? Icons.wifi : Icons.wifi_off,
+                  //           color: isConnected ? Colors.green : Colors.red,
+                  //           size: 16,
+                  //         ),
+                  //       const SizedBox(width: 8),
+                  //       Text(
+                  //         isCheckingConnection
+                  //             ? 'Checking server connection...'
+                  //             : isConnected
+                  //                 ? 'Server connected'
+                  //                 : 'Server connection failed',
+                  //         style: TextStyle(
+                  //           color: isCheckingConnection
+                  //               ? Colors.orange
+                  //               : isConnected
+                  //                   ? Colors.green
+                  //                   : Colors.red,
+                  //           fontWeight: FontWeight.w500,
+                  //         ),
+                  //       ),
+                  //       const Spacer(),
+                  //       if (!isConnected && !isCheckingConnection)
+                  //         TextButton(
+                  //           onPressed: _checkServerConnection,
+                  //           child: const Text('Retry'),
+                  //         ),
+                  //     ],
+                  //   ),
+                  // ),
 
                   // Service Selection Card
                   _buildServiceSelectionCard(),
