@@ -216,9 +216,9 @@ class _BookingsScreenState extends State<BookingsScreen>
     final status = job.status.toLowerCase();
     switch (type) {
       case 'Ongoing':
-        return status == 'TechnicianFinish' ||
-            status == 'EstimateApproved' ||
-            status == 'searchingTechnician' ||
+        return status == 'technicianfinished' ||
+            status == 'estimateapproved' ||
+            status == 'searchingtechnician' ||
             status == 'confirmed';
       case 'Completed':
         return status == 'completed' || status == 'finished';

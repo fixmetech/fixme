@@ -1,10 +1,13 @@
 import 'package:fixme/features/ongoing_request/screens/completed_job.dart';
 import 'package:fixme/features/ongoing_request/screens/make_payment.dart';
+import 'package:fixme/mainScreen.dart';
 import 'package:flutter/material.dart';
 
 // controllers
 import 'package:fixme/features/ongoing_request/controller/finish_job_controller.dart';
 import 'package:fixme/features/ongoing_request/controller/ongoing_state_controller.dart';
+import 'package:get/get.dart';
+import 'package:get/state_manager.dart';
 
 class FinishJobScreen extends StatefulWidget {
   // REQUIRED: we now always receive the dynamic jobId
@@ -91,7 +94,10 @@ class _FinishJobScreenState extends State<FinishJobScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            // Navigate to MainScreen with Activities tab
+            Get.offAll(const MainScreen());
+          },
         ),
         title: Text(
           'Job Details${widget.requestId != null ? ': #${widget.requestId}' : ''}',

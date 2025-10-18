@@ -5,7 +5,8 @@ import 'package:fixme/models/job_request.dart';
 
 class BookingsController extends GetxController {
   final RxList<JobRequest> activities = <JobRequest>[].obs;
-  final RxList<Map<String, dynamic>> scheduledBookings = <Map<String, dynamic>>[].obs;
+  final RxList<Map<String, dynamic>> scheduledBookings =
+      <Map<String, dynamic>>[].obs;
   final RxBool loading = false.obs;
   final RxnString error = RxnString(); // <-- added this line
   final _auth = FirebaseAuth.instance;
@@ -33,7 +34,7 @@ class BookingsController extends GetxController {
       activities.assignAll(jobRequests);
     } catch (e) {
       error.value = e.toString();
-    } finally { 
+    } finally {
       loading.value = false;
     }
   }
@@ -49,10 +50,17 @@ class BookingsController extends GetxController {
     error.value = null;
     try {
       final list = await BookingsRepository.getUserBookings(user.uid);
+
+      list.sort((a, b) {
+        final aTime = a['updatedAt'] ?? a['createdAt'];
+        final bTime = b['updatedAt'] ?? b['createdAt'];
+        return bTime.compareTo(aTime);
+      });
+
       scheduledBookings.assignAll(list);
     } catch (e) {
       error.value = e.toString();
-    } finally { 
+    } finally {
       loading.value = false;
     }
   }
@@ -61,6 +69,4 @@ class BookingsController extends GetxController {
     await fetchBookings();
     await fetchScheduledBookings();
   }
-
-  
 }

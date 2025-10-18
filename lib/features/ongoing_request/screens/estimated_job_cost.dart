@@ -1,6 +1,9 @@
 import 'package:fixme/features/ongoing_request/screens/ongoing_state.dart';
+import 'package:fixme/mainScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:fixme/features/ongoing_request/controller/estimated_job_cost_controller.dart';
+import 'package:get/get.dart';
+import 'package:get/state_manager.dart';
 
 class ServiceRequestScreen extends StatefulWidget {
   /// The dynamic job id passed from the previous screen (Share PIN)
@@ -79,7 +82,10 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            // Navigate to MainScreen with Activities tab
+            Get.offAll(const MainScreen());
+          },
         ),
         title: Text(
           'Ongoing Request${widget.requestId != null ? ': #${widget.requestId}' : ''}',

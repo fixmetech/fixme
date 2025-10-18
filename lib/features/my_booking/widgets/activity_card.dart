@@ -331,8 +331,9 @@ class ActivityCard extends StatelessWidget {
                 bottomRight: Radius.circular(16),
               ),
             ),
-            child: Row(
+            child: ['completed', 'cancelled', 'estimatedRejected'].contains(jobRequest.status) != true ? Row(
               children: [
+              ['technicianConfirmed', 'EstimateApproved', 'technicianFinished'].contains(jobRequest.status) ?
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: onView,
@@ -347,11 +348,12 @@ class ActivityCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                ),
+                ) : const SizedBox.shrink(),
+                
                 const SizedBox(width: 12),
                 
                 // Track Button
-                if (jobRequest.customerLocation != null)
+                if (['searchingTechnician', 'confirmed', 'technicianArrived', 'technicianGettingReady', 'technicianOnTheWay'].contains(jobRequest.status))
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.blue[50],
@@ -372,7 +374,7 @@ class ActivityCard extends StatelessWidget {
                   const SizedBox(width: 8),
                 
                 // Call Button (if technician assigned)
-                if (jobRequest.technicianId != null)
+                if (jobRequest.technicianPhone != null)
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.green[50],
@@ -389,7 +391,7 @@ class ActivityCard extends StatelessWidget {
                     ),
                   ),
               ],
-            ),
+            ) : const SizedBox.shrink(),
           ),
         ],
       ),

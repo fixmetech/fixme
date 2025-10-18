@@ -1,4 +1,5 @@
 import 'package:fixme/features/ongoing_request/screens/completed_job.dart';
+import 'package:fixme/mainScreen.dart';
 import 'package:fixme/services/stripe_service.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -187,7 +188,15 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            // Navigate to MainScreen with Activities tab
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => const MainScreen(),
+              ),
+              (route) => false,
+            );
+          },
         ),
         title: Text(
           'Job Details: #$displayRequestId',
