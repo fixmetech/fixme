@@ -1,3 +1,4 @@
+import 'package:fixme/features/my_booking/widgets/booking_list.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:fixme/features/my_booking/widgets/activity_list.dart';
@@ -153,58 +154,60 @@ class _BookingsScreenState extends State<BookingsScreen>
             ),
           );
         }
+          final bookings = c.scheduledBookings;
+          final items = c.activities
+              .where((activity) => _matchesType(activity, type))
+              .toList();
+          // sort items by date descending
+          items.sort((a, b) {
+            final aTime = a.updatedAt ?? a.createdAt;
+            final bTime = b.updatedAt ?? b.createdAt;
+            return bTime.compareTo(aTime); // descending = recent first
+          });
 
-        final items = c.activities
-            .where((activity) => _matchesType(activity, type))
-            .toList();
-        // sort items by date descending
-        items.sort((a, b) {
-          final aTime = a.updatedAt ?? a.createdAt;
-          final bTime = b.updatedAt ?? b.createdAt;
-          return bTime.compareTo(aTime); // descending = recent first
-        });
-
-        return RefreshIndicator(
-          onRefresh: c.refresh,
-          child: items.isEmpty
-              ? SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.6,
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.inbox,
-                              size: 56,
-                              color: Colors.grey.shade400,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'No $type bookings yet',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey.shade700,
-                                fontWeight: FontWeight.w600,
+          return RefreshIndicator(
+            onRefresh: c.refresh,
+            child: (type != 'Bookings' && items.isEmpty) || (type == 'Bookings' && bookings.isEmpty)
+                ? SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.6,
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.inbox,
+                                size: 56,
+                                color: Colors.grey.shade400,
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'You have no bookings in this category. Pull down to refresh.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.grey.shade500),
-                            ),
-                          ],
+                              const SizedBox(height: 12),
+                              Text(
+                                'No $type bookings yet',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey.shade700,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'You have no bookings in this category. Pull down to refresh.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Colors.grey.shade500),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                )
-              : ActivityList(type: type, activities: items),
-        );
+                  )
+                : type == 'Bookings' 
+                    ? BookingList(type: type, bookings: bookings)
+                    : ActivityList(type: type, activities: items),
+          );
       }),
     );
   }
@@ -213,9 +216,9 @@ class _BookingsScreenState extends State<BookingsScreen>
     final status = job.status.toLowerCase();
     switch (type) {
       case 'Ongoing':
-        return status == 'TechnicianFinish' ||
-            status == 'EstimateApproved' ||
-            status == 'searchingTechnician' ||
+        return status == 'technicianfinished' ||
+            status == 'estimateapproved' ||
+            status == 'searchingtechnician' ||
             status == 'confirmed';
       case 'Completed':
         return status == 'completed' || status == 'finished';

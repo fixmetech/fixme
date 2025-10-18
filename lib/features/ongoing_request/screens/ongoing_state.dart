@@ -1,8 +1,11 @@
 import 'package:fixme/features/ongoing_request/screens/finish_job.dart';
+import 'package:fixme/mainScreen.dart';
 import 'package:flutter/material.dart';
 
 // controller
 import 'package:fixme/features/ongoing_request/controller/ongoing_state_controller.dart';
+import 'package:get/get.dart';
+import 'package:get/state_manager.dart';
 
 class OngoingScreen extends StatefulWidget {
   /// Firestore/DB job document id – REQUIRED and passed from previous screen
@@ -87,7 +90,10 @@ class _OngoingScreenState extends State<OngoingScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            // Navigate to MainScreen with Activities tab selected (index 2)
+            Get.offAll(const MainScreen());
+          },
         ),
         title: Text(
           'Ongoing Request${widget.requestId != null ? ': #${widget.requestId}' : ''}',
