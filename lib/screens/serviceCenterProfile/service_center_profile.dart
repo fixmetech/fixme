@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fixme/screens/file_complaint_screen.dart';
+import 'package:fixme/screens/serviceCenterProfile/service_center_appointment.dart';
 
 class ServiceCenterProfile extends StatelessWidget {
   final String? serviceCenterId;
@@ -150,7 +151,15 @@ class ServiceCenterProfile extends StatelessWidget {
                                           ),
                                           elevation: 0,
                                         ),
-                                        onPressed: () {},
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  ServiceCenterAppointmentPage(),
+                                            ),
+                                          );
+                                        },
                                         icon: const Icon(Icons.handyman,
                                             size: 18),
                                         label: const Text(
