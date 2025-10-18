@@ -60,7 +60,7 @@ class ServiceGrid extends StatelessWidget {
               Expanded(
                 child: ServiceBox(
                   title: 'Towing',
-                  height: 100,
+                  height: 90,
                   icon: Icons.car_repair,
                   isMain: false,
                   onTap: () {
@@ -77,7 +77,7 @@ class ServiceGrid extends StatelessWidget {
               Expanded(
                 child: ServiceBox(
                   title: 'service center',
-                  height: 100,
+                  height: 90,
                   icon: Icons.electric_car,
                   isMain: false,
                   onTap: () {
@@ -90,24 +90,7 @@ class ServiceGrid extends StatelessWidget {
                   },
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ServiceBox(
-                  title: 'Marketplace',
-                  icon: Icons.shopping_cart,
-                  height: 100,
-                  isMain: false,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AsapVehicleService(),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
+           ],
           ),
           const SizedBox(height: 12),
         ],

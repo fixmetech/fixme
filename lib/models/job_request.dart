@@ -6,8 +6,11 @@ class JobRequest {
   final String? jobId;
   final String status;
   final LatLng? customerLocation;
+  final String? customerAddress;
   final String customerId;
   final String? technicianId;
+  final String? technicianName;
+  final String? technicianPhone;
   final String serviceCategory;
   final PropertyInfo propertyInfo;
   final List<String> selectedIssues;
@@ -19,8 +22,11 @@ class JobRequest {
     this.jobId,
     required this.status,
     this.customerLocation,
+    this.customerAddress,
     required this.customerId,
     this.technicianId,
+    this.technicianName,
+    this.technicianPhone,
     required this.serviceCategory,
     required this.propertyInfo,
     required this.selectedIssues,
@@ -40,8 +46,11 @@ class JobRequest {
               map['customerLocation']['longitude']?.toDouble() ?? 0.0,
             )
           : null,
+      customerAddress: map['customerAddress'],
       customerId: map['customerId'] ?? '',
       technicianId: map['technicianId'],
+      technicianName: map['technicianName'],
+      technicianPhone: map['technicianPhone'],
       serviceCategory: map['serviceCategory'] ?? '',
       propertyInfo: PropertyInfo.fromMap(map['propertyInfo'] ?? {}),
       selectedIssues: List<String>.from(map['selectedIssues'] ?? []),
@@ -62,6 +71,7 @@ class JobRequest {
               'longitude': customerLocation!.longitude,
             }
           : null,
+      'customerAddress': customerAddress,
       'customerId': customerId,
       'technicianId': technicianId,
       'serviceCategory': serviceCategory,
@@ -78,8 +88,11 @@ class JobRequest {
     String? jobId,
     String? status,
     LatLng? customerLocation,
+    String? customerAddress,
     String? customerId,
     String? technicianId,
+    String? technicianName,
+    String? technicianPhone,
     String? serviceCategory,
     PropertyInfo? propertyInfo,
     List<String>? selectedIssues,
@@ -91,8 +104,11 @@ class JobRequest {
       jobId: jobId ?? this.jobId,
       status: status ?? this.status,
       customerLocation: customerLocation ?? this.customerLocation,
+      customerAddress: customerAddress ?? this.customerAddress,
       customerId: customerId ?? this.customerId,
       technicianId: technicianId ?? this.technicianId,
+      technicianName: technicianName ?? this.technicianName,
+      technicianPhone: technicianPhone ?? this.technicianPhone,
       serviceCategory: serviceCategory ?? this.serviceCategory,
       propertyInfo: propertyInfo ?? this.propertyInfo,
       selectedIssues: selectedIssues ?? this.selectedIssues,

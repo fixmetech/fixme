@@ -1,27 +1,27 @@
 import 'package:fixme/screens/report_technician.dart';
 import 'package:fixme/screens/file_complaint_screen.dart';
+import 'package:fixme/utils/constants/size.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get_connect/http/src/utils/utils.dart';
 import 'technician_message_popup.dart';
 import 'technician_request_screen.dart';
 import 'package:fixme/features/technician_profile/controller/technician_profile_controller.dart';
 
 class TechnicianProfile extends StatelessWidget {
   final String? technicianId;
-  
+
   const TechnicianProfile({super.key, this.technicianId});
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
-    final controller = TechnicianProfileController(
-      technicianId: technicianId,
-    );
+    final controller = TechnicianProfileController(technicianId: technicianId);
 
     return Scaffold(
       backgroundColor: const Color(0xffF8F8FA),
       body: FutureBuilder<TechnicianProfileData>(
-        future: controller.fetchProfileOnce(),   // <- fetch via backend
+        future: controller.fetchProfileOnce(), // <- fetch via backend
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -39,17 +39,15 @@ class TechnicianProfile extends StatelessWidget {
               Column(
                 children: [
                   // Top Profile Section
+                  // --- Top Profile Section ---
                   Container(
-                    height: screenHeight * 0.4,
+                    height: screenHeight * 0.38,
                     width: double.infinity,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.blue[700]!,
-                          Colors.blue[600]!,
-                        ],
+                        colors: [Colors.blue[700]!, Colors.blue[600]!],
                       ),
                       borderRadius: const BorderRadius.only(
                         bottomLeft: Radius.circular(25),
@@ -65,15 +63,22 @@ class TechnicianProfile extends StatelessWidget {
                     ),
                     padding: EdgeInsets.only(
                       top: screenHeight * 0.08,
-                      left: 10,
-                      right: 10,
+                      left: 16,
+                      right: 16,
                       bottom: 20,
                     ),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        const SizedBox(height: 30), // Space for report button
+                        const SizedBox(
+                          height: FixMeSizes.appBarHeight,
+                        ), // For top spacing or report button
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
+                            // --- Profile Image ---
                             Container(
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
@@ -83,21 +88,29 @@ class TechnicianProfile extends StatelessWidget {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
+                                    color: Colors.black.withOpacity(0.25),
                                     blurRadius: 8,
                                     offset: const Offset(0, 4),
                                   ),
                                 ],
                               ),
                               child: CircleAvatar(
-                                radius: 55,
+                                radius: 50,
                                 backgroundColor: Colors.lightBlueAccent,
-                                backgroundImage: (data.profilePictureUrl != null && data.profilePictureUrl!.isNotEmpty)
+                                backgroundImage:
+                                    (data.profilePictureUrl != null &&
+                                        data.profilePictureUrl!.isNotEmpty)
                                     ? NetworkImage(data.profilePictureUrl!)
-                                    : const AssetImage('assets/images/select-user-technician.png'),
+                                    : const AssetImage(
+                                            'assets/images/select-user-technician.png',
+                                          )
+                                          as ImageProvider,
                               ),
                             ),
-                            const SizedBox(width: 20),
+
+                            const SizedBox(width: 18),
+
+                            // --- Name & Category ---
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,110 +119,183 @@ class TechnicianProfile extends StatelessWidget {
                                     data.name ?? 'Technician',
                                     style: const TextStyle(
                                       color: Colors.white,
-                                      fontSize: 28,
+                                      fontSize: 24,
                                       fontWeight: FontWeight.bold,
-                                      shadows: [Shadow(color: Colors.black26, blurRadius: 2, offset: Offset(0, 1))],
+                                      shadows: [
+                                        Shadow(
+                                          color: Colors.black26,
+                                          blurRadius: 2,
+                                          offset: Offset(0, 1),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(height: 5),
+                                  const SizedBox(height: 6),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: Colors.white.withOpacity(0.2),
                                       borderRadius: BorderRadius.circular(15),
                                     ),
                                     child: Text(
-                                      data.serviceCategory ?? 'Professional Technician',
-                                      style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+                                      data.serviceCategory ??
+                                          'Professional Technician',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
-                            )
+                            ),
                           ],
                         ),
-                        const SizedBox(height: 15),
+
+                        const SizedBox(height: 25),
+
+                        // --- Stats + Buttons Row ---
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            _buildStatColumn(
-                              (data.totalJobs ?? 0).toString(),
-                              "Completed Orders",
+                            // --- Jobs Completed ---
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  (data.totalJobs ?? 0).toString(),
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                const Text(
+                                  "Jobs Completed",
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ],
                             ),
-                            Container( // Request button
+
+                            // --- Divider ---
+                            Container(
+                              height: 40,
+                              width: 1,
+                              color: Colors.white24,
+                            ),
+
+                            // --- Request Button ---
+                            Container(
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
+                                borderRadius: BorderRadius.circular(30),
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF43A047),
+                                    Color(0xFF2E7D32),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.lightGreenAccent.withOpacity(0.3),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 3),
+                                    color: Colors.greenAccent.withOpacity(0.4),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
                                   ),
                                 ],
                               ),
                               child: ElevatedButton.icon(
                                 style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
                                   foregroundColor: Colors.white,
-                                  backgroundColor: Colors.green[600],
-                                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(25),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 12,
                                   ),
-                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                ),
+                                icon: const Icon(
+                                  Icons.handyman_rounded,
+                                  size: 18,
+                                ),
+                                label: const Text(
+                                  "Request",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
                                 ),
                                 onPressed: () {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => TechnicianRequestScreen(
-                                        technicianName: data.name ?? "Technician",
-                                        technicianImage: (data.profilePictureUrl != null && data.profilePictureUrl!.isNotEmpty)
+                                        technicianName:
+                                            data.name ?? "Technician",
+                                        technicianImage:
+                                            (data.profilePictureUrl != null &&
+                                                data
+                                                    .profilePictureUrl!
+                                                    .isNotEmpty)
                                             ? data.profilePictureUrl!
                                             : 'assets/images/select-user-technician.png',
-                                        visitingFee: 75.0, // keep placeholder if not stored
+                                        visitingFee: 75.0,
                                       ),
                                     ),
                                   );
                                 },
-
-                                icon: const Icon(Icons.handyman, size: 16),
-                                label: const Text("Request", style: TextStyle(fontWeight: FontWeight.bold)),
                               ),
                             ),
-                            Container( // Message button
+
+                            // --- Message Icon Button ---
+                            Container(
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
+                                shape: BoxShape.circle,
+                                color: Colors.white.withOpacity(0.15),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.5),
+                                  width: 1.5,
+                                ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.white.withOpacity(0.2),
-                                    blurRadius: 8,
+                                    color: Colors.black.withOpacity(0.15),
+                                    blurRadius: 6,
                                     offset: const Offset(0, 3),
                                   ),
                                 ],
                               ),
-                              child: OutlinedButton.icon(
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                                  side: const BorderSide(color: Colors.white, width: 2),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(25),
-                                  ),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.message_rounded,
+                                  color: Colors.white,
+                                  size: 20,
                                 ),
+                                padding: const EdgeInsets.all(12),
                                 onPressed: () async {
                                   await showDialog(
                                     context: context,
-                                    builder: (context) => TechnicianMessagePopup(
-                                      technicianName: data.name ?? 'Technician',
-                                    ),
+                                    builder: (context) =>
+                                        TechnicianMessagePopup(
+                                          technicianName:
+                                              data.name ?? 'Technician',
+                                        ),
                                   );
                                 },
-                                icon: const Icon(Icons.message, size: 18),
-                                label: const Text("Message", style: TextStyle(fontWeight: FontWeight.bold)),
                               ),
                             ),
                           ],
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -230,7 +316,8 @@ class TechnicianProfile extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row( // Average Rating header
+                            Row(
+                              // Average Rating header
                               children: [
                                 Container(
                                   padding: const EdgeInsets.all(8),
@@ -238,7 +325,11 @@ class TechnicianProfile extends StatelessWidget {
                                     color: Colors.orange.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
-                                  child: const Icon(Icons.star, color: Colors.orange, size: 24),
+                                  child: const Icon(
+                                    Icons.star,
+                                    color: Colors.orange,
+                                    size: 24,
+                                  ),
                                 ),
                                 const SizedBox(width: 15),
                                 const Text(
@@ -256,12 +347,17 @@ class TechnicianProfile extends StatelessWidget {
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
-                                  colors: [Colors.orange.withOpacity(0.1), Colors.amber.withOpacity(0.05)],
+                                  colors: [
+                                    Colors.orange.withOpacity(0.1),
+                                    Colors.amber.withOpacity(0.05),
+                                  ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
                                 borderRadius: BorderRadius.circular(15),
-                                border: Border.all(color: Colors.orange.withOpacity(0.2)),
+                                border: Border.all(
+                                  color: Colors.orange.withOpacity(0.2),
+                                ),
                               ),
                               child: Row(
                                 children: [
@@ -273,7 +369,14 @@ class TechnicianProfile extends StatelessWidget {
                                       color: Colors.orange,
                                     ),
                                   ),
-                                  const Text("/5.0", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: Colors.grey)),
+                                  const Text(
+                                    "/5.0",
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
                                   const SizedBox(width: 15),
                                   Column(
                                     children: [
@@ -292,7 +395,10 @@ class TechnicianProfile extends StatelessWidget {
                                       const SizedBox(height: 5),
                                       Text(
                                         "Based on ${(data.totalJobs ?? 0)} jobs",
-                                        style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 12,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -309,7 +415,11 @@ class TechnicianProfile extends StatelessWidget {
                                     color: Colors.blue.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
-                                  child: const Icon(Icons.reviews, color: Colors.blue, size: 24),
+                                  child: const Icon(
+                                    Icons.reviews,
+                                    color: Colors.blue,
+                                    size: 24,
+                                  ),
                                 ),
                                 const SizedBox(width: 15),
                                 const Text(
@@ -323,9 +433,21 @@ class TechnicianProfile extends StatelessWidget {
                               ],
                             ),
                             const SizedBox(height: 20),
-                            _buildReview("Kasun Mendis", "Great service, arrived on time and fixed my issue quickly!", "2 days ago"),
-                            _buildReview("Akith Jayalath", "Very professional and courteous. Highly recommend.", "1 week ago"),
-                            _buildReview("Madusha Pabasara", "Affordable and reliable technician. Will book again.", "2 weeks ago"),
+                            _buildReview(
+                              "Kasun Mendis",
+                              "Great service, arrived on time and fixed my issue quickly!",
+                              "2 days ago",
+                            ),
+                            _buildReview(
+                              "Akith Jayalath",
+                              "Very professional and courteous. Highly recommend.",
+                              "1 week ago",
+                            ),
+                            _buildReview(
+                              "Madusha Pabasara",
+                              "Affordable and reliable technician. Will book again.",
+                              "2 weeks ago",
+                            ),
                           ],
                         ),
                       ),
@@ -335,77 +457,70 @@ class TechnicianProfile extends StatelessWidget {
               ),
 
               // Report Button - Positioned at top right
+              // Report Button - Positioned at top right
               Positioned(
                 top: MediaQuery.of(context).padding.top + 10,
                 right: 20,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.red.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      backgroundColor: Colors.red[600],
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      elevation: 0,
+                child: GestureDetector(
+                  onTap: () {
+                    // 👉 Handle report action here
+                    print('Report tapped');
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
                     ),
-                    onPressed: () {
-                      // Handle report action
-                      _showReportDialog(context, data);
-                    },
-                    icon: const Icon(Icons.flag, size: 18),
-                    label: const Text(
-                      "Report",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(color: Colors.white.withOpacity(0.3)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.flag_rounded,
+                          size: 18,
+                          color: Colors.white.withOpacity(0.95),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Report',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.95),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13.5,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
+
               // Back Button - Positioned at top left
               Positioned(
-                top: MediaQuery.of(context).padding.top + 10,
+                top: FixMeSizes.appBarHeight,
                 left: 20,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.07),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.arrow_back_rounded,
+                    color: Colors.white, // pure white icon
+                    size: 28,
                   ),
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
-                    onPressed: () {
-                      Navigator.of(context).maybePop();
-                    },
-                    tooltip: 'Back',
-                    style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color>(Colors.blue[700]!),
-                      padding: MaterialStateProperty.all<EdgeInsets>(const EdgeInsets.all(10)),
-                      shape: MaterialStateProperty.all<OutlinedBorder>(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                      elevation: MaterialStateProperty.all<double>(0),
-                    ),
-                  ),
+                  onPressed: () {
+                    Navigator.of(context).maybePop();
+                  },
+                  tooltip: 'Back',
                 ),
               ),
             ],
@@ -415,12 +530,17 @@ class TechnicianProfile extends StatelessWidget {
     );
   }
 
-  static void _showReportDialog(BuildContext context, TechnicianProfileData technicianData) {
+  static void _showReportDialog(
+    BuildContext context,
+    TechnicianProfileData technicianData,
+  ) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
           title: Row(
             children: [
               Icon(Icons.flag, color: Colors.red[600]),
@@ -428,7 +548,9 @@ class TechnicianProfile extends StatelessWidget {
               const Text("Report Technician"),
             ],
           ),
-          content: const Text("Are you sure you want to report this technician? Please provide a reason for reporting."),
+          content: const Text(
+            "Are you sure you want to report this technician? Please provide a reason for reporting.",
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -448,9 +570,10 @@ class TechnicianProfile extends StatelessWidget {
                       selectedTechnician: {
                         'id': technicianData.id ?? 104,
                         'name': technicianData.name ?? 'kasun',
-                        'email': technicianData.email ??'kasun@gmail.com',
+                        'email': technicianData.email ?? 'kasun@gmail.com',
                         'phone': technicianData.phone ?? '0712345678',
-                        'profession': technicianData.serviceCategory?? 'carservice',
+                        'profession':
+                            technicianData.serviceCategory ?? 'carservice',
                         'badge': technicianData.badgeType ?? 'standard',
                         'rating': technicianData.rating ?? 0.0,
                       },
@@ -499,7 +622,7 @@ class TechnicianProfile extends StatelessWidget {
 
   static Widget _buildReview(String name, String feedback, String timeAgo) {
     return Container(
-      margin: const EdgeInsets.only(bottom:5),
+      margin: const EdgeInsets.only(bottom: 5),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -529,10 +652,7 @@ class TechnicianProfile extends StatelessWidget {
               ),
               Text(
                 timeAgo,
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
               ),
             ],
           ),
@@ -540,11 +660,7 @@ class TechnicianProfile extends StatelessWidget {
           Row(
             children: List.generate(
               5,
-                  (index) => Icon(
-                Icons.star,
-                color: Colors.orange,
-                size: 16,
-              ),
+              (index) => Icon(Icons.star, color: Colors.orange, size: 16),
             ),
           ),
           const SizedBox(height: 10),

@@ -141,6 +141,10 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
       print('Sending job request to backend...');
       print('Job Request Data: ${_jobRequest!.toMap()}');
 
+      // Update job request with current address
+      _jobRequest = _jobRequest!.copyWith(
+        customerAddress: "colomnobo, sri lanka", // Example address
+      );
       // Send job request to backend
       final response = await technicianRepository.createJobRequest(
         _jobRequest!.toMap(),
