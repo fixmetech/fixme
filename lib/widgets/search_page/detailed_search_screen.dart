@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../screens/search_results_screen.dart';
+import '../../services/search_service.dart';
 
 class DetailedSearchScreen extends StatefulWidget {
   @override
@@ -9,42 +10,211 @@ class DetailedSearchScreen extends StatefulWidget {
 class _DetailedSearchScreenState extends State<DetailedSearchScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
-  List<String> _recentSearches = ['AC Repair', 'Plumbing', 'Electrician', 'Car Service', 'Towing'];
+  List<Map<String, dynamic>> _recentSearches = [];
+  bool _isLoadingRecentSearches = false;
+  bool _isSearching = false;
+  
+  // Mock user ID - replace with actual user ID from authentication
+  String get currentUserId => 'test-user-123';
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(_onTabChanged);
+    _loadRecentSearches();
+  }
+
+  void _onTabChanged() {
+    if (_tabController.indexIsChanging) {
+      _loadRecentSearches();
+    }
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
-  void _performSearch(String query) {
-    if (query.trim().isNotEmpty) {
-      // Add to recent searches if not already present
-      if (!_recentSearches.contains(query)) {
+  void _loadRecentSearches() async {
+    setState(() {
+      _isLoadingRecentSearches = true;
+    });
+
+    try {
+      final category = _getSelectedCategory();
+      final response = await SearchService.getRecentSearches(
+        userId: currentUserId,
+        category: category,
+        limit: 5,
+      );
+
+      if (response['success'] == true) {
         setState(() {
-          _recentSearches.insert(0, query);
-          if (_recentSearches.length > 10) {
-            _recentSearches.removeLast();
-          }
+          _recentSearches = List<Map<String, dynamic>>.from(response['data'] ?? []);
+        });
+      } else {
+        // Fallback to static data if API fails
+        setState(() {
+          _recentSearches = [
+            {'query': 'AC Repair', 'category': 'All'},
+            {'query': 'Plumbing', 'category': 'All'},
+            {'query': 'Electrician', 'category': 'All'},
+            {'query': 'Car Service', 'category': 'All'},
+            {'query': 'Towing', 'category': 'All'},
+          ];
         });
       }
-      
-      // Navigate to search results
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => SearchResultsScreen(
-            searchQuery: query,
-            category: _getSelectedCategory(),
+    } catch (e) {
+      print('Error loading recent searches: $e');
+      // Fallback to static data
+      setState(() {
+        _recentSearches = [
+          {'query': 'AC Repair', 'category': 'All'},
+          {'query': 'Plumbing', 'category': 'All'},
+          {'query': 'Electrician', 'category': 'All'},
+          {'query': 'Car Service', 'category': 'All'},
+          {'query': 'Towing', 'category': 'All'},
+        ];
+      });
+    } finally {
+      setState(() {
+        _isLoadingRecentSearches = false;
+      });
+    }
+  }
+
+  void _performSearch(String query) async {
+    if (query.trim().isEmpty) return;
+
+    setState(() {
+      _isSearching = true;
+    });
+
+    try {
+      final category = _getSelectedCategory();
+      Map<String, dynamic> response;
+
+      // Choose the appropriate search method based on category
+      switch (category) {
+        case 'All':
+          response = await SearchService.searchAll(
+            query: query,
+            userId: currentUserId,
+          );
+          break;
+        case 'Technicians':
+          response = await SearchService.searchTechniciansWithHistory(
+            query: query,
+            userId: currentUserId,
+          );
+          break;
+        case 'Service Centers':
+          response = await SearchService.searchServiceCentersWithHistory(
+            query: query,
+            userId: currentUserId,
+          );
+          break;
+        case 'Towing':
+          response = await SearchService.searchTowingServices(
+            query: query,
+            userId: currentUserId,
+          );
+          break;
+        default:
+          response = await SearchService.searchAll(
+            query: query,
+            userId: currentUserId,
+          );
+      }
+
+      setState(() {
+        _isSearching = false;
+      });
+
+      if (response['success'] == true) {
+        // Refresh recent searches after successful search
+        _loadRecentSearches();
+        
+        // Navigate to search results
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SearchResultsScreen(
+              searchQuery: query,
+              category: category,
+            ),
           ),
+        );
+      } else {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response['message'] ?? 'Search failed. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isSearching = false;
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Search error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _filterByCategory(String categoryName) async {
+    // For category filtering, search only within technicians for that specialization
+    // Pass empty query but set the category filter for technician specializations
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SearchResultsScreen(
+          searchQuery: '', // Empty search query for browsing
+          category: 'Technicians', // Always filter technicians for category selection
+          specializationFilter: categoryName.toLowerCase(), // The specific specialization
+        ),
+      ),
+    );
+  }
+
+  void _removeRecentSearch(String searchId) async {
+    try {
+      final response = await SearchService.deleteSearchHistoryItem(
+        userId: currentUserId,
+        searchId: searchId,
+      );
+
+      if (response['success'] == true) {
+        _loadRecentSearches(); // Refresh the list
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Search removed from history'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to remove search'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error removing search: ${e.toString()}'),
+          backgroundColor: Colors.red,
         ),
       );
     }
@@ -106,15 +276,23 @@ class _DetailedSearchScreenState extends State<DetailedSearchScreen> with Single
                 controller: _searchController,
                 style: TextStyle(color: Colors.black87),
                 onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value;
-                  });
+                  // Handle search input changes if needed
                 },
                 onSubmitted: _performSearch,
                 decoration: InputDecoration(
                   hintText: 'Search FixMe Services',
                   hintStyle: TextStyle(color: Colors.grey[500]),
                   prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
+                  suffixIcon: _isSearching 
+                    ? Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : null,
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                 ),
@@ -237,7 +415,27 @@ class _DetailedSearchScreenState extends State<DetailedSearchScreen> with Single
             ),
           ),
         ),
-        ..._recentSearches.map((search) => _buildSearchItem(search, Icons.history)),
+        if (_isLoadingRecentSearches)
+          Center(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: CircularProgressIndicator(),
+            ),
+          )
+        else if (_recentSearches.isEmpty)
+          Padding(
+            padding: EdgeInsets.all(16),
+            child: Text(
+              'No recent searches',
+              style: TextStyle(color: Colors.grey[500]),
+            ),
+          )
+        else
+          ..._recentSearches.map((search) => _buildSearchItem(
+            search['query']?.toString() ?? search.toString(), 
+            Icons.history,
+            searchId: search['id']?.toString(),
+          )),
       ],
     );
   }
@@ -290,12 +488,12 @@ class _DetailedSearchScreenState extends State<DetailedSearchScreen> with Single
             ),
           ),
         ),
-        ...searches.map((search) => _buildSearchItem(search, Icons.history)),
+        ...searches.map((search) => _buildSearchItem(search, Icons.history, searchId: null)),
       ],
     );
   }
 
-  Widget _buildSearchItem(String text, IconData icon) {
+  Widget _buildSearchItem(String text, IconData icon, {String? searchId}) {
     return InkWell(
       onTap: () => _performSearch(text),
       child: Container(
@@ -309,13 +507,22 @@ class _DetailedSearchScreenState extends State<DetailedSearchScreen> with Single
           children: [
             Icon(icon, color: Colors.grey[500], size: 20),
             SizedBox(width: 16),
-            Text(
-              text,
-              style: TextStyle(
-                color: Colors.black87,
-                fontSize: 16,
+            Expanded(
+              child: Text(
+                text,
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontSize: 16,
+                ),
               ),
             ),
+            if (searchId != null && icon == Icons.history)
+              IconButton(
+                icon: Icon(Icons.close, color: Colors.grey[400], size: 18),
+                onPressed: () => _removeRecentSearch(searchId),
+                padding: EdgeInsets.all(4),
+                constraints: BoxConstraints(minWidth: 32, minHeight: 32),
+              ),
           ],
         ),
       ),
@@ -324,7 +531,7 @@ class _DetailedSearchScreenState extends State<DetailedSearchScreen> with Single
 
   Widget _buildCategoryItem(String name, IconData icon) {
     return InkWell(
-      onTap: () => _performSearch(name),
+      onTap: () => _filterByCategory(name),
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(

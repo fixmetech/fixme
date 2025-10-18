@@ -8,6 +8,7 @@ class ResultsSection extends StatefulWidget {
   final List<String> selectedFilters;
   final Map<String, String> filterValues;
   final VoidCallback? onResetFilters;
+  final String? specializationFilter;
 
   const ResultsSection({
     Key? key,
@@ -16,6 +17,7 @@ class ResultsSection extends StatefulWidget {
     required this.selectedFilters,
     required this.filterValues,
     this.onResetFilters,
+    this.specializationFilter,
   }) : super(key: key);
 
   @override
@@ -42,7 +44,8 @@ class _ResultsSectionState extends State<ResultsSection> {
     if (oldWidget.selectedService != widget.selectedService ||
         oldWidget.searchQuery != widget.searchQuery ||
         oldWidget.selectedFilters.length != widget.selectedFilters.length ||
-        oldWidget.filterValues.length != widget.filterValues.length) {
+        oldWidget.filterValues.length != widget.filterValues.length ||
+        oldWidget.specializationFilter != widget.specializationFilter) {
       _loadData();
     }
   }
@@ -89,14 +92,74 @@ class _ResultsSectionState extends State<ResultsSection> {
         apiFilters['highlyRated'] = 'true';
       }
 
-      final result = await SearchService.searchTechnicians(
-        query: widget.searchQuery.isEmpty ? null : widget.searchQuery,
-        category: widget.selectedService.isEmpty ? null : widget.selectedService,
-        filters: apiFilters,
-        page: 1,
-        limit: 20,
-        sort: widget.filterValues['Sort'] ?? 'rating',
-      );
+      // Choose the appropriate search method based on category
+      Map<String, dynamic> result;
+      
+      // If specialization filter is provided, search technicians with that specialization
+      if (widget.specializationFilter != null && widget.specializationFilter!.isNotEmpty) {
+        result = await SearchService.searchTechniciansWithHistory(
+          query: widget.specializationFilter!, // Use specialization as the search query
+          userId: 'user-123', // Replace with actual user ID
+          filters: apiFilters,
+        );
+      } 
+      // Check if selectedService is a service category (not a search tab)
+      else if (_isServiceCategory(widget.selectedService)) {
+        // Special case for Towing - search in towing services collection
+        if (widget.selectedService.toLowerCase() == 'towing') {
+          result = await SearchService.searchTowingServices(
+            query: null, // Browse all towing services
+            userId: 'user-123', // Replace with actual user ID
+            filters: apiFilters,
+          );
+        } else {
+          // For other service categories, search technicians with specializations
+          result = await SearchService.searchTechniciansWithHistory(
+            query: _getSpecializationQuery(widget.selectedService), // Convert category to search terms
+            userId: 'user-123', // Replace with actual user ID
+            filters: apiFilters,
+          );
+        }
+      } else {
+        // Normal search logic based on selected service tab
+        switch (widget.selectedService) {
+          case 'All':
+            result = await SearchService.searchAll(
+              query: widget.searchQuery,
+              userId: 'user-123', // Replace with actual user ID
+            );
+            break;
+          case 'Technicians':
+            result = await SearchService.searchTechniciansWithHistory(
+              query: widget.searchQuery.isEmpty ? null : widget.searchQuery,
+              userId: 'user-123', // Replace with actual user ID
+              category: widget.selectedService.isEmpty ? null : widget.selectedService,
+              filters: apiFilters,
+            );
+            break;
+          case 'Service Centers':
+            result = await SearchService.searchServiceCentersWithHistory(
+              query: widget.searchQuery.isEmpty ? null : widget.searchQuery,
+              userId: 'user-123', // Replace with actual user ID
+              category: widget.selectedService.isEmpty ? null : widget.selectedService,
+              filters: apiFilters,
+            );
+            break;
+          case 'Towing':
+            result = await SearchService.searchTowingServices(
+              query: widget.searchQuery.isEmpty ? null : widget.searchQuery,
+              userId: 'user-123', // Replace with actual user ID
+              filters: apiFilters,
+            );
+            break;
+          default:
+            // Fallback to searching all categories
+            result = await SearchService.searchAll(
+              query: widget.searchQuery,
+              userId: 'user-123', // Replace with actual user ID
+            );
+        }
+      }
 
       if (result['success']) {
         setState(() {
@@ -178,12 +241,22 @@ class _ResultsSectionState extends State<ResultsSection> {
   // Check if filters are active
   bool get _hasActiveFilters {
     return widget.selectedFilters.isNotEmpty || 
+           _isServiceCategory(widget.selectedService) || // Service category selection counts as active filter
            widget.selectedService.isNotEmpty || 
-           widget.searchQuery.isNotEmpty;
+           widget.searchQuery.isNotEmpty ||
+           (widget.specializationFilter != null && widget.specializationFilter!.isNotEmpty);
   }
 
   String _getResultsHeaderText() {
-    if (widget.selectedService.isNotEmpty && widget.searchQuery.isNotEmpty) {
+    if (widget.specializationFilter != null && widget.specializationFilter!.isNotEmpty) {
+      return '${widget.specializationFilter!.toUpperCase()} Technicians';
+    } else if (_isServiceCategory(widget.selectedService)) {
+      if (widget.selectedService.toLowerCase() == 'towing') {
+        return 'TOWING Services'; // Show "TOWING Services" for towing category
+      } else {
+        return '${widget.selectedService.toUpperCase()} Technicians';
+      }
+    } else if (widget.selectedService.isNotEmpty && widget.searchQuery.isNotEmpty) {
       return '${widget.selectedService} - "${widget.searchQuery}"';
     } else if (widget.selectedService.isNotEmpty) {
       return widget.selectedService;
@@ -191,6 +264,34 @@ class _ResultsSectionState extends State<ResultsSection> {
       return '"${widget.searchQuery}"';
     } else {
       return 'Filtered';
+    }
+  }
+
+  // Check if the selected service is a service category (not a search tab)
+  bool _isServiceCategory(String service) {
+    final serviceCategories = [
+      'Service', 'Towing', 'Electricians', 'Plumbers', 'Gardening', 'Repair'
+    ];
+    return serviceCategories.contains(service);
+  }
+
+  // Convert service category to appropriate search terms for specializations
+  String _getSpecializationQuery(String category) {
+    switch (category.toLowerCase()) {
+      case 'repair':
+        return 'repair'; // Will match "Car Repair", "Engine Repair", "Car repair", etc.
+      case 'electricians':
+        return 'electrical'; // Will match "Auto Electrical", etc.
+      case 'plumbers':
+        return 'plumbing'; // Will match plumbing-related specializations
+      case 'gardening':
+        return 'garden'; // Will match gardening-related specializations
+      case 'towing':
+        return 'towing'; // Will match towing services
+      case 'service':
+        return 'service'; // Will match "Battery Services", etc.
+      default:
+        return category.toLowerCase();
     }
   }
 
@@ -391,11 +492,11 @@ class _ResultsSectionState extends State<ResultsSection> {
                     children: [
                       Icon(Icons.star, color: Colors.orange, size: 16),
                       Text(
-                        ' ${(item['rating'] ?? 4.5).toStringAsFixed(1)}',
+                        ' ${(item['rating'] ?? 0).toStringAsFixed(1)}',
                         style: TextStyle(color: Colors.grey[600], fontSize: 14),
                       ),
                       Text(
-                        ' • Rs.${item['visitingFee'] ?? 500} Fee',
+                        ' • Rs.${item['visitingFee'] ?? 0} Fee',
                         style: TextStyle(color: Colors.grey[600], fontSize: 14),
                       ),
                     ],
@@ -630,15 +731,15 @@ class _ResultsSectionState extends State<ResultsSection> {
                     children: [
                       Icon(Icons.star, color: Colors.orange, size: 16),
                       Text(
-                        ' ${(item['rating'] ?? 4.5).toStringAsFixed(1)}',
+                        ' ${(item['rating'] ?? 0).toStringAsFixed(1)}',
                         style: TextStyle(color: Colors.black87, fontSize: 14),
                       ),
                       Text(
-                        ' (${item['totalJobs'] ?? 100}+ jobs)',
+                        ' (${item['totalJobs'] ?? 0}+ jobs)',
                         style: TextStyle(color: Colors.grey[600], fontSize: 14),
                       ),
                       Text(
-                        ' • ${item['distance'] ?? 10} km',
+                        ' • ${item['distance'] ?? 0} km',
                         style: TextStyle(color: Colors.grey[600], fontSize: 14),
                       ),
                     ],
@@ -647,7 +748,7 @@ class _ResultsSectionState extends State<ResultsSection> {
                   Row(
                     children: [
                       Text(
-                        'Rs.${item['visitingFee'] ?? 500} Visiting Fee',
+                        'Rs.${item['visitingFee'] ?? 0} Visiting Fee',
                         style: TextStyle(color: Colors.grey[600], fontSize: 14),
                       ),
                       if (item['languages'] != null && (item['languages'] as List).isNotEmpty) ...[
