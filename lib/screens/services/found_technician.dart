@@ -1,8 +1,8 @@
 import 'package:fixme/features/ongoing_request/screens/share_pin.dart';
 import 'package:fixme/features/ongoing_request/controller/share_pin_controller.dart';
+import 'package:fixme/screens/services/controllers/found_technician_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 
@@ -32,7 +32,11 @@ class _FoundTechnicianState extends State<FoundTechnician>
   Timer? _statusTimer;
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
-  late Animation<double> _scaleAnimation;
+
+  // Initialize the controller
+  final FoundTechnicianController controller = Get.put(
+    FoundTechnicianController(),
+  );
 
   @override
   void initState() {
@@ -43,9 +47,6 @@ class _FoundTechnicianState extends State<FoundTechnician>
     );
     _pulseAnimation = Tween<double>(begin: 0.9, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
-    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
     );
 
     _startStatusFlow();
@@ -483,10 +484,15 @@ class _FoundTechnicianState extends State<FoundTechnician>
               ),
               child: ElevatedButton(
                 onPressed: () async {
-                  final SharePinController controller = Get.put(SharePinController());
+                  final SharePinController controller = Get.put(
+                    SharePinController(),
+                  );
 
                   // Use controller to request OTP; controller shows/hides loading internally
-                  final success = await controller.requestOtpForJob(widget.jobId, context);
+                  final success = await controller.requestOtpForJob(
+                    widget.jobId,
+                    context,
+                  );
                   if (success) {
                     // Navigate to job details screen where PIN will be displayed
                     Get.to(() => JobDetailsScreen(jobRequestId: widget.jobId));
@@ -621,10 +627,7 @@ class _FoundTechnicianState extends State<FoundTechnician>
               ),
             ),
             ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                widget.onFindAnother();
-              },
+              onPressed: () => controller.cancelBooking(jobId: widget.jobId, context: context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red.shade600,
                 foregroundColor: Colors.white,

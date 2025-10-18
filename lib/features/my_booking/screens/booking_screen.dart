@@ -76,7 +76,7 @@ class _BookingsScreenState extends State<BookingsScreen>
               tabAlignment: TabAlignment.start,
               tabs: const [
                 Tab(text: 'Ongoing'),
-                Tab(text: 'Upcoming'),
+                Tab(text: 'Bookings'),
                 Tab(text: 'Completed'),
                 Tab(text: 'Cancelled'),
               ],
@@ -89,7 +89,7 @@ class _BookingsScreenState extends State<BookingsScreen>
               controller: _tabController,
               children: [
                 _tabView('Ongoing'),
-                _tabView('Upcoming'),
+                _tabView('Bookings'),
                 _tabView('Completed'),
                 _tabView('Cancelled'),
               ],
@@ -213,13 +213,10 @@ class _BookingsScreenState extends State<BookingsScreen>
     final status = job.status.toLowerCase();
     switch (type) {
       case 'Ongoing':
-        return status == 'ongoing' ||
-            status == 'in_progress' ||
+        return status == 'TechnicianFinish' ||
+            status == 'EstimateApproved' ||
+            status == 'searchingTechnician' ||
             status == 'confirmed';
-      case 'Upcoming':
-        return status == 'upcoming' ||
-            status == 'scheduled' ||
-            status == 'pending';
       case 'Completed':
         return status == 'completed' || status == 'finished';
       case 'Cancelled':
