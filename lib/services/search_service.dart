@@ -77,11 +77,11 @@ class SearchService {
         queryParams['location'] = location;
       }
 
-      // Add filters to query params
+      // Add filters as direct query params (updated to match backend)
       if (filters != null) {
         filters.forEach((key, value) {
           if (value != null && value.toString().isNotEmpty) {
-            queryParams['filters[$key]'] = value.toString();
+            queryParams[key] = value.toString();
           }
         });
       }

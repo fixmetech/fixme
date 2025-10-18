@@ -33,10 +33,18 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void _onFiltersChanged(List<String> filters, Map<String, String> values) {
+    print('SearchScreen _onFiltersChanged called:');
+    print('  Old selectedFilters: $selectedFilters');
+    print('  New selectedFilters: $filters');
+    print('  Old filterValues: $filterValues');
+    print('  New filterValues: $values');
+    
     setState(() {
       selectedFilters = filters;
       filterValues = values;
     });
+    
+    print('  State updated successfully');
     // Here you can implement additional filtering logic if needed
     // The ResultsSection will handle the display logic
   }
