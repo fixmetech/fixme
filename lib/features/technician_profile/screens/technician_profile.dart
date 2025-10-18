@@ -241,16 +241,15 @@ class TechnicianProfile extends StatelessWidget {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => TechnicianRequestScreen(
-                                        technicianName:
-                                            data.name ?? "Technician",
-                                        technicianImage:
-                                            (data.profilePictureUrl != null &&
-                                                data
-                                                    .profilePictureUrl!
-                                                    .isNotEmpty)
+                                        technicianId: data.id?.toString() ?? '',
+                                        technicianName: data.name ?? "Technician",
+                                        technicianImage: (data.profilePictureUrl != null && data.profilePictureUrl!.isNotEmpty)
                                             ? data.profilePictureUrl!
                                             : 'assets/images/select-user-technician.png',
                                         visitingFee: 75.0,
+                                        technicianEmail: data.email,
+                                        technicianPhone: data.phone,
+                                        serviceCategory: data.serviceCategory,
                                       ),
                                     ),
                                   );
