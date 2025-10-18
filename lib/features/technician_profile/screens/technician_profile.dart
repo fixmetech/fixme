@@ -316,96 +316,7 @@ class TechnicianProfile extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              // Average Rating header
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.orange.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: const Icon(
-                                    Icons.star,
-                                    color: Colors.orange,
-                                    size: 24,
-                                  ),
-                                ),
-                                const SizedBox(width: 15),
-                                const Text(
-                                  "Average Rating",
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 15),
-                            Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.orange.withOpacity(0.1),
-                                    Colors.amber.withOpacity(0.05),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.circular(15),
-                                border: Border.all(
-                                  color: Colors.orange.withOpacity(0.2),
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    (data.rating ?? 0).toStringAsFixed(1),
-                                    style: const TextStyle(
-                                      fontSize: 36,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.orange,
-                                    ),
-                                  ),
-                                  const Text(
-                                    "/5.0",
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 15),
-                                  Column(
-                                    children: [
-                                      Row(
-                                        children: List.generate(
-                                          5,
-                                          (index) => Icon(
-                                            index < (data.rating ?? 0).round()
-                                                ? Icons.star
-                                                : Icons.star_border,
-                                            color: Colors.orange,
-                                            size: 24,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 5),
-                                      Text(
-                                        "Based on ${(data.totalJobs ?? 0)} jobs",
-                                        style: const TextStyle(
-                                          color: Colors.grey,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 30),
+
                             // Reviews section (static in your snippet) — leave as-is or wire to a reviews source later
                             Row(
                               children: [
@@ -423,7 +334,7 @@ class TechnicianProfile extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 15),
                                 const Text(
-                                  "Customer Reviews",
+                                  "Customer Ratings & Reviews",
                                   style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.bold,
@@ -444,19 +355,35 @@ class TechnicianProfile extends StatelessWidget {
                                 }
                                 final reviews = reviewSnapshot.data ?? [];
                                 if (reviews.isEmpty) {
-                                  return const Text('No reviews yet.');
+                                  // Display 0.0 as average, and "No reviews yet"
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      _buildAverageRatingDisplay(0.0, 0),
+                                      const SizedBox(height: 10),
+                                      const Text('No reviews yet.'),
+                                    ],
+                                  );
                                 }
+
+                                final totalStars = reviews.fold<int>(0, (sum, fb) => sum + (fb.rating ?? 0));
+                                final avgRating = totalStars / reviews.length;
+
                                 return Column(
-                                  children: reviews.map((fb) => _buildReview(
-                                    fb.customerName ?? "Pabodya Vithana",
-                                    fb.review,
-                                    _timeAgoSinceDate(fb.createdAt),
-                                    fb.rating,
-                                  )).toList(),
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildAverageRatingDisplay(avgRating, reviews.length),
+                                    const SizedBox(height: 10),
+                                    ...reviews.map((fb) => _buildReview(
+                                      fb.customerName ?? fb.customerId,
+                                      fb.review,
+                                      _timeAgoSinceDate(fb.createdAt),
+                                      fb.rating,
+                                    )),
+                                  ],
                                 );
                               },
                             ),
-
 
                           ],
                         ),
@@ -467,14 +394,13 @@ class TechnicianProfile extends StatelessWidget {
               ),
 
               // Report Button - Positioned at top right
-              // Report Button - Positioned at top right
               Positioned(
                 top: MediaQuery.of(context).padding.top + 10,
                 right: 20,
                 child: GestureDetector(
                   onTap: () {
-                    // 👉 Handle report action here
-                    print('Report tapped');
+                    // Handle report action
+                    _showReportDialog(context, data);
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -699,6 +625,71 @@ class TechnicianProfile extends StatelessWidget {
     if (difference.inHours > 0) return '${difference.inHours} hours ago';
     if (difference.inMinutes > 0) return '${difference.inMinutes} minutes ago';
     return 'just now';
+  }
+
+  static Widget _buildAverageRatingDisplay(double avgRating, int numReviews) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.orange.withOpacity(0.1),
+            Colors.amber.withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: Colors.orange.withOpacity(0.2),
+        ),
+      ),
+      child: Row(
+        children: [
+          Text(
+            avgRating.toStringAsFixed(1),
+            style: const TextStyle(
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
+              color: Colors.orange,
+            ),
+          ),
+          const Text(
+            "/5.0",
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(width: 15),
+          Column(
+            children: [
+              Row(
+                children: List.generate(
+                  5,
+                      (index) => Icon(
+                    index < avgRating.round()
+                        ? Icons.star
+                        : Icons.star_border,
+                    color: Colors.orange,
+                    size: 24,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                "Based on $numReviews reviews",
+                style: const TextStyle(
+                  color: Colors.grey,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
 }
