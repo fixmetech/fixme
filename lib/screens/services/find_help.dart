@@ -455,25 +455,35 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _currentPosition == null
-          ? Center(
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                child: SizedBox(
-                  width: 120,
-                  height: 120,
-                  child: lottie.Lottie.asset(
-                    'assets/animations/mapload.json',
-                    repeat: true,
-                    animate: true,
-                    fit: BoxFit.contain,
-                    frameRate: lottie.FrameRate.max, // For smooth animation
+    return WillPopScope(
+      onWillPop: () async {
+        // If in searching or found state, go to home screen
+        if (_searchState == SearchState.searching || 
+            _searchState == SearchState.found) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+          return false; // Prevent default back action
+        }
+        return true; // Allow default back action for initial state
+      },
+      child: Scaffold(
+        body: _currentPosition == null
+            ? Center(
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  child: SizedBox(
+                    width: 120,
+                    height: 120,
+                    child: lottie.Lottie.asset(
+                      'assets/animations/mapload.json',
+                      repeat: true,
+                      animate: true,
+                      fit: BoxFit.contain,
+                      frameRate: lottie.FrameRate.max, // For smooth animation
+                    ),
                   ),
                 ),
-              ),
-            )
-          : Stack(
+              )
+            : Stack(
               children: [
                 Obx(
                   () => GoogleMap(
@@ -530,7 +540,17 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
                   top: 48,
                   left: 16,
                   child: InkWell(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () {
+                      // If in searching or found state, go to home screen
+                      if (_searchState == SearchState.searching || 
+                          _searchState == SearchState.found) {
+                        // Navigate to home screen (pop all routes and go to home)
+                        Navigator.of(context).popUntil((route) => route.isFirst);
+                      } else {
+                        // In initial state, just go back to previous screen
+                        Navigator.pop(context);
+                      }
+                    },
                     borderRadius: BorderRadius.circular(24),
                     child: Container(
                       padding: const EdgeInsets.all(8),
@@ -594,6 +614,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
                 ),
               ],
             ),
+      ),
     );
   }
 

@@ -541,53 +541,58 @@ class _FoundTechnicianState extends State<FoundTechnician>
                     ]
                   : [],
             ),
-            child: OutlinedButton(
-              onPressed: _currentStatus != TechnicianStatus.arrived
-                  ? () => _showCancelDialog(context)
-                  : null,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: _currentStatus != TechnicianStatus.arrived
-                    ? Colors.red.shade700
-                    : Colors.grey.shade400,
-                side: BorderSide(
-                  color: _currentStatus != TechnicianStatus.arrived
-                      ? Colors.red.shade300
-                      : Colors.grey.shade300,
-                  width: 2,
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                backgroundColor: _currentStatus != TechnicianStatus.arrived
-                    ? Colors.red.shade50
-                    : Colors.grey.shade100,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.cancel_rounded,
+            child: Obx(
+              () => OutlinedButton(
+                onPressed: controller.isLoading.value == false && _currentStatus != TechnicianStatus.arrived
+                    ? () => _showCancelDialog(context)
+                    : null,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: _currentStatus != TechnicianStatus.arrived
+                      ? Colors.red.shade700
+                      : Colors.grey.shade400,
+                  side: BorderSide(
                     color: _currentStatus != TechnicianStatus.arrived
-                        ? Colors.red.shade700
-                        : Colors.grey.shade400,
-                    size: 20,
+                        ? Colors.red.shade300
+                        : Colors.grey.shade300,
+                    width: 2,
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    _currentStatus != TechnicianStatus.arrived
-                        ? "Cancel Booking"
-                        : "Cannot Cancel",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.3,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  backgroundColor: _currentStatus != TechnicianStatus.arrived
+                      ? Colors.red.shade50
+                      : Colors.grey.shade100,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.cancel_rounded,
                       color: _currentStatus != TechnicianStatus.arrived
                           ? Colors.red.shade700
                           : Colors.grey.shade400,
+                      size: 20,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Text(
+                      controller.isLoading.value == true
+                          ? 'Cancelling...'
+                      :
+                      _currentStatus != TechnicianStatus.arrived
+                          ? "Cancel Booking"
+                          : "Cannot Cancel",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.3,
+                        color: _currentStatus != TechnicianStatus.arrived
+                            ? Colors.red.shade700
+                            : Colors.grey.shade400,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -627,7 +632,9 @@ class _FoundTechnicianState extends State<FoundTechnician>
               ),
             ),
             ElevatedButton(
-              onPressed: () => controller.cancelBooking(jobId: widget.jobId, context: context),
+              onPressed: () => controller.cancelBooking(
+                jobId: widget.jobId,
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red.shade600,
                 foregroundColor: Colors.white,
