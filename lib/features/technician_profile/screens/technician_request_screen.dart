@@ -90,7 +90,7 @@ class _TechnicianRequestScreenState extends State<TechnicianRequestScreen> {
     
     try {
       final result = await _bookingController.getUserVehicles(currentUserId!);
-      print(result);
+      // print(result);
       
       if (result['success']) {
         setState(() {
@@ -1225,6 +1225,15 @@ class _TechnicianRequestScreenState extends State<TechnicianRequestScreen> {
     });
 
     try {
+      // Check if technician ID is available
+      if (widget.technicianId == null || widget.technicianId!.isEmpty) {
+        _showErrorDialog('Technician information is missing. Please go back and select a technician again.');
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+
       // Check if user is authenticated
       if (currentUserId == null) {
         _showErrorDialog('Please log in to continue.');
@@ -1246,7 +1255,7 @@ class _TechnicianRequestScreenState extends State<TechnicianRequestScreen> {
       // Validate required data
       final validationErrors = _bookingController.validateBookingData(
         userId: currentUserId!,
-        technicianId: widget.technicianId ?? 'tech_default_id',
+        technicianId: widget.technicianId!,
         description: _jobDescriptionController.text,
         scheduledDate: selectedDate,
         scheduledTime: selectedTimeSlot,
@@ -1269,9 +1278,10 @@ class _TechnicianRequestScreenState extends State<TechnicianRequestScreen> {
       final formattedTime = _bookingController.convertTo24HourFormat(selectedTimeSlot!);
 
       // Create booking request
+      print('Creating booking with technicianId: ${widget.technicianId}');
       final result = await _bookingController.createBookingRequest(
         userId: currentUserId!,
-        technicianId: widget.technicianId ?? 'tech_default_id',
+        technicianId: widget.technicianId!,
         serviceCategory: widget.serviceCategory ?? 'Vehicle Services',
         serviceSpecialization: selectedCar ?? 'General Repair',
         description: _jobDescriptionController.text,
