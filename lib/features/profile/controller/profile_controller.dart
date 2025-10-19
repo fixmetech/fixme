@@ -31,6 +31,7 @@ class ProfileController extends GetxController {
   final userVehicleProfiles = <VehicleProfile>[].obs;
   final vehicleCount = 0.obs;
   final selectedVehicle = Rxn<VehicleProfile>();
+  final selectedHome = Rxn<HomeProfile>();
 
   final userRepository = Get.put(UserRepository());
 
@@ -690,6 +691,29 @@ class ProfileController extends GetxController {
 
   void setCurrentVehicle(VehicleProfile? vehicle) {
     selectedVehicle.value = vehicle;
+  }
+
+  /// Set initial selected home to default or first home
+  void _setInitialSelectedHome() {
+    if (userHomeProfiles.isNotEmpty) {
+      selectedHome.value = getDefaultHome();
+    } else {
+      selectedHome.value = null;
+    }
+  }
+
+  /// Update selected home
+  void setSelectedHome(HomeProfile? home) {
+    selectedHome.value = home;
+  }
+
+  /// Get currently selected home (fallback to default if none selected)
+  HomeProfile? getSelectedHome() {
+    return selectedHome.value ?? getDefaultHome();
+  }
+
+  void setCurrentHome(HomeProfile? home) {
+    selectedHome.value = home;
   }
 
 }

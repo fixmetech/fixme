@@ -214,16 +214,18 @@ class _BookingsScreenState extends State<BookingsScreen>
 
   bool _matchesType(JobRequest job, String type) {
     final status = job.status.toLowerCase();
+    final estimateStatus = job.estimateStatus?.toLowerCase();
     switch (type) {
       case 'Ongoing':
         return status == 'technicianfinished' ||
             status == 'estimateapproved' ||
             status == 'searchingtechnician' ||
+            status == 'technicianconfirmed' ||
             status == 'confirmed';
       case 'Completed':
         return status == 'completed' || status == 'finished';
       case 'Cancelled':
-        return status == 'cancelled' || status == 'canceled';
+        return status == 'cancelled' || status == 'canceled' || estimateStatus == 'rejected';
       default:
         return false;
     }

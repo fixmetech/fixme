@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:fixme/models/vehicle_profile.dart';
 import 'package:fixme/models/home_profile.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -17,6 +19,8 @@ class JobRequest {
   final String? description;
   final DateTime createdAt;
   final DateTime? updatedAt;
+  final String? estimateStatus;
+  final int? estimatedCost;
 
   JobRequest({
     this.jobId,
@@ -33,6 +37,8 @@ class JobRequest {
     this.description,
     required this.createdAt,
     this.updatedAt,
+    this.estimateStatus,
+    this.estimatedCost,
   });
 
   // Convert from Map (API/Firestore data) to JobRequest object
@@ -57,6 +63,8 @@ class JobRequest {
       description: map['description'],
       createdAt: DateTime.parse(map['createdAt'] ?? DateTime.now().toIso8601String()),
       updatedAt: map['updatedAt'] != null ? DateTime.parse(map['updatedAt']) : null,
+      estimateStatus: map['estimateStatus'],
+      estimatedCost: map['estimatedCost']?.toInt(),
     );
   }
 
@@ -80,6 +88,8 @@ class JobRequest {
       'description': description,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
+      'estimateStatus': estimateStatus,
+      'estimatedCost': estimatedCost,
     };
   }
 
@@ -99,6 +109,8 @@ class JobRequest {
     String? description,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? estimateStatus,
+    int? estimatedCost,
   }) {
     return JobRequest(
       jobId: jobId ?? this.jobId,
@@ -115,6 +127,8 @@ class JobRequest {
       description: description ?? this.description,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      estimateStatus: estimateStatus ?? this.estimateStatus,
+      estimatedCost: estimatedCost ?? this.estimatedCost,
     );
   }
 }

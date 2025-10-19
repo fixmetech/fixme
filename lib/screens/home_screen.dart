@@ -23,6 +23,7 @@ class HomeScreen extends StatelessWidget {
             ServiceGrid(),
             RecentlyBooked(),
             FixMeBanner(),
+            SizedBox(height: 80),
           ],
         ),
       ),

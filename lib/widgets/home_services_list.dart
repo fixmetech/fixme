@@ -1,17 +1,18 @@
+import 'package:fixme/screens/services/home/asap_home_service_screen.dart';
 import 'package:flutter/material.dart';
 
 class HomeServicesList extends StatelessWidget {
   const HomeServicesList({super.key});
 
   final List<Map<String, dynamic>> services = const [
-    {"label": "Plumbing Support", "icon": Icons.plumbing, "color": Colors.blue},
-    {"label": "Carpentry Support", "icon": Icons.build, "color": Colors.orange},
-    {"label": "Electrical Support", "icon": Icons.electrical_services, "color": Colors.amber},
-    {"label": "Cleaning", "icon": Icons.cleaning_services, "color": Colors.green},
-    {"label": "Painting", "icon": Icons.format_paint, "color": Colors.purple},
-    {"label": "Landscaping", "icon": Icons.park, "color": Color.fromARGB(255, 45, 47, 47)},
-    {"label": "Appliance Repair", "icon": Icons.build_circle, "color": Colors.red},
-    {"label": "Renovation Services", "icon": Icons.construction, "color": Colors.indigo},
+    {"label": "Plumbing Support", "icon": Icons.plumbing, "color": Colors.blue, "category": "plumbing"},
+    {"label": "Carpentry Support", "icon": Icons.build, "color": Colors.orange, "category": "carpentry"},
+    {"label": "Electrical Support", "icon": Icons.electrical_services, "color": Colors.amber, "category": "electrical"},
+    {"label": "Cleaning", "icon": Icons.cleaning_services, "color": Colors.green, "category": "cleaning"},
+    {"label": "Painting", "icon": Icons.format_paint, "color": Colors.purple, "category": "painting"},
+    {"label": "Landscaping", "icon": Icons.park, "color": Color.fromARGB(255, 45, 47, 47), "category": "landscaping"},
+    {"label": "Appliance Repair", "icon": Icons.build_circle, "color": Colors.red, "category": "appliance"},
+    {"label": "Renovation Services", "icon": Icons.construction, "color": Colors.indigo, "category": "renovation"},
   ];
 
   @override
@@ -85,13 +86,12 @@ class HomeServicesList extends StatelessWidget {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(24),
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text("${service['label']} clicked"),
-                            backgroundColor: service['color'],
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AsapHomeServiceScreen(
+                              serviceType: service['label'],
+                              serviceCategory: service['category'],
                             ),
                           ),
                         );
