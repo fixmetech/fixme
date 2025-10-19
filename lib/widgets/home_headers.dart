@@ -1,10 +1,32 @@
+import 'package:fixme/features/profile/controller/profile_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class HomeHeaders extends StatelessWidget {
   const HomeHeaders({super.key});
 
+  /// Get greeting based on current time
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    
+    if (hour >= 5 && hour < 12) {
+      return "Good Morning";
+    } else if (hour >= 12 && hour < 17) {
+      return "Good Afternoon";
+    } else if (hour >= 17 && hour < 21) {
+      return "Good Evening";
+    } else {
+      return "Good Night";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Try to get profile controller if it exists, otherwise create one
+    final profileController = Get.isRegistered<ProfileController>()
+        ? Get.find<ProfileController>()
+        : Get.put(ProfileController());
+    
     return Stack(
       children: [
         // Background with curve
@@ -31,37 +53,58 @@ class HomeHeaders extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Greeting Texts
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    "Hello, Good Morning!",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    "Saduni",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
+              // Greeting Texts - Using cached data from ProfileController
+              Expanded(
+                child: Obx(() {
+                  final userName = profileController.fullName.value.isNotEmpty 
+                      ? profileController.fullName.value 
+                      : 'User';
+                  final greeting = _getGreeting();
+                  
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Hello, $greeting!",
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        userName,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  );
+                }),
               ),
-              const Spacer(),
 
-              // Profile Image
-              CircleAvatar(
-                radius: 24,
-                backgroundImage: NetworkImage(
-                  'https://wallpapers.com/images/hd/default-user-profile-icon-c8ljd88k8vow846e.png',
-                ),
-              ),
+              // Profile Image - Using cached data from ProfileController
+              Obx(() {
+                final profileImageUrl = profileController.profileImageUrl.value;
+                return CircleAvatar(
+                  radius: 24,
+                  backgroundColor: Colors.blue[100],
+                  backgroundImage: profileImageUrl.isNotEmpty
+                      ? NetworkImage(profileImageUrl)
+                      : null,
+                  child: profileImageUrl.isEmpty
+                      ? const Icon(
+                          Icons.person,
+                          size: 28,
+                          color: Colors.blue,
+                        )
+                      : null,
+                );
+              }),
             ],
           ),
         ),

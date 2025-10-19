@@ -3,9 +3,20 @@ import 'package:fixme/models/home_profile.dart';
 import 'package:fixme/models/vehicle_profile.dart';
 import 'package:fixme/utils/helper/helper_functions.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 
 class ProfileController extends GetxController {
   static ProfileController get instance => Get.find();
+
+  // Local storage instance
+  final _storage = GetStorage();
+  
+  // Storage keys
+  static const String _fullNameKey = 'user_full_name';
+  static const String _emailKey = 'user_email';
+  static const String _phoneKey = 'user_phone';
+  static const String _profileImageKey = 'user_profile_image';
+  static const String _lastSyncKey = 'user_last_sync';
 
   // Observable user data
   final fullName = ''.obs;
@@ -20,14 +31,53 @@ class ProfileController extends GetxController {
   final userVehicleProfiles = <VehicleProfile>[].obs;
   final vehicleCount = 0.obs;
   final selectedVehicle = Rxn<VehicleProfile>();
+  final selectedHome = Rxn<HomeProfile>();
 
   final userRepository = Get.put(UserRepository());
 
   @override
   void onInit() {
     super.onInit();
+    // Load cached data first for instant display
+    _loadCachedUserData();
+    // Then load fresh data from Firestore
     loadUserData();
     // loadUserHomes(); // Let the UI call this when needed
+  }
+
+  /// Load cached user data from local storage for instant display
+  void _loadCachedUserData() {
+    try {
+      fullName.value = _storage.read(_fullNameKey) ?? '';
+      email.value = _storage.read(_emailKey) ?? '';
+      phone.value = _storage.read(_phoneKey) ?? '';
+      profileImageUrl.value = _storage.read(_profileImageKey) ?? '';
+      
+      if (fullName.value.isNotEmpty) {
+        print('Loaded cached user data: ${fullName.value}');
+      }
+    } catch (e) {
+      print('Error loading cached user data: $e');
+    }
+  }
+
+  /// Save user data to local storage
+  void _cacheUserData({
+    required String name,
+    required String userEmail,
+    required String userPhone,
+    required String profileImage,
+  }) {
+    try {
+      _storage.write(_fullNameKey, name);
+      _storage.write(_emailKey, userEmail);
+      _storage.write(_phoneKey, userPhone);
+      _storage.write(_profileImageKey, profileImage);
+      _storage.write(_lastSyncKey, DateTime.now().toIso8601String());
+      print('Cached user data locally');
+    } catch (e) {
+      print('Error caching user data: $e');
+    }
   }
 
   /// Load user data from Firestore
@@ -40,15 +90,30 @@ class ProfileController extends GetxController {
         // Update observable values
         final firstName = userData['firstName'] ?? '';
         final lastName = userData['lastName'] ?? '';
-        fullName.value = '$firstName $lastName'.trim();
-        email.value = userData['email'] ?? '';
-        phone.value = userData['phone'] ?? '';
-        profileImageUrl.value = userData['profileImage'] ?? '';
+        final userName = '$firstName $lastName'.trim();
+        final userEmail = userData['email'] ?? '';
+        final userPhone = userData['phone'] ?? '';
+        final profileImage = userData['profileImage'] ?? '';
+        
+        fullName.value = userName;
+        email.value = userEmail;
+        phone.value = userPhone;
+        profileImageUrl.value = profileImage;
+        
+        // Cache the data locally
+        _cacheUserData(
+          name: userName,
+          userEmail: userEmail,
+          userPhone: userPhone,
+          profileImage: profileImage,
+        );
       }
     } catch (e) {
+      print('Error loading user data from Firestore: $e');
+      // If online fetch fails, cached data will still be displayed
       FixMeHelperFunctions.showErrorSnackBar(
-        'Error',
-        'Failed to load user data',
+        'Offline Mode',
+        'Using cached data. Connect to internet to sync latest changes.',
       );
     } finally {
       isLoading.value = false;
@@ -80,7 +145,7 @@ class ProfileController extends GetxController {
         final success = await userRepository.updateUserData(updateData);
 
         if (success) {
-          // Reload data to update UI
+          // Reload data to update UI and cache
           await loadUserData();
           FixMeHelperFunctions.showSuccessSnackBar(
             'Success',
@@ -96,7 +161,7 @@ class ProfileController extends GetxController {
     } catch (e) {
       FixMeHelperFunctions.showErrorSnackBar(
         'Error',
-        'Failed to update profile',
+        'Failed to update profile: $e',
       );
     } finally {
       isLoading.value = false;
@@ -135,6 +200,40 @@ class ProfileController extends GetxController {
   /// Refresh user data
   Future<void> refreshUserData() async {
     await loadUserData();
+  }
+
+  /// Clear cached user data (call on logout)
+  void clearCache() {
+    try {
+      _storage.remove(_fullNameKey);
+      _storage.remove(_emailKey);
+      _storage.remove(_phoneKey);
+      _storage.remove(_profileImageKey);
+      _storage.remove(_lastSyncKey);
+      
+      // Clear observable values
+      fullName.value = '';
+      email.value = '';
+      phone.value = '';
+      profileImageUrl.value = '';
+      
+      print('User cache cleared successfully');
+    } catch (e) {
+      print('Error clearing user cache: $e');
+    }
+  }
+
+  /// Get last sync time
+  DateTime? getLastSyncTime() {
+    try {
+      final lastSync = _storage.read(_lastSyncKey);
+      if (lastSync != null) {
+        return DateTime.parse(lastSync);
+      }
+    } catch (e) {
+      print('Error getting last sync time: $e');
+    }
+    return null;
   }
 
   /// Load user's homes
@@ -592,6 +691,29 @@ class ProfileController extends GetxController {
 
   void setCurrentVehicle(VehicleProfile? vehicle) {
     selectedVehicle.value = vehicle;
+  }
+
+  /// Set initial selected home to default or first home
+  void _setInitialSelectedHome() {
+    if (userHomeProfiles.isNotEmpty) {
+      selectedHome.value = getDefaultHome();
+    } else {
+      selectedHome.value = null;
+    }
+  }
+
+  /// Update selected home
+  void setSelectedHome(HomeProfile? home) {
+    selectedHome.value = home;
+  }
+
+  /// Get currently selected home (fallback to default if none selected)
+  HomeProfile? getSelectedHome() {
+    return selectedHome.value ?? getDefaultHome();
+  }
+
+  void setCurrentHome(HomeProfile? home) {
+    selectedHome.value = home;
   }
 
 }
