@@ -1,5 +1,8 @@
+import 'package:fixme/screens/search_screen.dart';
+import 'package:fixme/screens/service_center_search_screen.dart';
 import 'package:fixme/screens/services/home/asap_home_services.dart';
 import 'package:fixme/screens/services/vehicle/asap_vehicle_service.dart';
+import 'package:fixme/widgets/search_page/results_section.dart';
 import 'package:fixme/widgets/service_box.dart';
 import 'package:flutter/material.dart';
 
@@ -67,7 +70,7 @@ class ServiceGrid extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const AsapVehicleService(),
+                        builder: (context) => const SearchPage(initialSelectedService: 'Towing'),
                       ),
                     );
                   },
@@ -84,7 +87,7 @@ class ServiceGrid extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const AsapVehicleService(),
+                        builder: (context) => ServiceCenterSearchPage(),
                       ),
                     );
                   },
