@@ -1,8 +1,6 @@
-import 'package:fixme/screens/report_technician.dart';
 import 'package:fixme/screens/file_complaint_screen.dart';
 import 'package:fixme/utils/constants/size.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get_connect/http/src/utils/utils.dart';
 import 'technician_message_popup.dart';
 import 'technician_request_screen.dart';
 import 'package:fixme/features/technician_profile/controller/technician_profile_controller.dart';
@@ -365,7 +363,7 @@ class TechnicianProfile extends StatelessWidget {
                                   );
                                 }
 
-                                final totalStars = reviews.fold<int>(0, (sum, fb) => sum + (fb.rating ?? 0));
+                                final totalStars = reviews.fold<int>(0, (sum, fb) => sum + fb.rating);
                                 final avgRating = totalStars / reviews.length;
 
                                 return Column(
@@ -503,12 +501,11 @@ class TechnicianProfile extends StatelessWidget {
                   MaterialPageRoute(
                     builder: (context) => FileComplaintScreen(
                       selectedTechnician: {
-                        'id': technicianData.id ?? 104,
-                        'name': technicianData.name ?? 'kasun',
-                        'email': technicianData.email ?? 'kasun@gmail.com',
-                        'phone': technicianData.phone ?? '0712345678',
-                        'profession':
-                            technicianData.serviceCategory ?? 'carservice',
+                        'id': technicianData.id,
+                        'name': technicianData.name ?? 'Unknown Technician',
+                        'email': technicianData.email ?? '',
+                        'phone': technicianData.phone ?? '',
+                        'profession': technicianData.serviceCategory ?? 'Technician',
                         'badge': technicianData.badgeType ?? 'standard',
                         'rating': technicianData.rating ?? 0.0,
                       },
@@ -524,36 +521,7 @@ class TechnicianProfile extends StatelessWidget {
     );
   }
 
-  static Widget _buildStatColumn(String count, String label) {
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Column(
-        children: [
-          Text(
-            count,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   static Widget _buildReview(String name, String feedback, String timeAgo, int rating) {
     return Container(

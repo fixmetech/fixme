@@ -353,4 +353,76 @@ class ComplaintService {
       };
     }
   }
+
+  // Fetch completed bookings for customer-technician pair (for complaint filing)
+  static Future<Map<String, dynamic>> getCompletedBookingsForComplaint(
+    String customerId, 
+    String technicianId
+  ) async {
+    try {
+      // Get working base URL
+      final workingBaseUrl = await getWorkingBaseUrl();
+      if (workingBaseUrl == null) {
+        return {
+          'success': false,
+          'message': 'Unable to connect to server.',
+        };
+      }
+
+      // Construct the booking service URL correctly
+      // workingBaseUrl is like "http://10.0.2.2:3000/api/complaints"
+      // We need "http://10.0.2.2:3000/api/user/completed/..."
+      final baseApiUrl = workingBaseUrl.replaceAll('/complaints', '');
+      final url = Uri.parse('$baseApiUrl/user/completed/$customerId/$technicianId');
+      
+      final response = await http.get(
+        url,
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(Duration(seconds: 30));
+
+      // Check if response body is valid JSON
+      if (response.body.isEmpty) {
+        return {
+          'success': false,
+          'message': 'Empty response from server',
+        };
+      }
+
+      // Check for HTML error pages (like 404 pages)
+      if (response.body.startsWith('<!DOCTYPE html>') || response.body.startsWith('<html>')) {
+        return {
+          'success': false,
+          'message': 'Server returned HTML instead of JSON. Check if the endpoint exists.',
+        };
+      }
+
+      late Map<String, dynamic> responseData;
+      try {
+        responseData = json.decode(response.body);
+      } catch (e) {
+        return {
+          'success': false,
+          'message': 'Invalid JSON response from server: ${e.toString()}',
+        };
+      }
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'services': responseData['data'] ?? [],
+          'total': responseData['total'] ?? 0,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['error'] ?? responseData['message'] ?? 'Failed to fetch completed services',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+      };
+    }
+  }
 }
