@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/complaint_model.dart';
 import '../services/complaint_service.dart';
 
@@ -30,64 +31,13 @@ class _FileComplaintScreenState extends State<FileComplaintScreen> {
   bool isSubmitting = false;
   bool isConnected = false;
   bool isCheckingConnection = false;
+  bool isLoadingServices = false;
 
   final ImagePicker _picker = ImagePicker();
 
-  final List<Map<String, dynamic>> recentServices = [
-    {
-      'id': '1',
-      'name': 'Engine Repair',
-      'date': '2024-03-15',
-      'time': '10:00 AM',
-      'service': 'Engine Repair',
-      'price': 15000.0,
-      'technician': {
-        'id': 'tech1',
-        'name': 'Kamindu Mendis',
-        'email': 'kamindu@email.com',
-        'phone': '+94 77 234 5678',
-        'profession': 'Mechanic',
-        'badge': 'professional',
-        'rating': 4.2
-      }
-    },
-    {
-      'id': '2',
-      'name': 'Brake Service',
-      'date': '2024-03-10',
-      'time': '2:00 PM',
-      'service': 'Brake Service',
-      'price': 8000.0,
-      'technician': {
-        'id': 'tech2',
-        'name': 'Dumini Dehigoda',
-        'email': 'dumini@email.com',
-        'phone': '+94 77 456 7890',
-        'profession': 'Mechanic',
-        'badge': 'experience',
-        'rating': 4.8
-      }
-    },
-    {
-      'id': '3',
-      'name': 'Oil Change & Tune-up',
-      'date': '2024-03-08',
-      'time': '11:00 AM',
-      'service': 'Oil Change & Tune-up',
-      'price': 5000.0,
-      'technician': {
-        'id': 'tech3',
-        'name': 'Parami Jayasinghe',
-        'email': 'parami@email.com',
-        'phone': '+94 77 678 9012',
-        'profession': 'Mechanic',
-        'badge': 'probation',
-        'rating': 3.9
-      }
-    },
-  ];
-
+  List<Map<String, dynamic>> recentServices = [];
   Map<String, dynamic>? selectedServiceData;
+  Map<String, dynamic>? technicianData;
 
   @override
   void initState() {
@@ -96,7 +46,11 @@ class _FileComplaintScreenState extends State<FileComplaintScreen> {
       selectedServiceData = widget.selectedService;
       selectedService = '${widget.selectedService!['name']} - ${widget.selectedService!['service']} (${widget.selectedService!['date']})';
     }
+    if (widget.selectedTechnician != null) {
+      technicianData = widget.selectedTechnician;
+    }
     _checkServerConnection();
+    _loadCompletedServices();
   }
 
   Future<void> _checkServerConnection() async {
@@ -120,6 +74,102 @@ class _FileComplaintScreenState extends State<FileComplaintScreen> {
         isCheckingConnection = false;
       });
       _showError('Connection test failed: ${e.toString()}');
+    }
+  }
+
+  Future<void> _loadCompletedServices() async {
+    if (technicianData == null) {
+      return;
+    }
+    
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return;
+    }
+
+    setState(() {
+      isLoadingServices = true;
+    });
+
+    try {
+      final result = await ComplaintService.getCompletedBookingsForComplaint(
+        user.uid,
+        technicianData!['id'].toString(),
+      );
+
+      if (result['success']) {
+        setState(() {
+          recentServices = List<Map<String, dynamic>>.from(result['services'] ?? []);
+          isLoadingServices = false;
+        });
+      } else {
+        setState(() {
+          isLoadingServices = false;
+        });
+        _showError(result['message'] ?? 'Failed to load completed services');
+      }
+    } catch (e) {
+      setState(() {
+        isLoadingServices = false;
+      });
+      _showError('Error loading services: ${e.toString()}');
+    }
+  }
+
+  // Fetch user details from Firestore to get firstName and lastName
+  Future<Map<String, String>> _getUserDetails() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        return {
+          'name': 'Unknown User',
+          'email': '',
+          'phone': '',
+        };
+      }
+
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (userDoc.exists) {
+        final userData = userDoc.data() ?? {};
+        final firstName = userData['firstName'] ?? '';
+        final lastName = userData['lastName'] ?? '';
+        
+        // Concatenate first and last name
+        String fullName = '';
+        if (firstName.isNotEmpty && lastName.isNotEmpty) {
+          fullName = '$firstName $lastName';
+        } else if (firstName.isNotEmpty) {
+          fullName = firstName;
+        } else if (lastName.isNotEmpty) {
+          fullName = lastName;
+        } else {
+          fullName = user.displayName ?? 'Unknown User';
+        }
+
+        return {
+          'name': fullName,
+          'email': userData['email'] ?? user.email ?? '',
+          'phone': userData['phone'] ?? user.phoneNumber ?? '',
+        };
+      } else {
+        // Fallback to Firebase Auth data
+        return {
+          'name': user.displayName ?? 'Unknown User',
+          'email': user.email ?? '',
+          'phone': user.phoneNumber ?? '',
+        };
+      }
+    } catch (e) {
+      final user = FirebaseAuth.instance.currentUser;
+      return {
+        'name': user?.displayName ?? 'Unknown User',
+        'email': user?.email ?? '',
+        'phone': user?.phoneNumber ?? '',
+      };
     }
   }
 
@@ -741,47 +791,96 @@ class _FileComplaintScreenState extends State<FileComplaintScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Select Recent Service',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Select Recent Service',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
               ),
               SizedBox(height: 16),
-              ...recentServices.map((service) {
-                return ListTile(
-                  contentPadding: EdgeInsets.symmetric(vertical: 4),
-                  leading: CircleAvatar(
-                    backgroundColor: Color(0xFF6B46C1),
-                    child: Icon(Icons.car_repair, color: Colors.white, size: 20),
-                  ),
-                  title: Text(
-                    service['name']!,
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              if (isLoadingServices)
+                Center(
+                  child: Column(
                     children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Loading completed services...'),
+                    ],
+                  ),
+                )
+              else if (recentServices.isEmpty)
+                Center(
+                  child: Column(
+                    children: [
+                      Icon(Icons.history, size: 48, color: Colors.grey),
+                      SizedBox(height: 16),
                       Text(
-                        '${service['service']} - ${service['date']}',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        'No completed services found',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                        ),
                       ),
+                      SizedBox(height: 8),
                       Text(
-                        'Technician: ${service['technician']['name']}',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 11),
+                        'You can only file complaints for completed services with this technician.',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[500],
+                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
-                  onTap: () {
-                    setState(() {
-                      selectedServiceData = service;
-                      selectedService = '${service['name']} - ${service['service']} (${service['date']})';
-                    });
-                    Navigator.pop(context);
-                  },
-                );
-              }).toList(),
+                )
+              else
+                ...recentServices.map((service) {
+                  return Card(
+                    margin: EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+                      leading: CircleAvatar(
+                        backgroundColor: Color(0xFF6B46C1),
+                        child: Icon(Icons.car_repair, color: Colors.white, size: 20),
+                      ),
+                      title: Text(
+                        service['name'] ?? 'Service',
+                        style: TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${service['service'] ?? service['serviceCategory'] ?? 'Service'} - ${service['date']}',
+                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                          ),
+                          Text(
+                            'Price: Rs. ${service['price']?.toStringAsFixed(2) ?? '0.00'}',
+                            style: TextStyle(color: Colors.grey[600], fontSize: 11),
+                          ),
+                        ],
+                      ),
+                      trailing: Icon(Icons.chevron_right),
+                      onTap: () {
+                        setState(() {
+                          selectedServiceData = service;
+                          selectedService = '${service['name'] ?? service['serviceCategory'] ?? 'Service'} - ${service['service'] ?? service['serviceCategory'] ?? 'Service'} (${service['date']})';
+                        });
+                        Navigator.pop(context);
+                      },
+                    ),
+                  );
+                }).toList(),
             ],
           ),
         );
@@ -876,30 +975,33 @@ class _FileComplaintScreenState extends State<FileComplaintScreen> {
         return;
       }
 
-      // Create complaint model
+      // Fetch user details from Firestore
+      final userDetails = await _getUserDetails();
+
+      // Create complaint model with real data
       final complaint = ComplaintModel(
         customer: CustomerInfo(
-          name: user.displayName ?? 'Unknown User',
-          email: user.email ?? '',
-          phone: user.phoneNumber ?? '',
+          name: userDetails['name']!,
+          email: userDetails['email']!,
+          phone: userDetails['phone']!,
           userId: user.uid,
           avatar: user.photoURL ?? '',
         ),
         technician: TechnicianInfo(
-          name: selectedServiceData!['technician']['name'],
-          email: selectedServiceData!['technician']['email'],
-          phone: selectedServiceData!['technician']['phone'],
-          profession: selectedServiceData!['technician']['profession'],
-          badge: selectedServiceData!['technician']['badge'],
-          rating: selectedServiceData!['technician']['rating'].toDouble(),
-          userId: selectedServiceData!['technician']['id'],
+          name: technicianData != null ? technicianData!['name'] : (selectedServiceData!['technician']?['name'] ?? 'Unknown Technician'),
+          email: technicianData != null ? technicianData!['email'] : (selectedServiceData!['technician']?['email'] ?? ''),
+          phone: technicianData != null ? technicianData!['phone'] : (selectedServiceData!['technician']?['phone'] ?? ''),
+          profession: technicianData != null ? technicianData!['profession'] : (selectedServiceData!['serviceCategory'] ?? 'Technician'),
+          badge: technicianData != null ? technicianData!['badge'] : 'standard',
+          rating: technicianData != null ? (technicianData!['rating'] ?? 0.0).toDouble() : 0.0,
+          userId: technicianData != null ? technicianData!['id'].toString() : selectedServiceData!['technicianId'],
         ),
         service: ServiceInfo(
-          name: selectedServiceData!['name'],
+          name: selectedServiceData!['name'] ?? selectedServiceData!['serviceSpecialization'] ?? selectedServiceData!['serviceCategory'] ?? 'Service',
           date: selectedServiceData!['date'],
           time: selectedServiceData!['time'],
-          price: selectedServiceData!['price'].toDouble(),
-          serviceId: selectedServiceData!['id'],
+          price: (selectedServiceData!['price'] ?? selectedServiceData!['priceEstimate'] ?? 0).toDouble(),
+          serviceId: selectedServiceData!['id'] ?? selectedServiceData!['bookingId'],
         ),
         complaint: ComplaintDetails(
           title: titleController.text.trim(),
