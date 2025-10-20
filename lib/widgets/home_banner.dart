@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fixme/widgets/translatable_text.dart';
 
 class FixMeBanner extends StatelessWidget {
   const FixMeBanner({super.key});
@@ -34,7 +35,7 @@ class FixMeBanner extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                TranslatableText(
                   "Welcome to FixMe",
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         color: Colors.blue[800],
@@ -42,7 +43,7 @@ class FixMeBanner extends StatelessWidget {
                       ),
                 ),
                 const SizedBox(height: 6),
-                Text(
+                TranslatableText(
                   "Your one-stop solution for home and vehicle services.\nFind help anytime, anywhere!",
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.grey[700],

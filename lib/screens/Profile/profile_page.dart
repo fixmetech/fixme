@@ -7,6 +7,8 @@ import 'package:fixme/screens/Profile/customer_profile_security.dart';
 import 'package:fixme/screens/Profile/customer_profile_support.dart';
 import 'package:fixme/screens/Profile/customer_vehicle_profiles.dart';
 import 'package:fixme/screens/Profile/edit_profile_page.dart';
+import 'package:fixme/widgets/language_selector.dart';
+import 'package:fixme/widgets/translatable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:fixme/utils/constants/size.dart';
@@ -196,7 +198,7 @@ class CustomerProfilePage extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                TranslatableText(
                   'Contact Information',
                   style: TextStyle(
                     fontSize: 18,
@@ -255,7 +257,7 @@ class CustomerProfilePage extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            TranslatableText(
               label,
               style: TextStyle(
                 fontSize: 12,
@@ -334,8 +336,46 @@ class CustomerProfilePage extends StatelessWidget {
             Colors.red[600]!,
             CustomerProfileSecurity(),
           ),
+          _buildDivider(),
+          _buildLanguageMenuItem(),
         ],
       ),
+    );
+  }
+
+  Widget _buildLanguageMenuItem() {
+    return Builder(
+      builder: (BuildContext context) {
+        return ListTile(
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.teal.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.language, color: Colors.teal, size: 20),
+          ),
+          title: const TranslatableText(
+            'Language',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+          ),
+          trailing: const Icon(
+            Icons.arrow_forward_ios,
+            size: 16,
+            color: Colors.grey,
+          ),
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (context) => const LanguageSelectorDialog(),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -354,7 +394,7 @@ class CustomerProfilePage extends StatelessWidget {
         ),
         child: Icon(icon, color: iconColor, size: 20),
       ),
-      title: Text(
+      title: TranslatableText(
         title,
         style: TextStyle(
           fontSize: 16,

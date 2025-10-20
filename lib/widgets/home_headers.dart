@@ -1,4 +1,6 @@
 import 'package:fixme/features/profile/controller/profile_controller.dart';
+import 'package:fixme/widgets/translatable_text.dart';
+import 'package:fixme/widgets/language_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -18,6 +20,13 @@ class HomeHeaders extends StatelessWidget {
     } else {
       return "Good Night";
     }
+  }
+
+  void _showLanguageSelector(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const LanguageSelectorDialog(),
+    );
   }
 
   @override
@@ -45,7 +54,7 @@ class HomeHeaders extends StatelessWidget {
           ),
         ),
 
-        // Content (text + image)
+        // Content (text + image + language button)
         Positioned(
           top: 50,
           left: 16,
@@ -64,7 +73,7 @@ class HomeHeaders extends StatelessWidget {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      TranslatableText(
                         "Hello, $greeting!",
                         style: const TextStyle(
                           fontSize: 16,
@@ -85,6 +94,26 @@ class HomeHeaders extends StatelessWidget {
                     ],
                   );
                 }),
+              ),
+
+              // Language Selector Button
+              Container(
+                margin: const EdgeInsets.only(right: 12),
+                child: GestureDetector(
+                  onTap: () => _showLanguageSelector(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.language,
+                      size: 20,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
               ),
 
               // Profile Image - Using cached data from ProfileController
