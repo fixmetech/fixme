@@ -6,8 +6,9 @@ import '../widgets/search_page/filter_section.dart';
 import '../widgets/search_page/results_section.dart';
 
 class SearchPage extends StatefulWidget {
-  @override
-  const SearchPage({super.key});
+  final String? initialSelectedService;
+
+  const SearchPage({super.key, this.initialSelectedService});
   _SearchPageState createState() => _SearchPageState();
 }
 
@@ -19,6 +20,14 @@ class _SearchPageState extends State<SearchPage> {
   
   // Add a callback to reset filters
   VoidCallback? _resetFiltersCallback;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialSelectedService != null) {
+      selectedService = widget.initialSelectedService!;
+    }
+  }
 
   void _onServiceSelected(String service) {
     setState(() {
@@ -33,10 +42,18 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void _onFiltersChanged(List<String> filters, Map<String, String> values) {
+    print('SearchScreen _onFiltersChanged called:');
+    print('  Old selectedFilters: $selectedFilters');
+    print('  New selectedFilters: $filters');
+    print('  Old filterValues: $filterValues');
+    print('  New filterValues: $values');
+    
     setState(() {
       selectedFilters = filters;
       filterValues = values;
     });
+    
+    print('  State updated successfully');
     // Here you can implement additional filtering logic if needed
     // The ResultsSection will handle the display logic
   }

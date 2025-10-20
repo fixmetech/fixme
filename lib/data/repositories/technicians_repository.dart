@@ -47,7 +47,7 @@ class TechniciansRepository extends GetxController {
   /// Create a new job request
   Future<Map<String, dynamic>> createJobRequest(Map<String, dynamic> jobData) async {
     try {
-      final response = await FixMeHttpHelper.post('api/jobs/create', jobData);
+      final response = await FixMeHttpHelper.post('api/jobs/findNearestTechnician', jobData);
       
       if (response['success'] == true) {
         print('Job request created successfully');

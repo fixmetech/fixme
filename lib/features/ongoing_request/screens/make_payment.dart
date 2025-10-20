@@ -1,18 +1,29 @@
-import 'package:fixme/features/ongoing_request/completed_job.dart';
+import 'package:fixme/features/ongoing_request/screens/completed_job.dart';
+import 'package:fixme/mainScreen.dart';
+import 'package:fixme/services/stripe_service.dart';
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+
+// Controller
+import 'package:fixme/features/ongoing_request/controller/make_payment_controller.dart';
 
 class MakePaymentScreen extends StatefulWidget {
-  final String pin;
-  final int requestId;
-  final int estimatedCost;
-  final String finishOtp;
+  /// REQUIRED: Firestore/DB job id used to load the final/finish OTP
+  final String jobId;
+
+  /// Optional UI fallbacks (used until live data loads)
+  final String? pin;
+  final int? requestId;
+  final int? estimatedCost;
+  final String? finishOtp;
 
   const MakePaymentScreen({
     Key? key,
-    this.pin = "434024",
-    this.requestId = 16,
-    this.estimatedCost = 5000,
-    this.finishOtp = "205699",
+    required this.jobId,      // ← dynamic id required
+    this.pin,
+    this.requestId,
+    this.estimatedCost,
+    this.finishOtp,
   }) : super(key: key);
 
   @override
@@ -22,8 +33,154 @@ class MakePaymentScreen extends StatefulWidget {
 class _MakePaymentScreenState extends State<MakePaymentScreen> {
   String? selectedPaymentMethod;
 
+  // Controller + live OTP holder
+  final MakePaymentController _controller = MakePaymentController();
+  String? _liveFinishOtp;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFinishPin();
+  }
+
+  Future<void> _loadFinishPin() async {
+    try {
+      // Optional: include idToken if backend enforces auth
+      // final idToken = await FirebaseAuth.instance.currentUser?.getIdToken();
+
+      final res = await _controller.getFinishPin(
+        jobId: widget.jobId,
+        // idToken: idToken,
+      );
+      if (!mounted) return;
+
+      if (res.ok && res.finishPin != null) {
+        setState(() {
+          _liveFinishOtp = res.finishPin!.toString();
+        });
+      } else {
+        // Not fatal — keep fallback and optionally inform user
+        debugPrint('Finish pin fetch failed: ${res.message}');
+      }
+    } catch (e) {
+      debugPrint('Finish pin fetch error: $e');
+    }
+  }
+
+  void _showQrCodeDialog() {
+    // Use the same cost value (fallback to 0 if null)
+    final cost = widget.estimatedCost ?? 0;
+
+    // Generate payment data for QR code
+    final qrData = {
+      'requestId': widget.requestId,
+      'amount': cost,
+      'jobId': widget.jobId,
+    }.toString();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Scan to Pay',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: QrImageView(
+                        data: qrData,
+                        version: QrVersions.auto,
+                        size: 200.0,
+                        backgroundColor: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CompletedJobScreen(
+                              jobId: widget.jobId,                               // ← REQUIRED
+                              requestId: widget.requestId ?? 0,                 // optional UI
+                              pin: widget.pin ?? '—',                           // optional UI
+                              estimatedCost: widget.estimatedCost ?? 0,         // optional UI
+                              finishOtp: _liveFinishOtp ?? widget.finishOtp ?? '—',
+                              paymentMethod: 'QR',
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        'Done',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  color: Colors.grey[600],
+                  iconSize: 24,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final displayRequestId = widget.requestId ?? 0;
+    final displayPin = widget.pin ?? '—';
+    final displayEstimated = widget.estimatedCost ?? 0;
+    final displayFinishOtp = _liveFinishOtp ?? widget.finishOtp ?? '—';
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -31,10 +188,18 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            // Navigate to MainScreen with Activities tab
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => const MainScreen(),
+              ),
+              (route) => false,
+            );
+          },
         ),
         title: Text(
-          'Job Details: #${widget.requestId}',
+          'Job Details: #$displayRequestId',
           style: const TextStyle(
             color: Colors.black,
             fontSize: 18,
@@ -54,8 +219,9 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
                 isCompleted: true,
                 isActive: false,
                 title: 'Share PIN',
-                description: 'Share this PIN with the technician to verify their arrival.',
-                child: _PinBox(pin: widget.pin),
+                description:
+                'Share this PIN with the technician to verify their arrival.',
+                child: _PinBox(pin: displayPin),
               ),
               const SizedBox(height: 24),
 
@@ -66,7 +232,7 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
                 isActive: false,
                 title: 'Estimated Job Cost',
                 description: 'You accepted the estimated job cost.',
-                child: _CostSection(cost: widget.estimatedCost),
+                child: _CostSection(cost: displayEstimated),
               ),
               const SizedBox(height: 24),
 
@@ -80,14 +246,17 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Step 4: Finish Job (Completed)
+              // Step 4: Finish Job (Completed) — show live finish OTP if fetched
               _buildStepItem(
-                stepNumber: 4, // <-- Fix: should be 4!
+                stepNumber: 4,
                 title: 'Finish Job',
-                description: 'Finalize the Job by sharing an OTP with the technician.',
+                description:
+                'Finalize the Job by sharing an OTP with the technician.',
                 isCompleted: true,
                 isActive: false,
-                child: _FinishOtpSection(finishOtp: widget.finishOtp),
+                child: _FinishOtpSection(
+                  finishOtp: displayFinishOtp,
+                ),
               ),
               const SizedBox(height: 24),
 
@@ -109,21 +278,29 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
                             setState(() {
                               selectedPaymentMethod = 'Cash';
                             });
-                            // Delay for button effect then navigate
                             Future.delayed(const Duration(milliseconds: 100), () {
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => CompletedJobScreen(),
+                                  builder: (context) => CompletedJobScreen(
+                                    jobId: widget.jobId,                             // ← REQUIRED
+                                    requestId: widget.requestId ?? 0,               // optional UI
+                                    pin: widget.pin ?? '—',                         // optional UI
+                                    estimatedCost: widget.estimatedCost ?? 0,       // optional UI
+                                    finishOtp: _liveFinishOtp ?? widget.finishOtp ?? '—',
+                                    paymentMethod: 'Cash',
+                                  ),
                                 ),
                               );
                             });
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: selectedPaymentMethod == 'Cash'
+                            backgroundColor:
+                            selectedPaymentMethod == 'Cash'
                                 ? Colors.green
                                 : Colors.white,
-                            foregroundColor: selectedPaymentMethod == 'Cash'
+                            foregroundColor:
+                            selectedPaymentMethod == 'Cash'
                                 ? Colors.white
                                 : Colors.black87,
                             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -147,19 +324,22 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      // Card Button (just highlight selection, no navigation yet)
+                      // Card Button
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
+                            StripeService.instance.makePayment();
                             setState(() {
                               selectedPaymentMethod = 'Card';
                             });
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: selectedPaymentMethod == 'Card'
+                            backgroundColor:
+                            selectedPaymentMethod == 'Card'
                                 ? Colors.green
                                 : Colors.white,
-                            foregroundColor: selectedPaymentMethod == 'Card'
+                            foregroundColor:
+                            selectedPaymentMethod == 'Card'
                                 ? Colors.white
                                 : Colors.black87,
                             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -175,6 +355,45 @@ class _MakePaymentScreenState extends State<MakePaymentScreen> {
                           ),
                           child: const Text(
                             '💳 Card',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // QR Button
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              selectedPaymentMethod = 'QR';
+                            });
+                            _showQrCodeDialog();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                            selectedPaymentMethod == 'QR'
+                                ? Colors.green
+                                : Colors.white,
+                            foregroundColor:
+                            selectedPaymentMethod == 'QR'
+                                ? Colors.white
+                                : Colors.black87,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6),
+                              side: BorderSide(
+                                color: selectedPaymentMethod == 'QR'
+                                    ? Colors.green
+                                    : Colors.grey[300]!,
+                              ),
+                            ),
+                            elevation: selectedPaymentMethod == 'QR' ? 2 : 0,
+                          ),
+                          child: const Text(
+                            '📱 QR',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -298,16 +517,16 @@ class _CostSection extends StatelessWidget {
   final int cost;
   const _CostSection({required this.cost});
   @override
-   Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          children: [
+          children: const [
             Flexible(
               child: Text(
                 'Accepted Estimated Price:',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: Colors.black87,
@@ -315,8 +534,8 @@ class _CostSection extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const SizedBox(width: 6),
-            const Text(
+            SizedBox(width: 6),
+            Text(
               '✅',
               style: TextStyle(fontSize: 20),
             ),

@@ -1,4 +1,5 @@
 import 'package:fixme/widgets/recent_booking_card.dart';
+import 'package:fixme/widgets/translatable_text.dart';
 import 'package:flutter/material.dart';
 
 class RecentlyBooked extends StatelessWidget {
@@ -15,7 +16,7 @@ class RecentlyBooked extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: const [
-              Text(
+              TranslatableText(
                 'Recently Booked',
                 style: TextStyle(
                   fontSize: 20,

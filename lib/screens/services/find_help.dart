@@ -7,11 +7,13 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:lottie/lottie.dart' as lottie;
 import 'package:fixme/screens/services/controllers/map_controllers.dart';
 import 'package:fixme/screens/services/found_technician.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FindHelp extends StatefulWidget {
   final JobRequest? jobRequest;
+  final SearchState? initialState;
 
-  const FindHelp({super.key, this.jobRequest});
+  const FindHelp({super.key, this.jobRequest, this.initialState,});
 
   @override
   State<FindHelp> createState() => _FindHelpState();
@@ -32,6 +34,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
   SearchState _searchState = SearchState.initial;
   Map<String, dynamic>? _foundTechnician;
   Map<String, dynamic>? _nearestTechnician;
+  String? _jobId;
   bool _showCenterMarker = true;
   Set<Polyline> _polylines = {};
 
@@ -43,11 +46,28 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _jobRequest = widget.jobRequest;
+
+    // Set initial state if provided
+    if (widget.initialState != null) {
+      _searchState = widget.initialState!;
+      _showCenterMarker = _searchState == SearchState.initial;
+
+      // If we have a job request with job ID, set it
+      if (_jobRequest?.jobId != null) {
+        _jobId = _jobRequest!.jobId;
+      }
+    }
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
     _getCurrentLocation();
+    
+    // If starting in found state, we need to setup the technician data
+    if (_searchState == SearchState.found && _jobRequest != null) {
+      _setupFoundState();
+    }
   }
 
   @override
@@ -59,6 +79,136 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
 
   // Getter for job request (useful for debugging or accessing from other widgets)
   JobRequest? get currentJobRequest => _jobRequest;
+
+  /// Fetch technician information from Firestore using technician ID
+  Future<Map<String, dynamic>?> _fetchTechnicianInfo(String technicianId) async {
+    try {
+      debugPrint('Fetching technician details for ID: $technicianId');
+      final technicianData = await technicianRepository.getTechnicianDetails(technicianId);
+      
+      if (technicianData != null) {
+        debugPrint('Technician details fetched successfully');
+        // Transform the data to match the expected format
+        return {
+          'id': technicianId,
+          'name': technicianData['name'] ?? 'Unknown Technician',
+          'phone': technicianData['phone'] ?? technicianData['phoneNumber'] ?? '',
+          'rating': technicianData['rating']?.toString() ?? '4.5',
+          'completedJobs': technicianData['completedJobs']?.toString() ?? 
+                          technicianData['jobsCompleted']?.toString() ?? '0',
+          'specialization': technicianData['specialization'] ?? 
+                           technicianData['serviceCategory'] ?? 
+                           _jobRequest?.serviceCategory ?? 'General Technician',
+          'profilePicture': technicianData['profilePicture'],
+          'availability': technicianData['availability'],
+          'location': technicianData['location'],
+        };
+      }
+      
+      debugPrint('No technician data found');
+      return null;
+    } catch (e) {
+      debugPrint('Error fetching technician info: $e');
+      return null;
+    }
+  }
+
+  /// Setup the found state when coming from bookings screen
+  void _setupFoundState() async {
+    // Wait for location to be available
+    while (_currentPosition == null) {
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+    
+    setState(() {
+      _showCenterMarker = false;
+      _selectedLocation = _jobRequest?.customerLocation ?? _currentPosition;
+    });
+    
+    // Add user location marker
+    await _addUserLocationMarker();
+    
+    // Add technician markers
+    await _addTechnicianMarkers();
+    
+    // Fetch technician info from Firestore if we have technician ID
+    if (_jobRequest?.technicianId != null) {
+      final technicianData = await _fetchTechnicianInfo(_jobRequest!.technicianId!);
+      
+      if (technicianData != null) {
+        setState(() {
+          _foundTechnician = technicianData;
+        });
+        
+        // If technician has location data, try to draw route and add marker
+        if (technicianData['location'] != null) {
+          try {
+            final location = technicianData['location'];
+            LatLng? techLocation;
+            
+            // Handle different location formats
+            if (location is GeoPoint) {
+              techLocation = LatLng(location.latitude, location.longitude);
+            } else if (location is Map && location['latitude'] != null) {
+              techLocation = LatLng(
+                location['latitude'] as double,
+                location['longitude'] as double,
+              );
+            }
+            
+            if (techLocation != null) {
+              await _addSelectedTechnicianMarker(techLocation, technicianData);
+              await _drawRouteToTechnician(techLocation);
+              await _focusCameraOnRoute(_selectedLocation!, techLocation);
+            }
+          } catch (e) {
+            debugPrint('Error processing technician location: $e');
+          }
+        }
+      } else {
+        // Fallback to basic info from JobRequest if fetch fails
+        setState(() {
+          _foundTechnician = {
+            'id': _jobRequest!.technicianId ?? '',
+            'name': _jobRequest!.technicianName ?? 'Technician',
+            'phone': _jobRequest!.technicianPhone ?? '',
+            'rating': '4.5',
+            'completedJobs': '0',
+            'specialization': _jobRequest!.serviceCategory,
+          };
+        });
+      }
+      
+      // Ensure jobId is set
+      if (_jobId == null && _jobRequest!.jobId != null) {
+        setState(() {
+          _jobId = _jobRequest!.jobId;
+        });
+      }
+    }
+    
+    // Move camera to customer location if available
+    if (_selectedLocation != null) {
+      try {
+        await mapController.animateCamera(
+          CameraUpdate.newLatLngZoom(_selectedLocation!, 15.5),
+        );
+      } catch (e) {
+        debugPrint('Error moving camera: $e');
+      }
+    }
+    
+    // Animate to appropriate sheet size
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _dragController.animateTo(
+          0.6,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
 
   Future<void> _getCurrentLocation() async {
     debugPrint('Getting current location...');
@@ -122,18 +272,7 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
 
     setState(() {
       _searchState = SearchState.found;
-      _foundTechnician = {
-        'name': 'Abishek Korala',
-        'rating': 4.8,
-        'experience': '3 years',
-        'specialization': 'Car Repair & Maintenance',
-        'distance': '2.8 km away',
-        'phone': '+94743383502',
-        'image': 'https://via.placeholder.com/80',
-        'estimatedArrival': '15-20 minutes',
-        'price': '\$45-65',
-        'completedJobs': 245,
-      };
+      _nearestTechnician = mapControllerInstance.nearByTechnicians.first;
     });
 
     // Auto-expand the bottom sheet when technician is found
@@ -151,18 +290,78 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
       print('Sending job request to backend...');
       print('Job Request Data: ${_jobRequest!.toMap()}');
 
+      // Update job request with current address
+      _jobRequest = _jobRequest!.copyWith(
+        customerAddress: "colomnobo, sri lanka", // Example address
+      );
       // Send job request to backend
       final response = await technicianRepository.createJobRequest(
         _jobRequest!.toMap(),
       );
 
+      print('Response from backend: $response');
+      print('Response type: ${response.runtimeType}');
+      print('Response keys: ${response.keys.toList()}');
+
+      if (response['data'] != null) {
+        print('Data keys: ${response['data'].keys.toList()}');
+        if (response['data']['ConfirmedJobRequest'] != null) {
+          print(
+            'ConfirmedJobRequest keys: ${response['data']['ConfirmedJobRequest'].keys.toList()}',
+          );
+        }
+      }
+
       if (response['success'] == true) {
-        _jobRequest = _jobRequest!.copyWith(
-          jobId: response['data']['jobId'] ?? response['jobId'],
-        );
-        print(
-          'Job request created successfully with ID: ${_jobRequest!.jobId}',
-        );
+        // Handle different possible response structures
+        String? jobId;
+        Map<String, dynamic>? technicianData;
+
+        // Try to extract job ID from various possible locations
+        if (response['data'] != null) {
+          final data = response['data'];
+          // Check for jobRequest structure
+          if (data['jobRequest'] != null) {
+            jobId = data['jobRequest']['jobId']?.toString();
+          }
+
+          // Map technician data correctly from backend response
+          if (data['technician'] != null) {
+            final backendTechnician = data['technician'];
+            technicianData = {
+              'name': backendTechnician['name'] ?? 'Unknown Technician',
+              'rating': backendTechnician['rating']?.toString() ?? '0.0',
+              'completedJobs':
+                  backendTechnician['completedJobs']?.toString() ?? '0',
+              'specialization':
+                  backendTechnician['specialization'] ?? 'General Technician',
+              'distance': data['distance']?.toString() ?? 'Unknown distance',
+              'phone':
+                  backendTechnician['phone'] ??
+                  backendTechnician['phoneNumber'] ??
+                  '',
+              // Include any other fields that might be useful
+              'id':
+                  backendTechnician['id'] ?? backendTechnician['technicianId'],
+              'location': backendTechnician['location'],
+              'availability': backendTechnician['availability'],
+            };
+          }
+        }
+
+        _jobRequest = _jobRequest!.copyWith(jobId: jobId);
+
+        setState(() {
+          _searchState = SearchState.found;
+          if (technicianData != null) {
+            _foundTechnician = technicianData;
+          }
+          if (jobId != null) {
+            _jobId = jobId;
+          }
+        });
+
+        print('Job request created successfully with ID: $jobId');
       } else {
         print('Failed to create job request: ${response['message']}');
         // TODO: Show error message to user
@@ -413,145 +612,171 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _currentPosition == null
-          ? Center(
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                child: SizedBox(
-                  width: 120,
-                  height: 120,
-                  child: lottie.Lottie.asset(
-                    'assets/animations/mapload.json',
-                    repeat: true,
-                    animate: true,
-                    fit: BoxFit.contain,
-                    frameRate: lottie.FrameRate.max, // For smooth animation
-                  ),
-                ),
-              ),
-            )
-          : Stack(
-              children: [
-                Obx(
-                  () => GoogleMap(
-                    onMapCreated: _onMapCreated,
-                    initialCameraPosition: CameraPosition(
-                      target: _currentPosition!,
-                      zoom: 15.5,
-                    ),
-                    markers: {..._markers, ...mapControllerInstance.markers},
-                    polylines: _polylines,
-                    myLocationEnabled: true,
-                    myLocationButtonEnabled: false,
-                    compassEnabled: false,
-                    onCameraMove: (position) {
-                      setState(() {
-                        _selectedLocation = position.target;
-                      });
-                    },
-                    onCameraIdle: () {
-                      if (_selectedLocation != null &&
-                          _searchState == SearchState.initial) {
-                        _getAddressFromLatLng(_selectedLocation!);
-                      }
-                    },
-                  ),
-                ),
-
-                // Location button
-                Positioned(
-                  bottom: FixMeSizes.bottomNavHeight + 190,
-                  right: 16,
-                  child: FloatingActionButton(
-                    mini: true,
-                    backgroundColor: Colors.white,
-                    onPressed: () async {
-                      await mapControllerInstance.moveToCurrentLocation();
-                    },
-                    child: const Icon(Icons.my_location, color: Colors.blue),
-                  ),
-                ),
-
-                // Center marker - only show in initial state
-                if (_showCenterMarker)
-                  const Center(
-                    child: Icon(
-                      Icons.person_pin_circle,
-                      size: 45,
-                      color: Colors.red,
+    return WillPopScope(
+      onWillPop: () async {
+        // If in searching or found state, go to home screen
+        if (_searchState == SearchState.searching ||
+            _searchState == SearchState.found) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+          return false; // Prevent default back action
+        }
+        return true; // Allow default back action for initial state
+      },
+      child: Scaffold(
+        body: _currentPosition == null
+            ? Center(
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  child: SizedBox(
+                    width: 120,
+                    height: 120,
+                    child: lottie.Lottie.asset(
+                      'assets/animations/mapload.json',
+                      repeat: true,
+                      animate: true,
+                      fit: BoxFit.contain,
+                      frameRate: lottie.FrameRate.max, // For smooth animation
                     ),
                   ),
-
-                // Back button
-                Positioned(
-                  top: 48,
-                  left: 16,
-                  child: InkWell(
-                    onTap: () => Navigator.pop(context),
-                    borderRadius: BorderRadius.circular(24),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 6,
-                            offset: Offset(0, 3),
-                          ),
-                        ],
+                ),
+              )
+            : Stack(
+                children: [
+                  Obx(
+                    () => GoogleMap(
+                      onMapCreated: _onMapCreated,
+                      initialCameraPosition: CameraPosition(
+                        target: _currentPosition!,
+                        zoom: 15.5,
                       ),
-                      child: const Icon(Icons.arrow_back, color: Colors.black),
+                      markers: {..._markers, ...mapControllerInstance.markers},
+                      polylines: _polylines,
+                      myLocationEnabled: true,
+                      myLocationButtonEnabled: false,
+                      compassEnabled: false,
+                      onCameraMove: (position) {
+                        setState(() {
+                          _selectedLocation = position.target;
+                        });
+                      },
+                      onCameraIdle: () {
+                        if (_selectedLocation != null &&
+                            _searchState == SearchState.initial) {
+                          _getAddressFromLatLng(_selectedLocation!);
+                        }
+                      },
                     ),
                   ),
-                ),
 
-                // Draggable Bottom Sheet
-                DraggableScrollableSheet(
-                  controller: _dragController,
-                  initialChildSize: _getInitialSize(),
-                  minChildSize: _getMinSize(),
-                  maxChildSize: _getMaxSize(),
-                  builder: (context, scrollController) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(24),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 10,
-                          ),
-                        ],
+                  // Location button
+                  Positioned(
+                    bottom: FixMeSizes.bottomNavHeight + 190,
+                    right: 16,
+                    child: FloatingActionButton(
+                      mini: true,
+                      backgroundColor: Colors.white,
+                      onPressed: () async {
+                        await mapControllerInstance.moveToCurrentLocation();
+                      },
+                      child: const Icon(Icons.my_location, color: Colors.blue),
+                    ),
+                  ),
+
+                  // Center marker - only show in initial state
+                  if (_showCenterMarker)
+                    const Center(
+                      child: Icon(
+                        Icons.person_pin_circle,
+                        size: 45,
+                        color: Colors.red,
                       ),
-                      child: SingleChildScrollView(
-                        controller: scrollController,
-                        child: Column(
-                          children: [
-                            // Drag handle
-                            Container(
-                              margin: const EdgeInsets.symmetric(vertical: 8),
-                              height: 4,
-                              width: 40,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[300],
-                                borderRadius: BorderRadius.circular(2),
-                              ),
+                    ),
+
+                  // Back button
+                  Positioned(
+                    top: 48,
+                    left: 16,
+                    child: InkWell(
+                      onTap: () {
+                        // If in searching or found state, go to home screen
+                        if (_searchState == SearchState.searching ||
+                            _searchState == SearchState.found) {
+                          // Navigate to home screen (pop all routes and go to home)
+                          Navigator.of(
+                            context,
+                          ).popUntil((route) => route.isFirst);
+                        } else {
+                          // In initial state, just go back to previous screen
+                          Navigator.pop(context);
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(24),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 6,
+                              offset: Offset(0, 3),
                             ),
-
-                            _buildBottomSheetContent(),
                           ],
                         ),
+                        child: const Icon(
+                          Icons.arrow_back,
+                          color: Colors.black,
+                        ),
                       ),
-                    );
-                  },
-                ),
-              ],
-            ),
+                    ),
+                  ),
+
+                  // Draggable Bottom Sheet
+                  DraggableScrollableSheet(
+                    controller: _dragController,
+                    initialChildSize: _getInitialSize(),
+                    minChildSize: _getMinSize(),
+                    maxChildSize: _getMaxSize(),
+                    builder: (context, scrollController) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(24),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 10,
+                            ),
+                          ],
+                        ),
+                        child: SingleChildScrollView(
+                          controller: scrollController,
+                          child: Column(
+                            children: [
+                              // Drag handle
+                              Container(
+                                margin: const EdgeInsets.symmetric(vertical: 8),
+                                height: 4,
+                                width: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+
+                              _buildBottomSheetContent(),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+      ),
     );
   }
 
@@ -562,15 +787,16 @@ class _FindHelpState extends State<FindHelp> with TickerProviderStateMixin {
       case SearchState.searching:
         return _buildSearchingContent();
       case SearchState.found:
-        return _foundTechnician != null
+        return  _jobId != null
             ? FoundTechnician(
                 technician: _foundTechnician!,
+                jobId: _jobId!,
                 onFindAnother: _resetSearch,
                 onCall: () {
                   // Handle call functionality
                 },
               )
-            : const SizedBox();
+            : _buildSearchingContent(); // Show searching if data not ready
     }
   }
 

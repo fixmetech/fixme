@@ -5,11 +5,13 @@ import '../widgets/search_page/results_section.dart';
 class SearchResultsScreen extends StatefulWidget {
   final String searchQuery;
   final String category;
+  final String? specializationFilter;
 
   const SearchResultsScreen({
     Key? key,
     required this.searchQuery,
     required this.category,
+    this.specializationFilter,
   }) : super(key: key);
 
   @override
@@ -102,6 +104,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
               selectedFilters: selectedFilters,
               filterValues: filterValues,
               onResetFilters: _resetFilters,
+              specializationFilter: widget.specializationFilter,
             ),
           ),
         ],

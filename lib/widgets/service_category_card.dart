@@ -1,5 +1,8 @@
+import 'package:fixme/screens/search_screen.dart';
+import 'package:fixme/screens/service_center_search_screen.dart';
 import 'package:fixme/screens/services/home/asap_home_services.dart';
 import 'package:fixme/screens/services/vehicle/asap_vehicle_service.dart';
+import 'package:fixme/widgets/search_page/results_section.dart';
 import 'package:fixme/widgets/service_box.dart';
 import 'package:flutter/material.dart';
 
@@ -60,14 +63,14 @@ class ServiceGrid extends StatelessWidget {
               Expanded(
                 child: ServiceBox(
                   title: 'Towing',
-                  height: 100,
+                  height: 90,
                   icon: Icons.car_repair,
                   isMain: false,
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const AsapVehicleService(),
+                        builder: (context) => const SearchPage(initialSelectedService: 'Towing'),
                       ),
                     );
                   },
@@ -77,37 +80,20 @@ class ServiceGrid extends StatelessWidget {
               Expanded(
                 child: ServiceBox(
                   title: 'service center',
-                  height: 100,
+                  height: 90,
                   icon: Icons.electric_car,
                   isMain: false,
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const AsapVehicleService(),
+                        builder: (context) => ServiceCenterSearchPage(),
                       ),
                     );
                   },
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ServiceBox(
-                  title: 'Marketplace',
-                  icon: Icons.shopping_cart,
-                  height: 100,
-                  isMain: false,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AsapVehicleService(),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
+           ],
           ),
           const SizedBox(height: 12),
         ],

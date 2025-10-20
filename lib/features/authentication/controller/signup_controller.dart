@@ -1,6 +1,7 @@
 import 'package:fixme/data/repositories/authentication_repository.dart';
 import 'package:fixme/features/authentication/controller/onboarding_controller.dart';
 import 'package:fixme/features/authentication/screens/login.dart';
+import 'package:fixme/features/profile/controller/profile_controller.dart';
 import 'package:fixme/mainScreen.dart';
 import 'package:fixme/utils/helper/helper_functions.dart';
 import 'package:fixme/utils/helper/network_manager.dart';
@@ -210,6 +211,16 @@ class SignupController extends GetxController {
         );
         return;
       }
+      
+      // Clear cached user data before logout
+      try {
+        if (Get.isRegistered<ProfileController>()) {
+          Get.find<ProfileController>().clearCache();
+        }
+      } catch (e) {
+        print('Error clearing profile cache on logout: $e');
+      }
+      
       await AuthenticationRepository.instance.signOut();
       FullScreenLoader.hideLoader(context);
       Get.offAll(LoginScreen());

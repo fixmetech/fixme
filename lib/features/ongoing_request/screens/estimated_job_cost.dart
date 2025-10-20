@@ -1,17 +1,77 @@
-import 'package:fixme/features/ongoing_request/ongoing_state.dart';
+import 'package:fixme/features/ongoing_request/screens/ongoing_state.dart';
+import 'package:fixme/mainScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:fixme/features/ongoing_request/controller/estimated_job_cost_controller.dart';
+import 'package:get/get.dart';
+import 'package:get/state_manager.dart';
 
-class ServiceRequestScreen extends StatelessWidget {
-  final String pin;
-  final int requestId;
-  final int estimatedCost;
+class ServiceRequestScreen extends StatefulWidget {
+  /// The dynamic job id passed from the previous screen (Share PIN)
+  final String jobRequestId;
+  final int? requestId; // Optional UI display number
 
   const ServiceRequestScreen({
     Key? key,
-    this.pin = "434024",
-    this.requestId = 16,
-    this.estimatedCost = 5000,
+    required this.jobRequestId, // dynamic from backend
+    this.requestId,
   }) : super(key: key);
+
+  @override
+  State<ServiceRequestScreen> createState() => _ServiceRequestScreenState();
+}
+
+class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
+  final ServiceRequestApi _api = ServiceRequestApi();
+  late Future<JobRequestDetails> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _api.fetchJob(widget.jobRequestId); // ← dynamic id from SharePin
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      _future = _api.fetchJob(widget.jobRequestId);
+    });
+  }
+
+  Future<void> _onDecision(String decision, int shownCost) async {
+    try {
+      await _api.approveOrReject(
+        jobId: widget.jobRequestId, // ← dynamic
+        decision: decision,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            decision == 'Approved'
+                ? 'Job cost accepted!'
+                : 'Job cost rejected!',
+          ),
+        ),
+      );
+
+      if (decision == 'Approved') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => OngoingScreen(
+              jobId: widget.jobRequestId,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Action failed: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,10 +82,13 @@ class ServiceRequestScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            // Navigate to MainScreen with Activities tab
+            Get.offAll(const MainScreen());
+          },
         ),
         title: Text(
-          'Ongoing Request: #$requestId',
+          'Ongoing Request${widget.requestId != null ? ': #${widget.requestId}' : ''}',
           style: const TextStyle(
             color: Colors.black,
             fontSize: 18,
@@ -34,35 +97,67 @@ class ServiceRequestScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(30.0),
-          child: Column(
-            children: [
-              // Step 1: Share PIN
-              _buildStepItem(
-                stepNumber: 1,
-                isCompleted: true,
-                isActive: false,
-                title: 'Share PIN',
-                description: 'Share this PIN with the technician to verify their arrival.',
-                child: _PinBox(pin: pin),
-              ),
-              const SizedBox(height: 24),
+      body: RefreshIndicator(
+        onRefresh: _refresh,
+        child: FutureBuilder<JobRequestDetails>(
+          future: _future,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  const SizedBox(height: 100),
+                  Center(
+                    child: Text(
+                      'Failed to load: ${snapshot.error}',
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+                ],
+              );
+            }
 
-              // Step 2: Estimated Job Cost
-              _buildStepItem(
-                stepNumber: 2,
-                isCompleted: false,
-                isActive: true,
-                title: 'Estimated Job Cost',
-                description: 'Accept the estimated job cost to proceed',
-                child: _CostSection(cost: estimatedCost),
-              ),
-              const SizedBox(height: 24),
+            final job = snapshot.data!;
+            final pin = job.pin.toString();
+            final estimated = (job.estimatedCost ?? 0).toInt();
 
-            ],
-          ),
+            return SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.all(30.0),
+                child: Column(
+                  children: [
+                    _buildStepItem(
+                      stepNumber: 1,
+                      isCompleted: true,
+                      isActive: false,
+                      title: 'Share PIN',
+                      description:
+                      'Share this PIN with the technician to verify their arrival.',
+                      child: _PinBox(pin: pin),
+                    ),
+                    const SizedBox(height: 24),
+                    _buildStepItem(
+                      stepNumber: 2,
+                      isCompleted: false,
+                      isActive: true,
+                      title: 'Estimated Job Cost',
+                      description: 'Accept the estimated job cost to proceed',
+                      child: _CostSection(
+                        cost: estimated,
+                        onAccept: () => _onDecision('Approved', estimated),
+                        onReject: () => _onDecision('Rejected', estimated),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -85,7 +180,6 @@ class ServiceRequestScreen extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Step number or check
         Container(
           width: 32,
           height: 32,
@@ -142,6 +236,7 @@ class ServiceRequestScreen extends StatelessWidget {
 class _PinBox extends StatelessWidget {
   final String pin;
   const _PinBox({required this.pin});
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -164,7 +259,15 @@ class _PinBox extends StatelessWidget {
 
 class _CostSection extends StatelessWidget {
   final int cost;
-  const _CostSection({required this.cost});
+  final VoidCallback? onAccept;
+  final VoidCallback? onReject;
+
+  const _CostSection({
+    required this.cost,
+    this.onAccept,
+    this.onReject,
+  });
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -183,15 +286,7 @@ class _CostSection extends StatelessWidget {
           children: [
             Expanded(
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => OngoingScreen()),
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Job cost accepted!')),
-                  );
-                },
+                onPressed: onAccept,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -209,11 +304,7 @@ class _CostSection extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: ElevatedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Job cost rejected!')),
-                  );
-                },
+                onPressed: onReject,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   padding: const EdgeInsets.symmetric(vertical: 16),

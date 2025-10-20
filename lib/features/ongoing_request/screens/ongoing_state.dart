@@ -1,16 +1,27 @@
-import 'package:fixme/features/ongoing_request/finish_job.dart';
+import 'package:fixme/features/ongoing_request/screens/finish_job.dart';
+import 'package:fixme/mainScreen.dart';
 import 'package:flutter/material.dart';
 
+// controller
+import 'package:fixme/features/ongoing_request/controller/ongoing_state_controller.dart';
+import 'package:get/get.dart';
+import 'package:get/state_manager.dart';
+
 class OngoingScreen extends StatefulWidget {
-  final String pin;
-  final int requestId;
-  final int estimatedCost;
+  /// Firestore/DB job document id – REQUIRED and passed from previous screen
+  final String jobId;
+
+  /// Optional UI display values (fallbacks until live data loads)
+  final String? pin;
+  final int? requestId;
+  final int? estimatedCost;
 
   const OngoingScreen({
     Key? key,
-    this.pin = "434024",
-    this.requestId = 16,
-    this.estimatedCost = 5000,
+    required this.jobId,         // ← dynamic job id (required)
+    this.pin,                    // optional UI fallback
+    this.requestId,              // optional UI fallback
+    this.estimatedCost,          // optional UI fallback
   }) : super(key: key);
 
   @override
@@ -18,16 +29,60 @@ class OngoingScreen extends StatefulWidget {
 }
 
 class _OngoingScreenState extends State<OngoingScreen> {
+  final OngoingStateController _controller = OngoingStateController();
+
+  String? _livePin;
+  int? _liveEstimatedCost;
+  VoidCallback? _cancelPoll;
+
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 3), () {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => FinishJobScreen()));
+
+    // 1) Load once with the dynamic jobId
+    _controller.loadJob(widget.jobId).then((job) {
+      if (!mounted) return;
+      setState(() {
+        _livePin = job.pin.toString();
+        _liveEstimatedCost = (job.estimatedCost ?? widget.estimatedCost ?? 0).toInt();
+      });
+    }).catchError((e) {
+      debugPrint('loadJob error: $e'); // non-fatal; will use fallbacks
     });
+
+    // 2) Start polling until technician marks finish
+    _cancelPoll = _controller.startPollingUntilFinish(
+      jobId: widget.jobId,
+      onReached: () {
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => FinishJobScreen(
+              jobId: widget.jobId,             // ← REQUIRED
+              requestId: widget.requestId ?? 0,
+              pin: _livePin ?? widget.pin ?? '—',
+              estimatedCost: _liveEstimatedCost ?? widget.estimatedCost ?? 0,
+            ),
+          ),
+        );
+      },
+      onError: (e) => debugPrint('poll error: $e'),
+    );
+  }
+
+  @override
+  void dispose() {
+    _cancelPoll?.call();
+    _controller.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final displayPin = _livePin ?? widget.pin ?? '—';
+    final displayEstimated = _liveEstimatedCost ?? widget.estimatedCost ?? 0;
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -35,10 +90,13 @@ class _OngoingScreenState extends State<OngoingScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            // Navigate to MainScreen with Activities tab selected (index 2)
+            Get.offAll(const MainScreen());
+          },
         ),
         title: Text(
-          'Ongoing Request: #${widget.requestId}',
+          'Ongoing Request${widget.requestId != null ? ': #${widget.requestId}' : ''}',
           style: const TextStyle(
             color: Colors.black,
             fontSize: 18,
@@ -52,25 +110,25 @@ class _OngoingScreenState extends State<OngoingScreen> {
           padding: const EdgeInsets.all(30.0),
           child: Column(
             children: [
-              // Step 1: Share PIN
+              // Step 1: Share PIN — uses live pin if loaded, else fallback
               _buildStepItem(
                 stepNumber: 1,
                 isCompleted: true,
                 isActive: false,
                 title: 'Share PIN',
                 description: 'Share this PIN with the technician to verify their arrival.',
-                child: _PinBox(pin: widget.pin),
+                child: _PinBox(pin: displayPin),
               ),
               const SizedBox(height: 24),
 
-              // Step 2: Estimated Job Cost
+              // Step 2: Estimated Job Cost — uses live estimate if loaded, else fallback
               _buildStepItem(
                 stepNumber: 2,
                 isCompleted: true,
                 isActive: false,
                 title: 'Estimated Job Cost',
                 description: 'You accepted the estimated job cost.',
-                child: _CostSection(cost: widget.estimatedCost),
+                child: _CostSection(cost: displayEstimated),
               ),
               const SizedBox(height: 24),
 
@@ -195,10 +253,10 @@ class _CostSection extends StatelessWidget {
       children: [
         Row(
           children: [
-            Flexible(
+            const Flexible(
               child: Text(
                 'Accepted Estimated Price:',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: Colors.black87,
@@ -207,10 +265,7 @@ class _CostSection extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 6),
-            const Text(
-              '✅',
-              style: TextStyle(fontSize: 20),
-            ),
+            const Text('✅', style: TextStyle(fontSize: 20)),
           ],
         ),
         const SizedBox(height: 8),

@@ -181,6 +181,14 @@ class _AsapVehicleServiceState extends State<AsapVehicleService> {
   }
 
   void _handleFindTap() {
+    if (FirebaseAuth.instance.currentUser?.uid == null) {
+      FixMeHelperFunctions.showInfoSnackBar(
+        'Not Logged In',
+        "Please log in to proceed.",
+      );
+      return;
+    }
+
     if (_formKey.currentState!.validate() && _canProceed()) {
       // Create job request object
       final selectedVehicle = _profileController.getSelectedVehicle();
@@ -191,23 +199,21 @@ class _AsapVehicleServiceState extends State<AsapVehicleService> {
         );
         return;
       }
-
       final jobRequest = JobRequest(
         status: 'pending',
-        customerId: FirebaseAuth.instance.currentUser?.uid ?? 'unknown_user',
+        customerId: FirebaseAuth.instance.currentUser?.uid ?? '',
         propertyInfo: PropertyInfo.fromVehicle(selectedVehicle),
         selectedIssues: selectedIssues,
-        description: _descriptionController.text.trim().isNotEmpty 
-            ? _descriptionController.text.trim() 
+        description: _descriptionController.text.trim().isNotEmpty
+            ? _descriptionController.text.trim()
             : null,
         createdAt: DateTime.now(),
+        serviceCategory: 'vehicles',
       );
 
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (_) => FindHelp(jobRequest: jobRequest),
-        ),
+        MaterialPageRoute(builder: (_) => FindHelp(jobRequest: jobRequest)),
       );
     } else {
       if (selectedIssues.isEmpty) {

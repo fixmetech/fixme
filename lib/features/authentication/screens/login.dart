@@ -30,7 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: const EdgeInsets.all(FixMeSizes.defaultSpace),
           child: Column(
             crossAxisAlignment:
-                CrossAxisAlignment.start, // This aligns everything to the left
+            CrossAxisAlignment.start, // This aligns everything to the left
             children: [
               // Top spacing
               SizedBox(height: FixMeDeviceUtils.getAppBarHeight()),
@@ -86,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     // Password
                     Obx(
-                      () => TextFormField(
+                          () => TextFormField(
                         obscureText: controller.hidePassword.value,
                         decoration: InputDecoration(
                           labelText: 'Password',
@@ -94,7 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           suffixIcon: IconButton(
                             onPressed: () {
                               controller.hidePassword.value =
-                                  !controller.hidePassword.value;
+                              !controller.hidePassword.value;
                             },
                             icon: Icon(
                               controller.hidePassword.value
@@ -124,10 +124,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           'Forgot Password?',
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
-                                color: darK
-                                    ? FixMeColors.primary
-                                    : FixMeColors.primary,
-                              ),
+                            color: darK
+                                ? FixMeColors.primary
+                                : FixMeColors.primary,
+                          ),
                         ),
                       ),
                     ),
@@ -161,6 +161,79 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: FixMeSizes.spaceBtwItems),
+
+                    // OR Divider
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Divider(
+                            color: darK
+                                ? FixMeColors.textSecondary
+                                : FixMeColors.textTertiary,
+                            thickness: 1,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            'OR',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: darK
+                                  ? FixMeColors.textSecondary
+                                  : FixMeColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Divider(
+                            color: darK
+                                ? FixMeColors.textSecondary
+                                : FixMeColors.textTertiary,
+                            thickness: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: FixMeSizes.spaceBtwItems),
+
+                    // Google Sign In Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          // Handle Google Sign In
+                        },
+                        icon: Image.asset(
+                          'assets/images/google_logo.png',
+                          height: 24,
+                          width: 24,
+                        ),
+                        label: Text(
+                          'Continue with Google',
+                          style: Theme.of(context).textTheme.bodyMedium!.apply(
+                            color: darK
+                                ? FixMeColors.light
+                                : FixMeColors.dark,
+                            fontWeightDelta: 2,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: darK
+                                ? FixMeColors.textSecondary
+                                : FixMeColors.textTertiary,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: FixMeSizes.buttonPaddingVertical,
+                            horizontal: FixMeSizes.buttonPaddingHorizontal,
+                          ),
+                          backgroundColor: darK
+                              ? Colors.transparent
+                              : Colors.white,
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: FixMeSizes.spaceBtwInputFields),
 
                     // Create Account Button
@@ -169,7 +242,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: OutlinedButton(
                         onPressed: () {
                           Get.offAll(
-                            () => const OnboardingScreen(initialPage: 1),
+                                () => const OnboardingScreen(initialPage: 1),
                           );
                         },
                         style: OutlinedButton.styleFrom(

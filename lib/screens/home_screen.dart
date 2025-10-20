@@ -1,3 +1,8 @@
+import 'package:fixme/features/ongoing_request/screens/finish_job.dart';
+import 'package:fixme/features/ongoing_request/screens/share_pin.dart';
+import 'package:fixme/screens/serviceCenterProfile/service_center_profile.dart';
+import 'package:fixme/features/technician_profile/screens/technician_profile.dart';
+import 'package:fixme/widgets/home_banner.dart';
 import 'package:fixme/widgets/home_headers.dart';
 import 'package:fixme/widgets/recently_booked.dart';
 import 'package:fixme/widgets/service_category_card.dart';
@@ -17,30 +22,8 @@ class HomeScreen extends StatelessWidget {
             HomeHeaders(),
             ServiceGrid(),
             RecentlyBooked(),
-            // testing
-            SizedBox(height: 20), 
-            // link to camera screen
-            // Center(
-            //   child: ElevatedButton(
-            //     onPressed: () => Navigator.push(
-            //       context,
-            //       MaterialPageRoute(builder: (context) => TestCameraScreen()),
-            //     ),
-            //     child: Text('Open Camera Screen'),
-            //   ),
-            // ),
-            //  SizedBox(height: 20),
-            // // link to camera screen
-            // Center(
-            //   child: ElevatedButton(
-            //     onPressed: () => Navigator.push(
-            //       context,
-            //       MaterialPageRoute(builder: (context) => JobDetailsScreen()),
-            //     ),
-            //     child: Text('Share Pin'),
-            //   ),
-            // ),
-            // SizedBox(height: 20),
+            FixMeBanner(),
+            SizedBox(height: 80),
           ],
         ),
       ),

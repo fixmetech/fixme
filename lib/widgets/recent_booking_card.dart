@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fixme/widgets/translatable_text.dart';
 
 class BookingCard extends StatelessWidget {
   final String title;
@@ -36,7 +37,7 @@ class BookingCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          TranslatableText(
             title,
             style: const TextStyle(
               fontWeight: FontWeight.bold,

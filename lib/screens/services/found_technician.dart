@@ -1,7 +1,8 @@
-import 'package:fixme/features/ongoing_request/share_pin.dart';
+import 'package:fixme/features/ongoing_request/screens/share_pin.dart';
+import 'package:fixme/features/ongoing_request/controller/share_pin_controller.dart';
+import 'package:fixme/screens/services/controllers/found_technician_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 
@@ -9,12 +10,14 @@ enum TechnicianStatus { gettingReady, onTheWay, arrived }
 
 class FoundTechnician extends StatefulWidget {
   final Map<String, dynamic> technician;
+  final String jobId;
   final VoidCallback onFindAnother;
   final VoidCallback onCall;
 
   const FoundTechnician({
     super.key,
     required this.technician,
+    required this.jobId,
     required this.onFindAnother,
     required this.onCall,
   });
@@ -29,7 +32,11 @@ class _FoundTechnicianState extends State<FoundTechnician>
   Timer? _statusTimer;
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
-  late Animation<double> _scaleAnimation;
+
+  // Initialize the controller
+  final FoundTechnicianController controller = Get.put(
+    FoundTechnicianController(),
+  );
 
   @override
   void initState() {
@@ -40,9 +47,6 @@ class _FoundTechnicianState extends State<FoundTechnician>
     );
     _pulseAnimation = Tween<double>(begin: 0.9, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
-    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
     );
 
     _startStatusFlow();
@@ -479,8 +483,20 @@ class _FoundTechnicianState extends State<FoundTechnician>
                 ],
               ),
               child: ElevatedButton(
-                onPressed: () {
-                  Get.offAll(() => JobDetailsScreen());
+                onPressed: () async {
+                  final SharePinController controller = Get.put(
+                    SharePinController(),
+                  );
+
+                  // Use controller to request OTP; controller shows/hides loading internally
+                  final success = await controller.requestOtpForJob(
+                    widget.jobId,
+                    context,
+                  );
+                  if (success) {
+                    // Navigate to job details screen where PIN will be displayed
+                    Get.to(() => JobDetailsScreen(jobRequestId: widget.jobId));
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue.shade600,
@@ -525,53 +541,58 @@ class _FoundTechnicianState extends State<FoundTechnician>
                     ]
                   : [],
             ),
-            child: OutlinedButton(
-              onPressed: _currentStatus != TechnicianStatus.arrived
-                  ? () => _showCancelDialog(context)
-                  : null,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: _currentStatus != TechnicianStatus.arrived
-                    ? Colors.red.shade700
-                    : Colors.grey.shade400,
-                side: BorderSide(
-                  color: _currentStatus != TechnicianStatus.arrived
-                      ? Colors.red.shade300
-                      : Colors.grey.shade300,
-                  width: 2,
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                backgroundColor: _currentStatus != TechnicianStatus.arrived
-                    ? Colors.red.shade50
-                    : Colors.grey.shade100,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.cancel_rounded,
+            child: Obx(
+              () => OutlinedButton(
+                onPressed: controller.isLoading.value == false && _currentStatus != TechnicianStatus.arrived
+                    ? () => _showCancelDialog(context)
+                    : null,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: _currentStatus != TechnicianStatus.arrived
+                      ? Colors.red.shade700
+                      : Colors.grey.shade400,
+                  side: BorderSide(
                     color: _currentStatus != TechnicianStatus.arrived
-                        ? Colors.red.shade700
-                        : Colors.grey.shade400,
-                    size: 20,
+                        ? Colors.red.shade300
+                        : Colors.grey.shade300,
+                    width: 2,
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    _currentStatus != TechnicianStatus.arrived
-                        ? "Cancel Booking"
-                        : "Cannot Cancel",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.3,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  backgroundColor: _currentStatus != TechnicianStatus.arrived
+                      ? Colors.red.shade50
+                      : Colors.grey.shade100,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.cancel_rounded,
                       color: _currentStatus != TechnicianStatus.arrived
                           ? Colors.red.shade700
                           : Colors.grey.shade400,
+                      size: 20,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Text(
+                      controller.isLoading.value == true
+                          ? 'Cancelling...'
+                      :
+                      _currentStatus != TechnicianStatus.arrived
+                          ? "Cancel Booking"
+                          : "Cannot Cancel",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.3,
+                        color: _currentStatus != TechnicianStatus.arrived
+                            ? Colors.red.shade700
+                            : Colors.grey.shade400,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -611,10 +632,9 @@ class _FoundTechnicianState extends State<FoundTechnician>
               ),
             ),
             ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                widget.onFindAnother();
-              },
+              onPressed: () => controller.cancelBooking(
+                jobId: widget.jobId,
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red.shade600,
                 foregroundColor: Colors.white,

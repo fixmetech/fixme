@@ -1,17 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import '../controller/technician_request_controller.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+
 
 class TechnicianRequestScreen extends StatefulWidget {
   final String technicianName;
   final String technicianImage;
   final double visitingFee;
+  final String? technicianId;
+  final String? technicianEmail;
+  final String? technicianPhone;
+  final String? serviceCategory;
+ 
 
   const TechnicianRequestScreen({
     super.key,
     required this.technicianName,
     required this.technicianImage,
     this.visitingFee = 50.0,
+    this.technicianId,
+    this.technicianEmail,
+    this.technicianPhone,
+    this.serviceCategory,
   });
 
   @override
@@ -21,12 +34,148 @@ class TechnicianRequestScreen extends StatefulWidget {
 class _TechnicianRequestScreenState extends State<TechnicianRequestScreen> {
   final TextEditingController _jobDescriptionController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
+  final TechnicianScheduleJobController _bookingController = TechnicianScheduleJobController();
   
   String? selectedCar;
+  Map<String, dynamic>? selectedVehicle;
   DateTime? selectedDate;
   String? selectedTimeSlot;
   List<File> selectedImages = [];
   DateTime currentCalendarDate = DateTime.now();
+  bool isLoading = false;
+  
+  // User data - will be loaded from Firebase Auth
+  String? currentUserId;
+  
+  // Dynamic data
+  List<String> availableTimeSlots = [];
+  List<Map<String, dynamic>> userVehicles = [];
+  bool isLoadingTimeSlots = false;
+  bool isLoadingVehicles = false;
+  Map<DateTime, List<String>> technicianAvailability = {}; // Date -> available time slots
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      currentUserId = FirebaseAuth.instance.currentUser?.uid;
+      
+      print('Technician Request Screen initialized with:');
+      print('- technicianId: ${widget.technicianId}');
+      print('- technicianName: ${widget.technicianName}');
+      print('- currentUserId: $currentUserId');
+      
+      if (currentUserId != null) {
+        // Load user vehicles
+        await _loadUserVehicles();
+      }
+      
+      setState(() {});
+    } catch (e) {
+      print('Error loading user data: $e');
+      setState(() {});
+    }
+  }
+  
+  Future<void> _loadUserVehicles() async {
+    if (currentUserId == null) return;
+    
+    setState(() {
+      isLoadingVehicles = true;
+    });
+    
+    try {
+      final result = await _bookingController.getUserVehicles(currentUserId!);
+      // print(result);
+      
+      if (result['success']) {
+        setState(() {
+          userVehicles = List<Map<String, dynamic>>.from(result['data']);
+        });
+      } else {
+        print('Failed to load vehicles: ${result['error']}');
+        // Use fallback data if needed
+        userVehicles = [
+          {'id': '1', 'name': 'My Vehicle', 'type': 'Car'},
+        ];
+      }
+    } catch (e) {
+      print('Error loading vehicles: $e');
+      // Use fallback data
+      userVehicles = [
+        {'id': '1', 'name': 'My Vehicle', 'type': 'Car'},
+      ];
+    } finally {
+      setState(() {
+        isLoadingVehicles = false;
+      });
+    }
+  }
+  
+  Future<void> _loadAvailableTimeSlots(DateTime date) async {
+    if (widget.technicianId == null) {
+      print('No technician ID provided');
+      setState(() {
+        availableTimeSlots = [
+          '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
+          '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'
+        ];
+      });
+      return;
+    }
+    
+    setState(() {
+      isLoadingTimeSlots = true;
+      availableTimeSlots = []; // Clear previous slots
+    });
+    
+    try {
+      final dateString = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      print('Loading time slots for technician: ${widget.technicianId}, date: $dateString');
+      
+      final result = await _bookingController.getAvailableTimeSlots(widget.technicianId!, dateString);
+      
+      print('Time slots API result: $result');
+      
+      if (result['success']) {
+        final slots = List<String>.from(result['data'] ?? []);
+        print('Available time slots received: $slots');
+        setState(() {
+          availableTimeSlots = slots.isNotEmpty ? slots : [
+            '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
+            '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'
+          ];
+          technicianAvailability[date] = availableTimeSlots;
+        });
+      } else {
+        print('API failed: ${result['error']}');
+        // Use fallback time slots when API fails
+        setState(() {
+          availableTimeSlots = [
+            '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
+            '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'
+          ];
+        });
+      }
+    } catch (e) {
+      print('Error loading time slots: $e');
+      // Use fallback time slots on error
+      setState(() {
+        availableTimeSlots = [
+          '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
+          '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'
+        ];
+      });
+    } finally {
+      setState(() {
+        isLoadingTimeSlots = false;
+      });
+    }
+  }
   
   // Sample unavailable dates (red dates)
   final List<DateTime> unavailableDates = [
@@ -45,12 +194,7 @@ class _TechnicianRequestScreenState extends State<TechnicianRequestScreen> {
     '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'
   ];
   
-  // Sample saved cars
-  final List<Map<String, String>> savedCars = [
-    {'name': 'Toyota Camry 2020', 'type': 'Sedan'},
-    {'name': 'Honda Civic 2019', 'type': 'Hatchback'},
-    {'name': 'BMW X5 2021', 'type': 'SUV'},
-  ];
+  // Dynamic saved cars loaded from backend
 
   @override
   Widget build(BuildContext context) {
@@ -272,22 +416,63 @@ class _TechnicianRequestScreenState extends State<TechnicianRequestScreen> {
                 border: Border.all(color: Colors.grey.shade300),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Row(
-                children: [
-                  const Icon(Icons.directions_car, color: Colors.blue),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      selectedCar ?? "Select a car",
-                      style: TextStyle(
-                        color: selectedCar != null ? Colors.black87 : Colors.grey[600],
-                        fontSize: 16,
-                      ),
+              child: selectedVehicle != null
+                  ? Row(
+                      children: [
+                        Icon(
+                          selectedVehicle!['vehicleType']?.toLowerCase() == 'car' 
+                            ? Icons.directions_car
+                            : selectedVehicle!['vehicleType']?.toLowerCase() == 'truck'
+                              ? Icons.local_shipping
+                              : selectedVehicle!['vehicleType']?.toLowerCase() == 'bike' || 
+                                selectedVehicle!['vehicleType']?.toLowerCase() == 'motorcycle'
+                                ? Icons.motorcycle
+                                : Icons.directions_car,
+                          color: Colors.blue,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                selectedCar!,
+                                style: const TextStyle(
+                                  color: Colors.black87,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${selectedVehicle!['plateNumber'] ?? ''} • ${selectedVehicle!['color'] ?? ''} ${selectedVehicle!['vehicleType'] ?? ''}',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.arrow_drop_down, color: Colors.grey),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        const Icon(Icons.directions_car, color: Colors.grey),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            isLoadingVehicles ? "Loading vehicles..." : "Select a vehicle",
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                        const Icon(Icons.arrow_drop_down, color: Colors.grey),
+                      ],
                     ),
-                  ),
-                  const Icon(Icons.arrow_drop_down, color: Colors.grey),
-                ],
-              ),
             ),
           ),
           
@@ -605,10 +790,13 @@ class _TechnicianRequestScreenState extends State<TechnicianRequestScreen> {
               }
               
               final date = DateTime(currentCalendarDate.year, currentCalendarDate.month, dayNumber);
+              // Check if this date has available slots or is in static unavailable list
               final isUnavailable = unavailableDates.any((unavailableDate) =>
                   unavailableDate.year == date.year &&
                   unavailableDate.month == date.month &&
-                  unavailableDate.day == date.day);
+                  unavailableDate.day == date.day) ||
+                  (technicianAvailability.containsKey(date) && 
+                   technicianAvailability[date]!.isEmpty);
               final isSelected = selectedDate != null &&
                   selectedDate!.year == date.year &&
                   selectedDate!.month == date.month &&
@@ -621,7 +809,10 @@ class _TechnicianRequestScreenState extends State<TechnicianRequestScreen> {
                     setState(() {
                       selectedDate = date;
                       selectedTimeSlot = null; // Reset time slot when date changes
+                      availableTimeSlots = []; // Clear previous time slots
                     });
+                    // Load available time slots for the selected date
+                    _loadAvailableTimeSlots(date);
                   },
                   child: Container(
                     height: 40,
@@ -665,10 +856,34 @@ class _TechnicianRequestScreenState extends State<TechnicianRequestScreen> {
   }
 
   Widget _buildTimeSlots() {
+    if (isLoadingTimeSlots) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20.0),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+    
+    if (availableTimeSlots.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20.0),
+          child: Text(
+            'No available time slots for this date',
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 16,
+            ),
+          ),
+        ),
+      );
+    }
+    
     return Wrap(
       spacing: 10,
       runSpacing: 10,
-      children: timeSlots.map((timeSlot) {
+      children: availableTimeSlots.map((timeSlot) {
         final isSelected = selectedTimeSlot == timeSlot;
         return GestureDetector(
           onTap: () {
@@ -702,7 +917,8 @@ class _TechnicianRequestScreenState extends State<TechnicianRequestScreen> {
     final canSendRequest = selectedCar != null &&
         _jobDescriptionController.text.isNotEmpty &&
         selectedDate != null &&
-        selectedTimeSlot != null;
+        selectedTimeSlot != null &&
+        !isLoading;
 
     return SizedBox(
       width: double.infinity,
@@ -710,14 +926,14 @@ class _TechnicianRequestScreenState extends State<TechnicianRequestScreen> {
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           foregroundColor: Colors.white,
-          backgroundColor: Colors.blue[600],
+          backgroundColor: isLoading ? Colors.grey : Colors.blue[600],
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
           elevation: 5,
           shadowColor: Colors.blue.withOpacity(0.4),
         ),
-        onPressed: () {
+        onPressed: isLoading ? null : () {
           if (canSendRequest) {
             _showRequestSummary();
           } else {
@@ -727,11 +943,21 @@ class _TechnicianRequestScreenState extends State<TechnicianRequestScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.send, size: 20),
+            if (isLoading)
+              const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            else
+              const Icon(Icons.send, size: 20),
             const SizedBox(width: 8),
-            const Text(
-              "Send Request",
-              style: TextStyle(
+            Text(
+              isLoading ? "Sending..." : "Send Request",
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -828,28 +1054,157 @@ class _TechnicianRequestScreenState extends State<TechnicianRequestScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: const Text("Select Your Car"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: savedCars.map((car) {
-            return ListTile(
-              leading: const Icon(Icons.directions_car, color: Colors.blue),
-              title: Text(car['name']!),
-              subtitle: Text(car['type']!),
-              onTap: () {
-                setState(() {
-                  selectedCar = car['name'];
-                });
-                Navigator.of(context).pop();
-              },
-            );
-          }).toList(),
+        title: const Text("Select Your Vehicle"),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: userVehicles.isNotEmpty 
+              ? userVehicles.map((vehicle) {
+                  final make = vehicle['make'] ?? 'Unknown';
+                  final model = vehicle['model'] ?? 'Model';
+                  final year = vehicle['year'] ?? '';
+                  final plateNumber = vehicle['plateNumber'] ?? '';
+                  final color = vehicle['color'] ?? '';
+                  final vehicleType = vehicle['vehicleType'] ?? 'Vehicle';
+                  final isDefault = vehicle['isDefault'] ?? false;
+                  
+                  // Create display name
+                  final vehicleName = '$make $model${year.isNotEmpty ? ' $year' : ''}';
+                  final subtitle = '${plateNumber.isNotEmpty ? '$plateNumber • ' : ''}$color $vehicleType';
+                  
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: isDefault ? Colors.blue : Colors.grey.shade300,
+                        width: isDefault ? 2 : 1,
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                      color: isDefault ? Colors.blue.shade50 : null,
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      leading: Stack(
+                        children: [
+                          Icon(
+                            vehicleType.toLowerCase() == 'car' 
+                              ? Icons.directions_car
+                              : vehicleType.toLowerCase() == 'truck'
+                                ? Icons.local_shipping
+                                : vehicleType.toLowerCase() == 'bike' || vehicleType.toLowerCase() == 'motorcycle'
+                                  ? Icons.motorcycle
+                                  : Icons.directions_car,
+                            color: isDefault ? Colors.blue : Colors.grey.shade600,
+                            size: 28,
+                          ),
+                          if (isDefault)
+                            Positioned(
+                              right: 0,
+                              top: 0,
+                              child: Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: Colors.green,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      title: Text(
+                        vehicleName,
+                        style: TextStyle(
+                          fontWeight: isDefault ? FontWeight.bold : FontWeight.normal,
+                          color: isDefault ? Colors.blue.shade800 : Colors.black87,
+                        ),
+                      ),
+                      subtitle: Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: isDefault ? Colors.blue.shade600 : Colors.grey.shade600,
+                          fontSize: 12,
+                        ),
+                      ),
+                      trailing: isDefault 
+                        ? Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.green,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Text(
+                              'Default',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          )
+                        : null,
+                      onTap: () {
+                        setState(() {
+                          selectedCar = vehicleName;
+                          selectedVehicle = vehicle;
+                        });
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  );
+                }).toList()
+              : [
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        Icon(
+                          isLoadingVehicles ? Icons.hourglass_empty : Icons.directions_car_outlined,
+                          color: Colors.grey,
+                          size: 48,
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          isLoadingVehicles ? 'Loading vehicles...' : 'No vehicles found',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          isLoadingVehicles ? 'Please wait' : 'Add a vehicle in your profile to continue',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 14,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: const Text("Cancel"),
           ),
+          if (!isLoadingVehicles && userVehicles.isEmpty)
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // TODO: Navigate to add vehicle screen
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please add a vehicle in your profile first'),
+                  ),
+                );
+              },
+              child: const Text("Add Vehicle"),
+            ),
         ],
       ),
     );
@@ -864,8 +1219,167 @@ class _TechnicianRequestScreenState extends State<TechnicianRequestScreen> {
     }
   }
 
-  void _sendRequest() {
-    // Handle sending the request
+  void _sendRequest() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      // Check if technician ID is available
+      if (widget.technicianId == null || widget.technicianId!.isEmpty) {
+        _showErrorDialog('Technician information is missing. Please go back and select a technician again.');
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+
+      // Check if user is authenticated
+      if (currentUserId == null) {
+        _showErrorDialog('Please log in to continue.');
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+
+      // Check if vehicle is selected
+      if (selectedVehicle == null) {
+        _showErrorDialog('Please select a vehicle first.');
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+
+      // Validate required data
+      final validationErrors = _bookingController.validateBookingData(
+        userId: currentUserId!,
+        technicianId: widget.technicianId!,
+        description: _jobDescriptionController.text,
+        scheduledDate: selectedDate,
+        scheduledTime: selectedTimeSlot,
+        technicianDetails: {
+          'name': widget.technicianName,
+          'email': widget.technicianEmail ?? 'technician@example.com',
+          'phone': widget.technicianPhone ?? '0771234567',
+        },
+      );
+
+      if (validationErrors.isNotEmpty) {
+        _showValidationErrors(validationErrors);
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+
+      // Convert time slot to 24-hour format
+      final formattedTime = _bookingController.convertTo24HourFormat(selectedTimeSlot!);
+
+      // Create booking request
+      print('Creating booking with technicianId: ${widget.technicianId}');
+      final result = await _bookingController.createBookingRequest(
+        userId: currentUserId!,
+        technicianId: widget.technicianId!,
+        serviceCategory: widget.serviceCategory ?? 'Vehicle Services',
+        serviceSpecialization: selectedCar ?? 'General Repair',
+        description: _jobDescriptionController.text,
+        bookingDate: DateTime.now(),
+        bookingTime: DateTime.now().toString().substring(11, 16), // Current time in HH:mm
+        scheduledDate: selectedDate!,
+        scheduledTime: formattedTime,
+        vehicleDetails: selectedVehicle,
+        technicianDetails: {
+          'name': widget.technicianName,
+          'email': widget.technicianEmail ?? 'technician@example.com',
+          'phone': widget.technicianPhone ?? '0771234567',
+        },
+        priceEstimate: widget.visitingFee,
+      );
+
+      setState(() {
+        isLoading = false;
+      });
+
+      if (result['success']) {
+        _showSuccessDialog(result['data']);
+      } else {
+        _showErrorDialog(result['error']);
+      }
+    } catch (error) {
+      setState(() {
+        isLoading = false;
+      });
+      _showErrorDialog('An unexpected error occurred: ${error.toString()}');
+    }
+  }
+
+  void _showValidationErrors(Map<String, String> errors) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: Row(
+          children: [
+            Icon(Icons.error, color: Colors.red[600]),
+            const SizedBox(width: 10),
+            const Text("Validation Errors"),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: errors.entries.map((entry) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              "• ${entry.value}",
+              style: const TextStyle(color: Colors.red),
+            ),
+          )).toList(),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red[600],
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showErrorDialog(String error) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: Row(
+          children: [
+            Icon(Icons.error, color: Colors.red[600]),
+            const SizedBox(width: 10),
+            const Text("Request Failed"),
+          ],
+        ),
+        content: Text(error),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red[600],
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSuccessDialog(dynamic bookingData) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -874,16 +1388,28 @@ class _TechnicianRequestScreenState extends State<TechnicianRequestScreen> {
           children: [
             Icon(Icons.check_circle, color: Colors.green[600]),
             const SizedBox(width: 10),
-            const Text("Request Sent!"),
+            const Text("Request Sent Successfully!"),
           ],
         ),
-        content: Text(
-          "Your request has been sent to ${widget.technicianName}. They will respond soon.",
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Your booking request has been sent to ${widget.technicianName}."),
+            const SizedBox(height: 10),
+            if (bookingData['bookingId'] != null)
+              Text(
+                "Booking ID: ${bookingData['bookingId']}",
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            const SizedBox(height: 10),
+            const Text("You will receive a confirmation soon."),
+          ],
         ),
         actions: [
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue[600],
+              backgroundColor: Colors.green[600],
               foregroundColor: Colors.white,
             ),
             onPressed: () {

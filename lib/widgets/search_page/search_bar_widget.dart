@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fixme/widgets/translatable_text.dart';
 import 'detailed_search_screen.dart';
 
 class SearchBarWidget extends StatelessWidget {
@@ -29,7 +30,7 @@ class SearchBarWidget extends StatelessWidget {
             SizedBox(width: 20),
             Icon(Icons.search, color: Colors.grey[500]),
             SizedBox(width: 12),
-            Text(
+            TranslatableText(
               'Search services',
               style: TextStyle(
                 color: Colors.grey[500],
