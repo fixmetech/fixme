@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fixme/widgets/translatable_text.dart';
 
 class ServiceBox extends StatelessWidget {
   final String title;
@@ -45,7 +46,7 @@ class ServiceBox extends StatelessWidget {
                   Positioned(
                     top: 16,
                     left: 16,
-                    child: Text(
+                    child: TranslatableText(
                       title,
                       style: TextStyle(
                         fontSize: 18,
@@ -62,7 +63,7 @@ class ServiceBox extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
+                  TranslatableText(
                     title,
                     style: TextStyle(
                       fontSize: 14,

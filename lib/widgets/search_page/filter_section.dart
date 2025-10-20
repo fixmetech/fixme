@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fixme/widgets/translatable_text.dart';
 
 class FilterSection extends StatefulWidget {
   final Function(List<String>, Map<String, String>) onFiltersChanged;
@@ -937,7 +938,7 @@ class _FilterSectionState extends State<FilterSection> {
           return Container(
             margin: EdgeInsets.only(right: 8),
             child: FilterChip(
-              label: Text(
+              label: TranslatableText(
                 _getFilterDisplayText(filter),
                 style: TextStyle(
                   color: isSelected ? Colors.white : Colors.grey[700],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fixme/widgets/translatable_text.dart';
 import '../../screens/service_center_search_screen.dart';
 import '../../services/search_service.dart';
 
@@ -135,7 +136,7 @@ class _ServiceCategoriesState extends State<ServiceCategories> {
                     ),
                   ),
                   SizedBox(height: 8),
-                  Text(
+                  TranslatableText(
                     service['name'] as String,
                     style: TextStyle(
                       color: isSelected ?  const Color.fromARGB(255, 97, 183, 253) : Colors.grey[700],
